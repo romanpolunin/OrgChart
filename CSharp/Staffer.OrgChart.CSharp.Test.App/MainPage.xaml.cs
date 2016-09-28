@@ -16,7 +16,6 @@ using Windows.UI.Xaml.Navigation;
 using Windows.UI.Xaml.Shapes;
 using Staffer.OrgChart.CSharp.Test.Layout;
 using Staffer.OrgChart.Layout.CSharp;
-using Rect = Windows.Foundation.Rect;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -39,10 +38,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
 
             var boxContainer = new BoxContainer(dataSource);
 
-            foreach (var box in boxContainer.Boxes.Values)
-            {
-                box.Frame.Exterior.Size = new OrgChart.Layout.CSharp.Size(400, 200);
-            }
+            TestDataGen.GenerateBoxSizes(boxContainer);
 
             RenderBoxes(boxContainer, DrawCanvas);
         }
@@ -61,6 +57,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
                 var frame = box.Frame;
                 drawCanvas.Children.Add(new Rectangle
                 {
+                    RenderTransform = new TranslateTransform { X = frame.Exterior.TopLeft.X, Y = frame.Exterior.TopLeft.Y},
                     Width = frame.Exterior.Size.Width,
                     Height = frame.Exterior.Size.Height,
                     Fill = new SolidColorBrush(Colors.Beige),

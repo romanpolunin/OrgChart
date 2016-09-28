@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
+﻿using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Staffer.OrgChart.Layout.CSharp;
 
@@ -23,6 +20,21 @@ namespace Staffer.OrgChart.CSharp.Test.Layout
             var rootCount2 = boxContainer.Boxes.Values.Count(x => x.VisualParentId == 0);
             Assert.AreEqual(1, rootCount1);
             Assert.AreEqual(1, rootCount2);
+        }
+
+        [TestMethod]
+        public void TestLayout()
+        {
+            var dataSource = new TestDataSource();
+            new TestDataGen().GenerateDataItems(dataSource);
+
+            var boxContainer = new BoxContainer(dataSource);
+            TestDataGen.GenerateBoxSizes(boxContainer);
+
+            var layout = new LayoutProcessor();
+            var diagram = new Diagram();
+            var layoutSettings = new DiagramLayoutSettings();
+            layout.ApplyToFrames(diagram, layoutSettings);
         }
     }
 }

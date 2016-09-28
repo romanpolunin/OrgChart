@@ -20,6 +20,15 @@
         public Size Size;
 
         /// <summary>
+        /// Ctr. to help client code prevent naming conflicts with Rect, Point and Size type names.
+        /// </summary>
+        public Rect(float x, float y, float w, float h)
+        {
+            TopLeft = new Point(x, y);
+            Size = new Size(w, h);
+        }
+
+        /// <summary>
         /// Ctr. for case with known location.
         /// </summary>
         public Rect(Point topLeft, Size size)

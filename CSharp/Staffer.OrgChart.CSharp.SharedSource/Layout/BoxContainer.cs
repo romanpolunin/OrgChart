@@ -20,7 +20,7 @@ namespace Staffer.OrgChart.Layout.CSharp
         /// <summary>
         /// Access to internal collection of boxes.
         /// </summary>
-        public Dictionary<string, Box> BoxesByDataId => m_boxesByDataId;
+        public IReadOnlyDictionary<string, Box> BoxesByDataId => m_boxesByDataId;
         
         /// <summary>
         /// Ctr.
