@@ -31,10 +31,16 @@ namespace Staffer.OrgChart.CSharp.Test.Layout
             var boxContainer = new BoxContainer(dataSource);
             TestDataGen.GenerateBoxSizes(boxContainer);
 
-            var layout = new LayoutProcessor();
             var diagram = new Diagram();
-            var layoutSettings = new DiagramLayoutSettings();
-            layout.ApplyToFrames(diagram, layoutSettings);
+            diagram.SetBoxes(boxContainer);
+
+            diagram.LayoutSettings.LayoutStrategies.Add("default", new LinearLayoutStrategy());
+            diagram.LayoutSettings.DefaultLayoutStrategyId = "default";
+
+            var state = new LayoutState(diagram);
+            state.SizesFunc = dataId => boxContainer.BoxesByDataId[dataId].Frame.Exterior.Size;
+
+            LayoutProcessor.Apply(state);
         }
     }
 }

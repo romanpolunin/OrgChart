@@ -10,14 +10,14 @@
         /// </summary>
         public readonly Point TopLeft;
         /// <summary>
-        /// Bottom-right corner.
+        /// Computed bottom-right corner.
         /// </summary>
         public Point BottomRight => new Point(TopLeft.X + Size.Width, TopLeft.Y + Size.Height);
 
         /// <summary>
-        /// Computed length of the rectangle.
+        /// Size of the rectangle.
         /// </summary>
-        public Size Size;
+        public readonly Size Size;
 
         /// <summary>
         /// Ctr. to help client code prevent naming conflicts with Rect, Point and Size type names.

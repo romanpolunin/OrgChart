@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Staffer.OrgChart.Layout.CSharp
 {
@@ -219,17 +220,29 @@ namespace Staffer.OrgChart.Layout.CSharp
                 }
             }
 
+            return result;
+        }
+
+        /// <summary>
+        /// Update every node's <see cref="TreeNode.Level"/> and <see cref="Depth"/> of the tree.
+        /// </summary>
+        public void UpdateHierarchyStats()
+        {
             // initialize hierarchy level numbers
-            result.IterateParentFirst(x =>
+            IterateParentFirst(x =>
             {
                 if (x.ParentNode != null)
                 {
                     x.Level = x.ParentNode.Level + 1;
                 }
+                else
+                {
+                    x.Level = 0;
+                }
                 return true;
             });
 
-            return result;
+            Depth = 1 + Nodes.Values.Max(x => x.Level);
         }
     }
 }

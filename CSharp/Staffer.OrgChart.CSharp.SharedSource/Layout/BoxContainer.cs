@@ -21,7 +21,13 @@ namespace Staffer.OrgChart.Layout.CSharp
         /// Access to internal collection of boxes.
         /// </summary>
         public IReadOnlyDictionary<string, Box> BoxesByDataId => m_boxesByDataId;
-        
+
+        /// <summary>
+        /// Auto-generated system root box. Added to guarantee a single-root hierarchy.
+        /// </summary>
+        [CanBeNull]
+        public Box SystemRoot { get; set; }
+
         /// <summary>
         /// Ctr.
         /// </summary>
@@ -46,26 +52,36 @@ namespace Staffer.OrgChart.Layout.CSharp
             m_boxes.Clear();
             m_lastBoxId = 0;
 
+            // generate system root box, 
+            // but don't add it to the list of boxes yet
+            SystemRoot = new Box(++m_lastBoxId, true);
+            
+            // add data-bound boxes
             foreach (var dataId in source.AllDataItemIds)
             {
                 AddBox(dataId);
             }
 
+            // initialize hierarchy links
             foreach (var box in m_boxes.Values)
             {
-                if (!string.IsNullOrEmpty(box.DataId))
+                var parentDataId = string.IsNullOrEmpty(box.DataId) ? null : source.GetParentKeyFunc(box.DataId);
+                if (string.IsNullOrEmpty(parentDataId))
                 {
-                    var parentDataId = source.GetParentKeyFunc(box.DataId);
-                    if (!string.IsNullOrEmpty(parentDataId))
+                    box.VisualParentId = SystemRoot.Id;
+                }
+                else
+                {
+                    Box parentBox;
+                    if (m_boxesByDataId.TryGetValue(parentDataId, out parentBox))
                     {
-                        Box parentBox;
-                        if (m_boxesByDataId.TryGetValue(parentDataId, out parentBox))
-                        {
-                            box.VisualParentId = parentBox.Id;
-                        }
+                        box.VisualParentId = parentBox.Id;
                     }
                 }
             }
+
+            // now add the root
+            m_boxes.Add(SystemRoot.Id, SystemRoot);
         }
 
         /// <summary>

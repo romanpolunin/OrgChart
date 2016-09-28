@@ -6,66 +6,86 @@ namespace Staffer.OrgChart.Layout.CSharp
     /// <summary>
     /// Applies layout.
     /// </summary>
-    public class LayoutProcessor
+    public static class LayoutProcessor
     {
         /// <summary>
-        /// Runtime state of the layout process, plus all external dependencies.
-        /// Cannot be re-used across multiple layout operations.
+        /// Initializes <paramref name="state"/> and performs all layout operations.
         /// </summary>
-        public LayoutState State { get; }
-
-        /// <summary>
-        /// Ctr.
-        /// </summary>
-        public LayoutProcessor()
+        public static void Apply([NotNull]LayoutState state)
         {
-            State = new LayoutState();
-        }
-
-        /// <summary>
-        /// Initializes <see cref="State"/> and performs all layout operations.
-        /// </summary>
-        public void Apply([NotNull] Diagram diagram, [NotNull] DiagramLayoutSettings diagramLayoutSettings)
-        {
-            // initialize tree structure
-            State.InitVisualTree(Tree<int, Box>.Build(diagram.Boxes.Boxes.Values, x => x.Id, x => x.VisualParentId));
-
-            // apply box sizes
-            foreach (var box in diagram.Boxes.Boxes.Values.Where(x => x.IsDataBound))
+            // verify the root
+            if (state.Diagram.Boxes.SystemRoot == null)
             {
-                box.Frame.Exterior = new Rect(State.SizesFunc(box.DataId));
+                throw new InvalidOperationException("SystemRoot is not initialized on the box container");
             }
 
-            // position boxes vertically
-            State.VisualTree.IterateChildFirst(VerticalLayout);
+            var tree = Tree<int, Box>.Build(state.Diagram.Boxes.Boxes.Values, x => x.Id, x => x.VisualParentId);
 
-            // position boxes horizontally
-            State.VisualTree.IterateChildFirst(HorizontalLayout);
-        }
+            // verify the root
+            if (tree.Roots.Count != 1 || tree.Roots[0].Element.Id != state.Diagram.Boxes.SystemRoot.Id)
+            {
+                throw new Exception("SystemRoot is not on the top of the visual tree");
+            }
 
-        private bool HorizontalLayout(Tree<int, Box>.TreeNode arg)
-        {
-            
-            return true;
-        }
+            // set the tree 
+            tree.UpdateHierarchyStats();
+            state.AttachVisualTree(tree);
 
-        private bool VerticalLayout(Tree<int, Box>.TreeNode arg)
-        {
-            return true;
-        }
+            // apply box sizes
+            foreach (var box in state.Diagram.Boxes.Boxes.Values.Where(x => x.IsDataBound))
+            {
+                box.Frame.Exterior = new Rect(state.SizesFunc(box.DataId));
+            }
 
-        /// <summary>
-        /// Changes coordinates of every <see cref="Frame"/> in the <paramref name="diagram"/> so they satisfy <paramref name="diagramLayoutSettings"/>.
-        /// </summary>
-        public void ApplyToFrames([NotNull] Diagram diagram, [NotNull]DiagramLayoutSettings diagramLayoutSettings)
-        {
-            throw new NotImplementedException();
+            VerticalLayout(state, tree.Roots[0]);
+            HorizontalLayout(state, tree.Roots[0]);
         }
 
         /// <summary>
-        /// Changes coordinates of every <see cref="Connector"/> in the <paramref name="diagram"/> so they satisfy <paramref name="diagramLayoutSettings"/>.
+        /// Re-entrant layout algorithm,
         /// </summary>
-        public void ApplyToConnectors([NotNull] Diagram diagram, [NotNull]DiagramLayoutSettings diagramLayoutSettings)
+        public static void HorizontalLayout(LayoutState state, Tree<int, Box>.TreeNode branchRoot)
+        {
+            if (branchRoot.Children.Count == 0)
+            {
+                // boxes which don't have children do not need any special layout
+                return;
+            }
+
+            var level = state.PushLayoutLevel(branchRoot);
+            try
+            {
+                level.EffectiveLayoutStrategy.ApplyHorizontalLayout(branchRoot, state, level);
+            }
+            finally
+            {
+                state.PopLayoutLevel();
+            }
+        }
+
+        /// <summary>
+        /// Re-entrant layout algorithm.
+        /// </summary>
+        public static void VerticalLayout(LayoutState state, Tree<int, Box>.TreeNode branchRoot)
+        {
+            if (branchRoot.Children.Count == 0)
+            {
+                // boxes which don't have children do not need any special layout
+                return;
+            }
+
+            var level = state.PushLayoutLevel(branchRoot);
+            try
+            {
+                level.EffectiveLayoutStrategy.ApplyVerticalLayout(branchRoot, state, level);
+            }
+            finally
+            {
+                state.PopLayoutLevel();
+            }
+        }
+
+        private static void RouteConnectors([NotNull]LayoutState state)
         {
             throw new NotImplementedException();
         }

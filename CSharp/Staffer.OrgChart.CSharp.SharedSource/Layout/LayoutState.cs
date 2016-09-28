@@ -9,14 +9,17 @@ namespace Staffer.OrgChart.Layout.CSharp
     /// </summary>
     public class LayoutState
     {
-        private struct LayoutLevelState
+        /// <summary>
+        /// State of the layout operation for a particular level of hierarchy.
+        /// </summary>
+        public struct LayoutLevel
         {
             /// <summary>
             /// Root parent for this subtree.
             /// </summary>
-            public readonly Box Root;
+            public readonly Tree<int, Box>.TreeNode BranchRoot;
             /// <summary>
-            /// Layout strategy in effect at this level, derived from <see cref="Root"/> or its parents.
+            /// Layout strategy in effect at this level, derived from <see cref="BranchRoot"/> or its parents.
             /// </summary>
             public readonly LayoutStrategyBase EffectiveLayoutStrategy;
             /// <summary>
@@ -27,10 +30,10 @@ namespace Staffer.OrgChart.Layout.CSharp
             /// <summary>
             /// Ctr.
             /// </summary>
-            public LayoutLevelState([NotNull] Box root, [NotNull] LayoutStrategyBase effectiveLayoutStrategy,
+            public LayoutLevel([NotNull] Tree<int, Box>.TreeNode node, [NotNull] LayoutStrategyBase effectiveLayoutStrategy,
                 [NotNull] Boundary boundary)
             {
-                Root = root;
+                BranchRoot = node;
                 EffectiveLayoutStrategy = effectiveLayoutStrategy;
                 Boundary = boundary;
             }
@@ -41,7 +44,7 @@ namespace Staffer.OrgChart.Layout.CSharp
         /// Every box has a <see cref="Boundary"/> object associated with it, to keep track of corresponding visual tree's edges.
         /// </summary>
         [NotNull]
-        private readonly Stack<LayoutLevelState> m_layoutStack = new Stack<LayoutLevelState>();
+        private readonly Stack<LayoutLevel> m_layoutStack = new Stack<LayoutLevel>();
         /// <summary>
         /// Pool of currently-unused <see cref="Boundary"/> objects. They are added and removed here as they are taken for use in <see cref="m_layoutStack"/>.
         /// </summary>
@@ -55,19 +58,13 @@ namespace Staffer.OrgChart.Layout.CSharp
         public Diagram Diagram { get; }
 
         /// <summary>
-        /// Reference to the container of boxes whose coordinates are being modified in this layout run.
-        /// </summary>
-        [NotNull]
-        public BoxContainer Boxes { get; }
-
-        /// <summary>
         /// Delegate that provides information about sizes of boxes.
         /// First argument is the underlying data item id.
         /// Return value is the size of the corresponding box.
         /// This one should be implemented by the part of rendering engine that performs content layout inside a box.
         /// </summary>
         [NotNull]
-        public Func<string, Size> SizesFunc { get; }
+        public Func<string, Size> SizesFunc { get; set; }
 
         /// <summary>
         /// Visual tree of boxes.
@@ -75,10 +72,19 @@ namespace Staffer.OrgChart.Layout.CSharp
         [CanBeNull]
         public Tree<int, Box> VisualTree { get; private set; }
 
+
         /// <summary>
-        /// Initializes the visual tree.
+        /// Ctr.
         /// </summary>
-        public void InitVisualTree(Tree<int, Box> tree)
+        public LayoutState([NotNull] Diagram diagram)
+        {
+            Diagram = diagram;
+        }
+
+        /// <summary>
+        /// Initializes the visual tree and pool of boundary objects.
+        /// </summary>
+        public void AttachVisualTree(Tree<int, Box> tree)
         {
             if (VisualTree != null)
             {
@@ -96,13 +102,13 @@ namespace Staffer.OrgChart.Layout.CSharp
         /// Push a new box onto the layout stack, thus getting deeper into layout hierarchy.
         /// Automatically allocates a Bondary object from pool.
         /// </summary>
-        public void PushLayoutLevel([NotNull] Box box)
+        public LayoutLevel PushLayoutLevel([NotNull] Tree<int, Box>.TreeNode node)
         {
             LayoutStrategyBase layoutStrategy;
-            if (box.LayoutStrategyId != null)
+            if (node.Element?.LayoutStrategyId != null)
             {
                 // is it explicitly specified?
-                layoutStrategy = Diagram.LayoutSettings.LayoutStrategies[box.LayoutStrategyId];
+                layoutStrategy = Diagram.LayoutSettings.LayoutStrategies[node.Element.LayoutStrategyId];
             }
             else if (m_layoutStack.Count > 0)
             {
@@ -122,7 +128,9 @@ namespace Staffer.OrgChart.Layout.CSharp
             var boundary = m_pooledBoundaries[m_pooledBoundaries.Count - 1];
             m_pooledBoundaries.RemoveAt(m_pooledBoundaries.Count - 1);
 
-            m_layoutStack.Push(new LayoutLevelState(box, layoutStrategy, boundary));
+            var result = new LayoutLevel(node, layoutStrategy, boundary);
+            m_layoutStack.Push(result);
+            return result;
         }
 
         /// <summary>

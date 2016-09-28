@@ -10,7 +10,7 @@
         /// </summary>
         public void MergeFrom([NotNull]Boundary boundary)
         {
-            throw new System.NotImplementedException();
+            //throw new System.NotImplementedException();
         }
     }
 }
