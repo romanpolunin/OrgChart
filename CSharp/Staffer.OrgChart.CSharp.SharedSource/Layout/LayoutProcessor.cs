@@ -34,7 +34,7 @@ namespace Staffer.OrgChart.Layout.CSharp
             // apply box sizes
             foreach (var box in state.Diagram.Boxes.Boxes.Values.Where(x => x.IsDataBound))
             {
-                box.Frame.Exterior = new Rect(state.SizesFunc(box.DataId));
+                box.Frame.Exterior = new Rect(state.BoxSizeFunc(box.DataId));
             }
 
             VerticalLayout(state, tree.Roots[0]);

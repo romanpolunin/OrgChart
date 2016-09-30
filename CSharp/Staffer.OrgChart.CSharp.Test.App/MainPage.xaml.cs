@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -31,28 +32,39 @@ namespace Staffer.OrgChart.CSharp.Test.App
             this.InitializeComponent();
         }
 
+        private TestDataSource m_dataSource;
+        private Diagram m_diagram;
+        private ObservableCollection<NodeViewModel> m_nodesForTreeCollection;
+
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            var dataSource = new TestDataSource();
-            new TestDataGen().GenerateDataItems(dataSource);
+            m_dataSource = new TestDataSource();
+            new TestDataGen().GenerateDataItems(m_dataSource, 10);
 
-            var boxContainer = new BoxContainer(dataSource);
+            var boxContainer = new BoxContainer(m_dataSource);
 
             TestDataGen.GenerateBoxSizes(boxContainer);
 
-            var diagram = new Diagram();
-            diagram.SetBoxes(boxContainer);
+            m_diagram = new Diagram();
+            m_diagram.SetBoxes(boxContainer);
 
-            diagram.LayoutSettings.LayoutStrategies.Add("default", new LinearLayoutStrategy());
-            diagram.LayoutSettings.DefaultLayoutStrategyId = "default";
+            m_diagram.LayoutSettings.LayoutStrategies.Add("default", new LinearLayoutStrategy());
+            m_diagram.LayoutSettings.DefaultLayoutStrategyId = "default";
 
-            var state = new LayoutState(diagram);
-            state.SizesFunc = dataId => boxContainer.BoxesByDataId[dataId].Frame.Exterior.Size;
+            var state = new LayoutState(m_diagram);
+            state.BoxSizeFunc = dataId => boxContainer.BoxesByDataId[dataId].Frame.Exterior.Size;
 
             LayoutProcessor.Apply(state);
 
+            UpdateListView(state.VisualTree);
 
             RenderBoxes(boxContainer, DrawCanvas);
+        }
+
+        private void UpdateListView(Tree<int, Box> visualTree)
+        {
+            m_nodesForTreeCollection = new ObservableCollection<NodeViewModel>(visualTree.Roots.Select(x => new NodeViewModel {Node = x}));
+            LvBoxes.ItemsSource = m_nodesForTreeCollection;
         }
 
         private static void RenderBoxes([NotNull] BoxContainer boxContainer, [NotNull]Canvas drawCanvas)

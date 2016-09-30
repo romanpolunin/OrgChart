@@ -64,7 +64,7 @@ namespace Staffer.OrgChart.Layout.CSharp
         /// This one should be implemented by the part of rendering engine that performs content layout inside a box.
         /// </summary>
         [NotNull]
-        public Func<string, Size> SizesFunc { get; set; }
+        public Func<string, Size> BoxSizeFunc { get; set; }
 
         /// <summary>
         /// Visual tree of boxes.

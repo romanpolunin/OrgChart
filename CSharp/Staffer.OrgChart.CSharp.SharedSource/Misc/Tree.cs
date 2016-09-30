@@ -105,7 +105,8 @@ namespace Staffer.OrgChart.Layout.CSharp
         public List<TreeNode> Roots { get; }
 
         /// <summary>
-        /// Dictionary of all node wrappers identified by element keys.
+        /// Dictionary of all node wrappers.
+        /// Nodes are always one-to-one with elements, so they are identified by element keys.
         /// </summary>
         public Dictionary<TKey, TreeNode> Nodes { get; }
 
@@ -207,7 +208,7 @@ namespace Staffer.OrgChart.Layout.CSharp
                 var parentKey = getParentKeyFunc(node.Element);
 
                 TreeNode parentNode;
-                if (!ReferenceEquals(null, parentKey) && result.Nodes.TryGetValue(parentKey, out parentNode))
+                if (result.Nodes.TryGetValue(parentKey, out parentNode))
                 {
                     node.ParentNode = parentNode;
                     parentNode.Children.Add(node);

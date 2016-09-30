@@ -5,10 +5,28 @@
     xmlns:local="using:Staffer.OrgChart.CSharp.Test.App"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:system="using:System"
+    xmlns:controls="using:WinRTXamlToolkit.Controls"
+    xmlns:data="using:WinRTXamlToolkit.Controls.Data"
     mc:Ignorable="d">
 
-    <StackPanel Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <Button Click="Button_Click">Click me</Button>
+    <StackPanel Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Orientation="Horizontal">
+        <StackPanel>
+            <Button Click="Button_Click">Click me</Button>
+            <controls:TreeView x:Name="LvBoxes">
+                <controls:TreeView.ItemTemplate>
+                    <DataTemplate x:DataType="local:NodeViewModel">
+                        <data:DataTemplateExtensions.Hierarchy>
+                            <data:HierarchicalDataTemplate
+                            ItemsSource="{Binding Children}" />
+                        </data:DataTemplateExtensions.Hierarchy>
+                        <ContentControl>
+                            <TextBlock Text="{Binding Text}" />
+                        </ContentControl>
+                    </DataTemplate>
+                </controls:TreeView.ItemTemplate>
+            </controls:TreeView>
+        </StackPanel>
         <Canvas x:Name="DrawCanvas"></Canvas>
     </StackPanel>
 </Page>

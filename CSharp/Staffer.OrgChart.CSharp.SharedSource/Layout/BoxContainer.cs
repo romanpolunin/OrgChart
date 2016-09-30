@@ -72,11 +72,7 @@ namespace Staffer.OrgChart.Layout.CSharp
                 }
                 else
                 {
-                    Box parentBox;
-                    if (m_boxesByDataId.TryGetValue(parentDataId, out parentBox))
-                    {
-                        box.VisualParentId = parentBox.Id;
-                    }
+                    box.VisualParentId = m_boxesByDataId[parentDataId].Id;
                 }
             }
 

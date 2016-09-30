@@ -44,6 +44,12 @@ namespace Staffer.OrgChart.Layout.CSharp
 
                 child.Element.Frame.Exterior = new Rect(rect.TopLeft.X, top, rect.Size.Width, rect.Size.Height);
             }
+
+            foreach (var child in node.Children)
+            {
+                // re-enter layout algorithm for child branch
+                LayoutProcessor.VerticalLayout(state, child);
+            }
         }
 
         /// <summary>

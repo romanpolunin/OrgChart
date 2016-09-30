@@ -37,8 +37,10 @@ namespace Staffer.OrgChart.CSharp.Test.Layout
             diagram.LayoutSettings.LayoutStrategies.Add("default", new LinearLayoutStrategy());
             diagram.LayoutSettings.DefaultLayoutStrategyId = "default";
 
-            var state = new LayoutState(diagram);
-            state.SizesFunc = dataId => boxContainer.BoxesByDataId[dataId].Frame.Exterior.Size;
+            var state = new LayoutState(diagram)
+            {
+                BoxSizeFunc = dataId => boxContainer.BoxesByDataId[dataId].Frame.Exterior.Size
+            };
 
             LayoutProcessor.Apply(state);
         }
