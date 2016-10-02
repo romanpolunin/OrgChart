@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
@@ -34,12 +35,18 @@ namespace Staffer.OrgChart.CSharp.Test.App
             this.InitializeComponent();
         }
 
+        private AutoResetEvent m_progressWaitHandle = new AutoResetEvent(false);
         private TestDataSource m_dataSource;
         private Diagram m_diagram;
         private ObservableCollection<NodeViewModel> m_nodesForTreeCollection;
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void StartButton_Click(object sender, RoutedEventArgs e)
         {
+            // release any existing progress on background layout
+            m_progressWaitHandle?.Dispose();
+            m_progressWaitHandle = new AutoResetEvent(true);
+
+            // re-create source data, diagram and layout data structures
             m_dataSource = new TestDataSource();
             new TestDataGen().GenerateDataItems(m_dataSource, 10);
 
@@ -74,7 +81,17 @@ namespace Staffer.OrgChart.CSharp.Test.App
             if (args.State.CurrentOperation > LayoutState.Operation.VerticalLayout)
             {
                 Dispatcher.RunAsync(CoreDispatcherPriority.High, () => RenderBoxes(args, DrawCanvas));
-                Task.Delay(500).Wait();
+                // wait until user releases the wait handle
+                try
+                {
+                    m_progressWaitHandle.WaitOne();
+                }
+                catch (ObjectDisposedException)
+                {
+                    // silently exit if this wait handle is not longer valid
+                    args.State.BoundaryChanged -= StateBoundaryChanged;
+                    args.State.OperationChanged -= StateOperationChanged;
+                }
             }
         }
 
@@ -127,7 +144,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
                         X2 = step.X,
                         Y2 = boundary.Top + (i + 1)*args.State.Diagram.LayoutSettings.Resolution,
                         Stroke = new SolidColorBrush(Colors.Red),
-                        Width = 1
+                        StrokeThickness = 2
                     });
 
                 step = boundary.Right[i];
@@ -139,9 +156,14 @@ namespace Staffer.OrgChart.CSharp.Test.App
                         X2 = step.X,
                         Y2 = boundary.Top + (i + 1)*args.State.Diagram.LayoutSettings.Resolution,
                         Stroke = new SolidColorBrush(Colors.Red),
-                        Width = 1
+                        StrokeThickness = 2
                     });
             }
+        }
+
+        private void ProgressButton_Click(object sender, RoutedEventArgs e)
+        {
+            m_progressWaitHandle?.Set();
         }
     }
 }

@@ -202,15 +202,15 @@ namespace Staffer.OrgChart.Layout.CSharp
             {
                 var higherLevel = m_layoutStack.Peek();
 
-                var offense = higherLevel.Boundary.ComputeOverlap(innerLevel.Boundary);
-                if (offense > 0)
+                var overlap = higherLevel.Boundary.ComputeOverlap(innerLevel.Boundary);
+                if (overlap > 0)
                 {
-                    LayoutAlgorithm.FixHorizontalOverlap(this, innerLevel, offense);
+                    LayoutAlgorithm.FixHorizontalOverlap(this, innerLevel, overlap);
                     BoundaryChanged?.Invoke(this, new BoundaryChangedEventArgs(innerLevel.Boundary, innerLevel, this));
                 }
 
                 higherLevel.Boundary.MergeFrom(innerLevel.Boundary);
-                BoundaryChanged?.Invoke(this, new BoundaryChangedEventArgs(innerLevel.Boundary, innerLevel, this));
+                BoundaryChanged?.Invoke(this, new BoundaryChangedEventArgs(higherLevel.Boundary, higherLevel, this));
             }
 
             // return boundary to the pool

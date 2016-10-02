@@ -12,7 +12,8 @@
 
     <StackPanel Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Orientation="Horizontal">
         <StackPanel>
-            <Button Click="Button_Click">Click me</Button>
+            <Button Click="StartButton_Click">Start</Button>
+            <Button Click="ProgressButton_Click">Progress</Button>
             <controls:TreeView x:Name="LvBoxes">
                 <controls:TreeView.ItemTemplate>
                     <DataTemplate x:DataType="local:NodeViewModel">
