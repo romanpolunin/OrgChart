@@ -45,6 +45,9 @@
     <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\Boundary.cs">
       <Link>Layout\Boundary.cs</Link>
     </Compile>
+    <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\BoundaryChangedEventArgs.cs">
+      <Link>Layout\BoundaryChangedEventArgs.cs</Link>
+    </Compile>
     <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\Box.cs">
       <Link>Layout\Box.cs</Link>
     </Compile>
@@ -75,8 +78,8 @@
     <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\IChartDataSource.cs">
       <Link>Layout\IChartDataSource.cs</Link>
     </Compile>
-    <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\LayoutProcessor.cs">
-      <Link>Layout\LayoutProcessor.cs</Link>
+    <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\LayoutAlgorithm.cs">
+      <Link>Layout\LayoutAlgorithm.cs</Link>
     </Compile>
     <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\LayoutState.cs">
       <Link>Layout\LayoutState.cs</Link>

@@ -9,13 +9,13 @@ namespace Staffer.OrgChart.Layout.CSharp
     public class BoxContainer
     {
         private int m_lastBoxId;
-        private readonly Dictionary<int, Box> m_boxes = new Dictionary<int, Box>();
+        private readonly Dictionary<int, Box> m_boxesById = new Dictionary<int, Box>();
         private readonly Dictionary<string, Box> m_boxesByDataId = new Dictionary<string, Box>();
 
         /// <summary>
         /// Access to internal collection of boxes.
         /// </summary>
-        public IReadOnlyDictionary<int, Box> Boxes => m_boxes;
+        public IReadOnlyDictionary<int, Box> BoxesById => m_boxesById;
 
         /// <summary>
         /// Access to internal collection of boxes.
@@ -49,7 +49,7 @@ namespace Staffer.OrgChart.Layout.CSharp
         public void ReloadBoxes([NotNull]IChartDataSource source)
         {
             m_boxesByDataId.Clear();
-            m_boxes.Clear();
+            m_boxesById.Clear();
             m_lastBoxId = 0;
 
             // generate system root box, 
@@ -63,7 +63,7 @@ namespace Staffer.OrgChart.Layout.CSharp
             }
 
             // initialize hierarchy links
-            foreach (var box in m_boxes.Values)
+            foreach (var box in m_boxesById.Values)
             {
                 var parentDataId = string.IsNullOrEmpty(box.DataId) ? null : source.GetParentKeyFunc(box.DataId);
                 if (string.IsNullOrEmpty(parentDataId))
@@ -77,7 +77,7 @@ namespace Staffer.OrgChart.Layout.CSharp
             }
 
             // now add the root
-            m_boxes.Add(SystemRoot.Id, SystemRoot);
+            m_boxesById.Add(SystemRoot.Id, SystemRoot);
         }
 
         /// <summary>
@@ -88,7 +88,7 @@ namespace Staffer.OrgChart.Layout.CSharp
         public Box AddBox(string dataId)
         {
             var box = new Box(NextBoxId(), dataId);
-            m_boxes.Add(box.Id, box);
+            m_boxesById.Add(box.Id, box);
             if (!string.IsNullOrEmpty(dataId))
             {
                 m_boxesByDataId.Add(box.DataId, box);

@@ -11,13 +11,13 @@ namespace Staffer.OrgChart.CSharp.Test.Layout
         public void TestDataSource()
         {
             var dataSource = new TestDataSource();
-            new TestDataGen().GenerateDataItems(dataSource);
+            new TestDataGen().GenerateDataItems(dataSource, 10);
 
             var boxContainer = new BoxContainer(dataSource);
 
-            Assert.AreEqual(dataSource.Items.Count, boxContainer.Boxes.Count);
+            Assert.AreEqual(dataSource.Items.Count, boxContainer.BoxesById.Count);
             var rootCount1 = dataSource.Items.Values.Count(x => x.ParentId == null);
-            var rootCount2 = boxContainer.Boxes.Values.Count(x => x.VisualParentId == 0);
+            var rootCount2 = boxContainer.BoxesById.Values.Count(x => x.VisualParentId == 0);
             Assert.AreEqual(1, rootCount1);
             Assert.AreEqual(1, rootCount2);
         }
@@ -26,7 +26,7 @@ namespace Staffer.OrgChart.CSharp.Test.Layout
         public void TestLayout()
         {
             var dataSource = new TestDataSource();
-            new TestDataGen().GenerateDataItems(dataSource);
+            new TestDataGen().GenerateDataItems(dataSource, 10);
 
             var boxContainer = new BoxContainer(dataSource);
             TestDataGen.GenerateBoxSizes(boxContainer);
@@ -42,7 +42,7 @@ namespace Staffer.OrgChart.CSharp.Test.Layout
                 BoxSizeFunc = dataId => boxContainer.BoxesByDataId[dataId].Frame.Exterior.Size
             };
 
-            LayoutProcessor.Apply(state);
+            LayoutAlgorithm.Apply(state);
         }
     }
 }

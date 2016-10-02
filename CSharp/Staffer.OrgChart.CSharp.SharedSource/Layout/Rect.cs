@@ -1,8 +1,11 @@
-﻿namespace Staffer.OrgChart.Layout.CSharp
+﻿using System.Diagnostics;
+
+namespace Staffer.OrgChart.Layout.CSharp
 {
     /// <summary>
     /// A rectangle in the diagram logical coordinate space.
     /// </summary>
+    [DebuggerDisplay("{TopLeft.X}:{TopLeft.Y}, {Size.Width}x{Size.Height}")]
     public struct Rect
     {
         /// <summary>
@@ -22,7 +25,7 @@
         /// <summary>
         /// Ctr. to help client code prevent naming conflicts with Rect, Point and Size type names.
         /// </summary>
-        public Rect(float x, float y, float w, float h)
+        public Rect(double x, double y, double w, double h)
         {
             TopLeft = new Point(x, y);
             Size = new Size(w, h);

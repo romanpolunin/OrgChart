@@ -4,9 +4,11 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI;
+using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -53,12 +55,27 @@ namespace Staffer.OrgChart.CSharp.Test.App
 
             var state = new LayoutState(m_diagram);
             state.BoxSizeFunc = dataId => boxContainer.BoxesByDataId[dataId].Frame.Exterior.Size;
+            state.BoundaryChanged += StateBoundaryChanged;
+            state.OperationChanged += StateOperationChanged;
 
-            LayoutProcessor.Apply(state);
+            Task.Factory.StartNew(() => { LayoutAlgorithm.Apply(state); });
+        }
 
-            UpdateListView(state.VisualTree);
+        private void StateOperationChanged(object sender, LayoutStateOperationChangedEventArgs args)
+        {
+            if (args.State.CurrentOperation > LayoutState.Operation.Preparing)
+            {
+                Dispatcher.RunAsync(CoreDispatcherPriority.High, () => UpdateListView(args.State.VisualTree));
+            }
+        }
 
-            RenderBoxes(boxContainer, DrawCanvas);
+        private void StateBoundaryChanged(object sender, BoundaryChangedEventArgs args)
+        {
+            if (args.State.CurrentOperation > LayoutState.Operation.VerticalLayout)
+            {
+                Dispatcher.RunAsync(CoreDispatcherPriority.High, () => RenderBoxes(args, DrawCanvas));
+                Task.Delay(500).Wait();
+            }
         }
 
         private void UpdateListView(Tree<int, Box> visualTree)
@@ -67,7 +84,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
             LvBoxes.ItemsSource = m_nodesForTreeCollection;
         }
 
-        private static void RenderBoxes([NotNull] BoxContainer boxContainer, [NotNull]Canvas drawCanvas)
+        private static void RenderBoxes([NotNull] BoundaryChangedEventArgs args, [NotNull]Canvas drawCanvas)
         {
             drawCanvas.Children.Clear();
 
@@ -76,7 +93,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
                 //ScaleY = 0.01
             };
 
-            foreach (var box in boxContainer.Boxes.Values)
+            foreach (var box in args.State.Diagram.Boxes.BoxesById.Values)
             {
                 var frame = box.Frame;
                 drawCanvas.Children.Add(new Rectangle
@@ -88,6 +105,42 @@ namespace Staffer.OrgChart.CSharp.Test.App
                     Stroke = new SolidColorBrush(Colors.Black),
                     StrokeThickness = 1
                 });
+
+                drawCanvas.Children.Add(new TextBlock
+                {
+                    RenderTransform = new TranslateTransform { X = frame.Exterior.TopLeft.X + 5, Y = frame.Exterior.TopLeft.Y + 5 },
+                    Width = frame.Exterior.Size.Width,
+                    Height = frame.Exterior.Size.Height,
+                    Text = box.Id.ToString()
+                });
+            }
+
+            var boundary = args.Boundary;
+            for (var i = 0; i < boundary.Left.Count; i++)
+            {
+                var step = boundary.Left[i];
+                if (step.BoxId != Box.None)
+                    drawCanvas.Children.Add(new Line
+                    {
+                        X1 = step.X,
+                        Y1 = boundary.Top + i*args.State.Diagram.LayoutSettings.Resolution,
+                        X2 = step.X,
+                        Y2 = boundary.Top + (i + 1)*args.State.Diagram.LayoutSettings.Resolution,
+                        Stroke = new SolidColorBrush(Colors.Red),
+                        Width = 1
+                    });
+
+                step = boundary.Right[i];
+                if (step.BoxId != Box.None)
+                    drawCanvas.Children.Add(new Line
+                    {
+                        X1 = step.X,
+                        Y1 = boundary.Top + i*args.State.Diagram.LayoutSettings.Resolution,
+                        X2 = step.X,
+                        Y2 = boundary.Top + (i + 1)*args.State.Diagram.LayoutSettings.Resolution,
+                        Stroke = new SolidColorBrush(Colors.Red),
+                        Width = 1
+                    });
             }
         }
     }

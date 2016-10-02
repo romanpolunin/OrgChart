@@ -8,16 +8,16 @@
         /// <summary>
         /// X-coordinate.
         /// </summary>
-        public readonly float X;
+        public readonly double X;
         /// <summary>
         /// Y-coordinate.
         /// </summary>
-        public readonly float Y;
+        public readonly double Y;
 
         /// <summary>
         /// Ctr.
         /// </summary>
-        public Point(float x, float y)
+        public Point(double x, double y)
         {
             X = x;
             Y = y;
@@ -32,16 +32,16 @@
         /// <summary>
         /// X-coordinate.
         /// </summary>
-        public readonly float Width;
+        public readonly double Width;
         /// <summary>
         /// Y-coordinate.
         /// </summary>
-        public readonly float Height;
+        public readonly double Height;
 
         /// <summary>
         /// Ctr.
         /// </summary>
-        public Size(float w, float h)
+        public Size(double w, double h)
         {
             Width = w;
             Height = h;

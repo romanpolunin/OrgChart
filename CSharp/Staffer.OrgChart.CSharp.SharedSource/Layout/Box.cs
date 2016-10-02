@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Staffer.OrgChart.Layout.CSharp
 {
@@ -7,8 +7,14 @@ namespace Staffer.OrgChart.Layout.CSharp
     /// A box in some <see cref="Diagram"/>. Has <see cref="Frame"/> and layout-related config such as <see cref="LayoutStrategyId"/>.
     /// This is a purely visual object, created based on underlying chart's data.
     /// </summary>
+    [DebuggerDisplay("{Id}, {Frame.Exterior.TopLeft.X}:{Frame.Exterior.TopLeft.Y}, {Frame.Exterior.Size.Width}x{Frame.Exterior.Size.Height}")]
     public class Box
     {
+        /// <summary>
+        /// Value to be used for box identifier to indicate an absent box.
+        /// </summary>
+        public const int None = -1;
+
         /// <summary>
         /// Identifier of this box. Unique in the scope of the parent <see cref="BoxContainer"/>.
         /// </summary>

@@ -110,6 +110,9 @@
     <Compile Include="..\staffer.orgchart.csharp.sharedsource\layout\Boundary.cs">
       <Link>Layout\Boundary.cs</Link>
     </Compile>
+    <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\BoundaryChangedEventArgs.cs">
+      <Link>Layout\BoundaryChangedEventArgs.cs</Link>
+    </Compile>
     <Compile Include="..\staffer.orgchart.csharp.sharedsource\layout\Box.cs">
       <Link>Layout\Box.cs</Link>
     </Compile>
@@ -140,8 +143,8 @@
     <Compile Include="..\staffer.orgchart.csharp.sharedsource\layout\IChartDataSource.cs">
       <Link>Layout\IChartDataSource.cs</Link>
     </Compile>
-    <Compile Include="..\staffer.orgchart.csharp.sharedsource\layout\LayoutProcessor.cs">
-      <Link>Layout\LayoutProcessor.cs</Link>
+    <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\LayoutAlgorithm.cs">
+      <Link>Layout\LayoutAlgorithm.cs</Link>
     </Compile>
     <Compile Include="..\staffer.orgchart.csharp.sharedsource\layout\LayoutState.cs">
       <Link>Layout\LayoutState.cs</Link>

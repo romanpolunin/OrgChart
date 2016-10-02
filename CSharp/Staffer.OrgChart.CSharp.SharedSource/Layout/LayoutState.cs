@@ -10,6 +10,29 @@ namespace Staffer.OrgChart.Layout.CSharp
     public class LayoutState
     {
         /// <summary>
+        /// Current layout operation.
+        /// </summary>
+        public enum Operation
+        {
+            /// <summary>
+            /// No op.
+            /// </summary>
+            Idle,
+            /// <summary>
+            /// Making initial preparations, creating visual tree.
+            /// </summary>
+            Preparing,
+            /// <summary>
+            /// Vertical layout in progress.
+            /// </summary>
+            VerticalLayout,
+            /// <summary>
+            /// Horizontal layout in progress.
+            /// </summary>
+            HorizontalLayout
+        }
+        
+        /// <summary>
         /// State of the layout operation for a particular level of hierarchy.
         /// </summary>
         public struct LayoutLevel
@@ -40,6 +63,19 @@ namespace Staffer.OrgChart.Layout.CSharp
         }
 
         /// <summary>
+        /// Current operation in progress.
+        /// </summary>
+        public Operation CurrentOperation
+        {
+            get { return m_currentOperation; }
+            set
+            {
+                m_currentOperation = value;
+                OperationChanged?.Invoke(this, new LayoutStateOperationChangedEventArgs(this));
+            }
+        }
+
+        /// <summary>
         /// Stack of the layout roots, as algorithm proceeds in depth-first fashion.
         /// Every box has a <see cref="Boundary"/> object associated with it, to keep track of corresponding visual tree's edges.
         /// </summary>
@@ -50,6 +86,8 @@ namespace Staffer.OrgChart.Layout.CSharp
         /// </summary>
         [NotNull]
         private readonly List<Boundary> m_pooledBoundaries = new List<Boundary>();
+
+        private Operation m_currentOperation;
 
         /// <summary>
         /// Reference to the diagram for which a layout is being computed.
@@ -72,6 +110,17 @@ namespace Staffer.OrgChart.Layout.CSharp
         [CanBeNull]
         public Tree<int, Box> VisualTree { get; private set; }
 
+        /// <summary>
+        /// Gets fired when any <see cref="Boundary"/> is modified by methods of this object.
+        /// </summary>
+        [CanBeNull]
+        public event EventHandler<BoundaryChangedEventArgs> BoundaryChanged;
+
+        /// <summary>
+        /// Gets fired when <see cref="CurrentOperation"/> is changed on this object.
+        /// </summary>
+        [CanBeNull]
+        public event EventHandler<LayoutStateOperationChangedEventArgs> OperationChanged;
 
         /// <summary>
         /// Ctr.
@@ -94,7 +143,7 @@ namespace Staffer.OrgChart.Layout.CSharp
             VisualTree = tree;
             for (var i = 0; i < tree.Depth; i++)
             {
-                m_pooledBoundaries.Add(new Boundary());
+                m_pooledBoundaries.Add(new Boundary(Diagram.LayoutSettings.Resolution));
             }
         }
 
@@ -105,7 +154,7 @@ namespace Staffer.OrgChart.Layout.CSharp
         public LayoutLevel PushLayoutLevel([NotNull] Tree<int, Box>.TreeNode node)
         {
             LayoutStrategyBase layoutStrategy;
-            if (node.Element?.LayoutStrategyId != null)
+            if (node.Element.LayoutStrategyId != null)
             {
                 // is it explicitly specified?
                 layoutStrategy = Diagram.LayoutSettings.LayoutStrategies[node.Element.LayoutStrategyId];
@@ -128,8 +177,13 @@ namespace Staffer.OrgChart.Layout.CSharp
             var boundary = m_pooledBoundaries[m_pooledBoundaries.Count - 1];
             m_pooledBoundaries.RemoveAt(m_pooledBoundaries.Count - 1);
 
+            boundary.Prepare(node.Element);
+
             var result = new LayoutLevel(node, layoutStrategy, boundary);
             m_layoutStack.Push(result);
+
+            BoundaryChanged?.Invoke(this, new BoundaryChangedEventArgs(boundary, result, this));
+
             return result;
         }
 
@@ -139,17 +193,28 @@ namespace Staffer.OrgChart.Layout.CSharp
         /// </summary>
         public void PopLayoutLevel()
         {
-            var prevLevel = m_layoutStack.Pop();
+            var innerLevel = m_layoutStack.Pop();
+
+            BoundaryChanged?.Invoke(this, new BoundaryChangedEventArgs(innerLevel.Boundary, innerLevel, this));
 
             // if this was not the root, merge boundaries into current level
             if (m_layoutStack.Count > 0)
             {
-                var currentLevel = m_layoutStack.Peek().Boundary;
-                currentLevel.MergeFrom(prevLevel.Boundary);
+                var higherLevel = m_layoutStack.Peek();
+
+                var offense = higherLevel.Boundary.ComputeOverlap(innerLevel.Boundary);
+                if (offense > 0)
+                {
+                    LayoutAlgorithm.FixHorizontalOverlap(this, innerLevel, offense);
+                    BoundaryChanged?.Invoke(this, new BoundaryChangedEventArgs(innerLevel.Boundary, innerLevel, this));
+                }
+
+                higherLevel.Boundary.MergeFrom(innerLevel.Boundary);
+                BoundaryChanged?.Invoke(this, new BoundaryChangedEventArgs(innerLevel.Boundary, innerLevel, this));
             }
 
             // return boundary to the pool
-            m_pooledBoundaries.Add(prevLevel.Boundary);
+            m_pooledBoundaries.Add(innerLevel.Boundary);
         }
     }
 }
