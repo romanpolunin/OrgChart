@@ -10,10 +10,18 @@
     xmlns:data="using:WinRTXamlToolkit.Controls.Data"
     mc:Ignorable="d">
 
-    <StackPanel Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Orientation="Horizontal">
-        <StackPanel>
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"></RowDefinition>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"></ColumnDefinition>
+            <ColumnDefinition Width="*"></ColumnDefinition>
+        </Grid.ColumnDefinitions>
+        <StackPanel Grid.Row="0" Grid.Column="0">
+            <CheckBox Name="CbInteractiveMode">Incremental</CheckBox>
             <Button Click="StartButton_Click">Start</Button>
-            <Button Click="ProgressButton_Click">Progress</Button>
+            <Button Click="ProgressButton_Click" IsEnabled="{Binding Path=IsChecked, ElementName=CbInteractiveMode}">Progress</Button>
             <controls:TreeView x:Name="LvBoxes">
                 <controls:TreeView.ItemTemplate>
                     <DataTemplate x:DataType="local:NodeViewModel">
@@ -28,6 +36,8 @@
                 </controls:TreeView.ItemTemplate>
             </controls:TreeView>
         </StackPanel>
-        <Canvas x:Name="DrawCanvas"></Canvas>
-    </StackPanel>
+        <ScrollViewer ZoomMode="Enabled" Grid.Row="0" Grid.Column="1" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+            <Canvas x:Name="DrawCanvas"></Canvas>
+        </ScrollViewer>
+    </Grid>
 </Page>

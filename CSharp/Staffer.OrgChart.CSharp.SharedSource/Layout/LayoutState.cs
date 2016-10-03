@@ -29,7 +29,11 @@ namespace Staffer.OrgChart.Layout.CSharp
             /// <summary>
             /// Horizontal layout in progress.
             /// </summary>
-            HorizontalLayout
+            HorizontalLayout,
+            /// <summary>
+            /// All layout operations have been completed.
+            /// </summary>
+            Completed
         }
         
         /// <summary>

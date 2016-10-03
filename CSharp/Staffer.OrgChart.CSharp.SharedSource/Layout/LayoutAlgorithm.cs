@@ -44,6 +44,8 @@ namespace Staffer.OrgChart.Layout.CSharp
 
             state.CurrentOperation = LayoutState.Operation.HorizontalLayout;
             HorizontalLayout(state, tree.Roots[0]);
+
+            state.CurrentOperation = LayoutState.Operation.Completed;
         }
 
         /// <summary>
@@ -111,7 +113,7 @@ namespace Staffer.OrgChart.Layout.CSharp
                 step = boundary.Right[i];
                 if (step.BoxId != Box.None)
                 {
-                    boundary.Left[i] = new Boundary.Step(step.BoxId, step.X + overlap);
+                    boundary.Right[i] = new Boundary.Step(step.BoxId, step.X + overlap);
                 }
             }
         }

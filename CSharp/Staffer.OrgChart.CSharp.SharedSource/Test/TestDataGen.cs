@@ -65,7 +65,7 @@ namespace Staffer.OrgChart.CSharp.Test.Layout
         public static void GenerateBoxSizes([NotNull] BoxContainer boxContainer)
         {
             const int minWidth = 50;
-            const int minHeight = 30;
+            const int minHeight = 50;
 
             var random = new Random(Environment.TickCount);
             foreach (var box in boxContainer.BoxesById.Values)
@@ -76,7 +76,7 @@ namespace Staffer.OrgChart.CSharp.Test.Layout
                 }
                 else
                 {
-                    box.Frame.Exterior = new Rect(new Size(minWidth + random.Next(200), minHeight + random.Next(10)));
+                    box.Frame.Exterior = new Rect(new Size(minWidth + random.Next(40), minHeight + random.Next(10)));
                 }
             }
         }
