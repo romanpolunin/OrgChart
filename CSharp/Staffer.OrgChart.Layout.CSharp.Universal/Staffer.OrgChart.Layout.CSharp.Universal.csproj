@@ -152,6 +152,9 @@
     <Compile Include="..\staffer.orgchart.csharp.sharedsource\layout\LayoutStrategyBase.cs">
       <Link>Layout\LayoutStrategyBase.cs</Link>
     </Compile>
+    <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\LinearLayoutStrategy.cs">
+      <Link>Layout\LinearLayoutStrategy.cs</Link>
+    </Compile>
     <Compile Include="..\staffer.orgchart.csharp.sharedsource\layout\NotNullAttribute.cs">
       <Link>Layout\NotNullAttribute.cs</Link>
     </Compile>

@@ -1,7 +1,16 @@
-﻿using System;
-
-namespace Staffer.OrgChart.Layout.CSharp
+﻿namespace Staffer.OrgChart.Layout.CSharp
 {
+    /// <summary>
+    /// Alignment of a parent box above children nodes.
+    /// </summary>
+    public enum BranchParentAlignment
+    {
+        InvalidValue = 0,
+        Left,
+        Center,
+        Right
+    }
+
     /// <summary>
     /// Base class for all chart layout strategies.
     /// </summary>
@@ -27,56 +36,4 @@ namespace Staffer.OrgChart.Layout.CSharp
         /// </summary>
         public abstract void ApplyHorizontalLayout([NotNull] LayoutState state, LayoutState.LayoutLevel level);
     }
-
-    /// <summary>
-    /// Arranges child boxes in a single line under the parent.
-    /// Can be configured to position parent in the middle, on the left or right from children.
-    /// </summary>
-    public class LinearLayoutStrategy : LayoutStrategyBase
-    {
-        /// <summary>
-        /// Applies layout changes to a given box and its children.
-        /// </summary>
-        public override void ApplyVerticalLayout(LayoutState state, LayoutState.LayoutLevel level)
-        {
-            var node = level.BranchRoot;
-            var top = node.Element.Frame.Exterior.BottomRight.Y + ParentChildSpacing;
-
-            foreach (var child in node.Children)
-            {
-                var rect = child.Element.Frame.Exterior;
-
-                child.Element.Frame.Exterior = new Rect(rect.TopLeft.X, top, rect.Size.Width, rect.Size.Height);
-            }
-
-            foreach (var child in node.Children)
-            {
-                // re-enter layout algorithm for child branch
-                LayoutAlgorithm.VerticalLayout(state, child);
-            }
-        }
-
-        /// <summary>
-        /// Applies layout changes to a given box and its children.
-        /// </summary>
-        public override void ApplyHorizontalLayout(LayoutState state, LayoutState.LayoutLevel level)
-        {
-            var node = level.BranchRoot;
-            //var leftmost = double.MaxValue;
-            //var rightmost = double.MinValue;
-
-            for (var i = 0; i < node.Children.Count; i++)
-            {
-                var child = node.Children[i];
-
-                var rect = child.Element.Frame.Exterior;
-                var leftEdge = i == 0 ? node.Element.Frame.Exterior.TopLeft.X : node.Children[i - 1].Element.Frame.Exterior.BottomRight.X + SiblingSpacing;
-                child.Element.Frame.Exterior = new Rect(new Point(leftEdge, rect.TopLeft.Y), rect.Size);
-
-                // re-enter layout algorithm for child branch
-                LayoutAlgorithm.HorizontalLayout(state, child);
-            }
-        }
-    }
-
 }

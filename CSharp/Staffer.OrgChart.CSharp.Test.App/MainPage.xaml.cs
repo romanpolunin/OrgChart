@@ -48,7 +48,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
 
             // re-create source data, diagram and layout data structures
             m_dataSource = new TestDataSource();
-            new TestDataGen().GenerateDataItems(m_dataSource, 20);
+            new TestDataGen().GenerateDataItems(m_dataSource, 1000);
 
             var boxContainer = new BoxContainer(m_dataSource);
 
@@ -57,7 +57,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
             m_diagram = new Diagram();
             m_diagram.SetBoxes(boxContainer);
 
-            m_diagram.LayoutSettings.LayoutStrategies.Add("default", new LinearLayoutStrategy());
+            m_diagram.LayoutSettings.LayoutStrategies.Add("default", new LinearLayoutStrategy { ParentAlignment = BranchParentAlignment.Center});
             m_diagram.LayoutSettings.DefaultLayoutStrategyId = "default";
 
             var state = new LayoutState(m_diagram);
@@ -70,7 +70,18 @@ namespace Staffer.OrgChart.CSharp.Test.App
 
             state.OperationChanged += StateOperationChanged;
 
-            Task.Factory.StartNew(() => { LayoutAlgorithm.Apply(state); });
+            Task.Factory.StartNew(() =>
+            {
+                try
+                {
+                    LayoutAlgorithm.Apply(state);
+                }
+                finally
+                {
+                    m_progressWaitHandle.Dispose();
+                    m_progressWaitHandle = null;
+                }
+            });
         }
 
         private void StateOperationChanged(object sender, LayoutStateOperationChangedEventArgs args)
@@ -88,7 +99,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
 
         private void StateBoundaryChanged(object sender, BoundaryChangedEventArgs args)
         {
-            if (args.State.CurrentOperation > LayoutState.Operation.VerticalLayout)
+            if (args.State.CurrentOperation > LayoutState.Operation.VerticalLayout && args.State.CurrentOperation < LayoutState.Operation.Completed)
             {
                 Dispatcher.RunAsync(CoreDispatcherPriority.High, () => RenderBoxes(args, DrawCanvas));
                 // wait until user releases the wait handle

@@ -91,8 +91,6 @@ namespace Staffer.OrgChart.Layout.CSharp
                 return;
             }
 
-            overlap += state.Diagram.LayoutSettings.BranchSpacing;
-
             Tree<int, Box>.TreeNode.IterateChildFirst(layoutLevel.BranchRoot,
                 node =>
                 {
@@ -107,13 +105,13 @@ namespace Staffer.OrgChart.Layout.CSharp
                 var step = boundary.Left[i];
                 if (step.BoxId != Box.None)
                 {
-                    boundary.Left[i] = new Boundary.Step(step.BoxId, step.X + overlap);
+                    boundary.Left[i] = new Boundary.Step(step.BoxId, step.ParentBoxId, step.X + overlap);
                 }
 
                 step = boundary.Right[i];
                 if (step.BoxId != Box.None)
                 {
-                    boundary.Right[i] = new Boundary.Step(step.BoxId, step.X + overlap);
+                    boundary.Right[i] = new Boundary.Step(step.BoxId, step.ParentBoxId, step.X + overlap);
                 }
             }
         }

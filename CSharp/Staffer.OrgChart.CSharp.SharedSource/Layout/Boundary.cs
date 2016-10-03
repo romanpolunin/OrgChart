@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices.ComTypes;
 
 namespace Staffer.OrgChart.Layout.CSharp
 {
@@ -21,6 +20,10 @@ namespace Staffer.OrgChart.Layout.CSharp
             /// </summary>
             public readonly int BoxId;
             /// <summary>
+            /// Which <see cref="Box"/> is the parent of <see cref="BoxId"/>.
+            /// </summary>
+            public readonly int ParentBoxId;
+            /// <summary>
             /// Horizontal position of the edge.
             /// </summary>
             public readonly double X;
@@ -28,9 +31,10 @@ namespace Staffer.OrgChart.Layout.CSharp
             /// <summary>
             /// Ctr.
             /// </summary>
-            public Step(int boxId, double x)
+            public Step(int boxId, int parentBoxId, double x)
             {
                 BoxId = boxId;
+                ParentBoxId = parentBoxId;
                 X = x;
             }
         }
@@ -80,6 +84,28 @@ namespace Staffer.OrgChart.Layout.CSharp
         /// <summary>
         /// Resets the edges, use when re-using this object from pool.
         /// </summary>
+        public void PrepareForHorizontalLayout([NotNull]Box box)
+        {
+            Prepare(box);
+
+            var n = (int)Math.Ceiling((Bottom - Top) / Resolution);
+            if (Left.Capacity < n)
+            {
+                Left.Capacity = n;
+                Right.Capacity = n;
+            }
+
+            var rect = box.Frame.Exterior;
+            for (var i = 0; i < n; i++)
+            {
+                Left.Add(new Step(box.Id, box.VisualParentId, rect.TopLeft.X));
+                Right.Add(new Step(box.Id, box.VisualParentId, rect.BottomRight.X));
+            }
+        }
+
+        /// <summary>
+        /// Resets the edges, use when re-using this object from pool.
+        /// </summary>
         public void Prepare([NotNull]Box box)
         {
             Left.Clear();
@@ -89,25 +115,27 @@ namespace Staffer.OrgChart.Layout.CSharp
             var rect = box.Frame.Exterior;
             Top = Math.Floor(rect.TopLeft.Y / Resolution) * Resolution - Resolution;
             Bottom = Top + rect.Size.Height + Resolution;
-
-            var n = (int)Math.Ceiling((Bottom - Top) / Resolution);
-            if (Left.Capacity < n)
-            {
-                Left.Capacity = n;
-                Right.Capacity = n;
-            }
-
-            for (var i = 0; i < n; i++)
-            {
-                Left.Add(new Step(box.Id, rect.TopLeft.X));
-                Right.Add(new Step(box.Id, rect.BottomRight.X));
-            }
         }
 
         /// <summary>
         /// Merges another boundary into this one, potentially pushing its edges out.
         /// </summary>
-        public void MergeFrom([NotNull]Boundary other)
+        public void VerticalMergeFrom([NotNull]Boundary other)
+        {
+            if (Top > other.Top)
+            {
+                throw new ArgumentException("Other cannot be above myself");
+            }
+
+            AssertState();
+
+            Bottom = Math.Max(Bottom, other.Bottom);
+        }
+
+        /// <summary>
+        /// Merges another boundary into this one, potentially pushing its edges out.
+        /// </summary>
+        public void HorizontalMergeFrom([NotNull]Boundary other)
         {
             if (Top > other.Top)
             {
@@ -128,8 +156,8 @@ namespace Staffer.OrgChart.Layout.CSharp
 
             while (Left.Count < n)
             {
-                Left.Add(new Step(Box.None, double.MaxValue));
-                Right.Add(new Step(Box.None, double.MinValue));
+                Left.Add(new Step(Box.None, Box.None, double.MaxValue));
+                Right.Add(new Step(Box.None, Box.None, double.MinValue));
             }
 
             int myFrom, myTo;
@@ -177,7 +205,7 @@ namespace Staffer.OrgChart.Layout.CSharp
         /// <summary>
         /// Returns max horizontal overlap between myself and <paramref name="other"/>.
         /// </summary>
-        public double ComputeOverlap([NotNull]Boundary other)
+        public double ComputeOverlap([NotNull]Boundary other, double siblingSpacing, double branchSpacing)
         {
             AssertState();
 
@@ -210,7 +238,10 @@ namespace Staffer.OrgChart.Layout.CSharp
             var offense = 0.0d;
             for (int i = myFrom, k = theirFrom; i < myTo && k < theirTo; i++, k++)
             {
-                var diff = Right[i].X - other.Left[k].X;
+                var siblings = Right[i].ParentBoxId == other.Left[k].ParentBoxId;
+                var desiredSpacing = siblings ? siblingSpacing : branchSpacing;
+
+                var diff = Right[i].X + desiredSpacing - other.Left[k].X;
                 if (diff > offense)
                 {
                     offense = diff;

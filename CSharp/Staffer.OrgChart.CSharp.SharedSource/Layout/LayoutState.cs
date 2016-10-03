@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Windows.Devices.Usb;
 
 namespace Staffer.OrgChart.Layout.CSharp
 {
@@ -181,7 +182,18 @@ namespace Staffer.OrgChart.Layout.CSharp
             var boundary = m_pooledBoundaries[m_pooledBoundaries.Count - 1];
             m_pooledBoundaries.RemoveAt(m_pooledBoundaries.Count - 1);
 
-            boundary.Prepare(node.Element);
+            switch (CurrentOperation)
+            {
+                case Operation.VerticalLayout:
+                    boundary.Prepare(node.Element);
+                    break;
+
+                case Operation.HorizontalLayout:
+                    boundary.PrepareForHorizontalLayout(node.Element);
+                    break;
+                default:
+                    throw new InvalidOperationException("This operation can only be invoked when performing vertical or horizontal layouts");
+            }
 
             var result = new LayoutLevel(node, layoutStrategy, boundary);
             m_layoutStack.Push(result);
@@ -206,14 +218,32 @@ namespace Staffer.OrgChart.Layout.CSharp
             {
                 var higherLevel = m_layoutStack.Peek();
 
-                var overlap = higherLevel.Boundary.ComputeOverlap(innerLevel.Boundary);
-                if (overlap > 0)
+                switch (CurrentOperation)
                 {
-                    LayoutAlgorithm.FixHorizontalOverlap(this, innerLevel, overlap);
-                    BoundaryChanged?.Invoke(this, new BoundaryChangedEventArgs(innerLevel.Boundary, innerLevel, this));
+                    case Operation.VerticalLayout:
+                        higherLevel.Boundary.VerticalMergeFrom(innerLevel.Boundary);
+                        break;
+
+                    case Operation.HorizontalLayout:
+                    {
+                        var overlap = higherLevel.Boundary.ComputeOverlap(innerLevel.Boundary,
+                            higherLevel.EffectiveLayoutStrategy.SiblingSpacing, Diagram.LayoutSettings.BranchSpacing);
+
+                        if (overlap > 0)
+                        {
+                            LayoutAlgorithm.FixHorizontalOverlap(this, innerLevel, overlap);
+                            BoundaryChanged?.Invoke(this,
+                                new BoundaryChangedEventArgs(innerLevel.Boundary, innerLevel, this));
+                        }
+
+                        higherLevel.Boundary.HorizontalMergeFrom(innerLevel.Boundary);
+                    }
+                        break;
+                    default:
+                        throw new InvalidOperationException(
+                            "This operation can only be invoked when performing vertical or horizontal layouts");
                 }
 
-                higherLevel.Boundary.MergeFrom(innerLevel.Boundary);
                 BoundaryChanged?.Invoke(this, new BoundaryChangedEventArgs(higherLevel.Boundary, higherLevel, this));
             }
 
