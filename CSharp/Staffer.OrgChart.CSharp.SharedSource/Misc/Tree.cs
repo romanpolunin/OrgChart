@@ -40,7 +40,7 @@ namespace Staffer.OrgChart.Layout.CSharp
             /// <summary>
             /// Ctr.
             /// </summary>
-            public TreeNode(TValue element)
+            public TreeNode([NotNull]TValue element)
             {
                 Element = element;
                 Children = new List<TreeNode>();
@@ -48,53 +48,45 @@ namespace Staffer.OrgChart.Layout.CSharp
 
             /// <summary>
             /// Goes through all elements depth-first. Applies <paramref name="func"/> to all children recursively, then to the parent.
+            /// If <paramref name="func"/> returns <c>false</c>, it will stop entire processing.
             /// </summary>
             /// <param name="root">Current node</param>
             /// <param name="func">A func to evaluate on <paramref name="root"/> and its children. Whenever it returns false, iteration stops</param>
             /// <returns>True if <paramref name="func"/> never returned <c>false</c></returns>
-            public static bool IterateChildFirst(TreeNode root, [NotNull] Func<TreeNode, bool> func)
+            public static bool IterateChildFirst([NotNull]TreeNode root, [NotNull] Func<TreeNode, bool> func)
             {
-                if (root != null)
+                foreach (var child in root.Children)
                 {
-                    foreach (var child in root.Children)
-                    {
-                        if (!IterateChildFirst(child, func))
-                        {
-                            return false;
-                        }
-                    }
-
-                    if (!func(root))
+                    if (!IterateChildFirst(child, func))
                     {
                         return false;
                     }
                 }
-                return true;
+
+                return func(root);
             }
 
             /// <summary>
             /// Goes through all elements depth-first. Applies <paramref name="func"/> to the parent first, then to all children recursively.
+            /// In this mode, children at each level decide for themselves whether they want to iterate further down, e.g. <paramref name="func"/> can cut-off a branch.
             /// </summary>
             /// <param name="root">Current node</param>
             /// <param name="func">A func to evaluate on <paramref name="root"/> and its children. Whenever it returns false, iteration stops</param>
             /// <returns>True if <paramref name="func"/> never returned <c>false</c></returns>
-            public static bool IterateParentFirst(TreeNode root, [NotNull] Func<TreeNode, bool> func)
+            public static bool IterateParentFirst([NotNull]TreeNode root, [NotNull] Func<TreeNode, bool> func)
             {
-                if (root != null)
+                if (!func(root))
                 {
-                    if (!func(root))
-                    {
-                        return false;
-                    }
-
-                    foreach (var child in root.Children)
-                    {
-                        if (!IterateParentFirst(child, func))
-                        {
-                            return false;
-                        }
-                    }
+                    return false;
                 }
+
+                foreach (var child in root.Children)
+                {
+                    // Ignore returned value, in this mode children at each level 
+                    // decide for themselves whether they want to iterate further down.
+                    IterateParentFirst(child, func);
+                }
+
                 return true;
             }
         }
@@ -138,6 +130,7 @@ namespace Staffer.OrgChart.Layout.CSharp
 
         /// <summary>
         /// Goes through all elements depth-first. Applies <paramref name="func"/> to all children recursively, then to the parent.
+        /// If <paramref name="func"/> returns <c>false</c>, it will stop entire processing.
         /// </summary>
         /// <param name="func">A func to evaluate on items of <see cref="Roots"/> and their children. Whenever it returns false, iteration stops</param>
         /// <returns>True if <paramref name="func"/> never returned <c>false</c></returns>
@@ -156,6 +149,7 @@ namespace Staffer.OrgChart.Layout.CSharp
 
         /// <summary>
         /// Goes through all elements depth-first. Applies <paramref name="func"/> to the parent first, then to all children recursively.
+        /// In this mode children at each level decide for themselves whether they want to iterate further down, e.g. <paramref name="func"/> can cut-off a branch.
         /// </summary>
         /// <param name="func">A func to evaluate on items of <see cref="Roots"/> and their children. Whenever it returns false, iteration stops</param>
         /// <returns>True if <paramref name="func"/> never returned <c>false</c></returns>
@@ -163,10 +157,9 @@ namespace Staffer.OrgChart.Layout.CSharp
         {
             foreach (var root in Roots)
             {
-                if (!TreeNode.IterateParentFirst(root, func))
-                {
-                    return false;
-                }
+                // Ignore returned value, in this mode children at each level 
+                // decide for themselves whether they want to iterate further down.
+                TreeNode.IterateParentFirst(root, func);
             }
 
             return true;

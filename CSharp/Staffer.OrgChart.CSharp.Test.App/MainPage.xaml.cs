@@ -48,14 +48,13 @@ namespace Staffer.OrgChart.CSharp.Test.App
 
             // re-create source data, diagram and layout data structures
             m_dataSource = new TestDataSource();
-            new TestDataGen().GenerateDataItems(m_dataSource, 1000);
+            new TestDataGen().GenerateDataItems(m_dataSource, 20);
 
             var boxContainer = new BoxContainer(m_dataSource);
 
             TestDataGen.GenerateBoxSizes(boxContainer);
 
-            m_diagram = new Diagram();
-            m_diagram.SetBoxes(boxContainer);
+            m_diagram = new Diagram {Boxes = boxContainer};
 
             m_diagram.LayoutSettings.LayoutStrategies.Add("default", new LinearLayoutStrategy { ParentAlignment = BranchParentAlignment.Center});
             m_diagram.LayoutSettings.DefaultLayoutStrategyId = "default";
@@ -84,6 +83,37 @@ namespace Staffer.OrgChart.CSharp.Test.App
             });
         }
 
+        private void QuickLayout()
+        {
+            var state = new LayoutState(m_diagram);
+            state.BoxSizeFunc = dataId => m_diagram.Boxes.BoxesByDataId[dataId].Frame.Exterior.Size;
+
+            LayoutAlgorithm.Apply(state);
+
+            RenderBoxes(m_diagram.VisualTree, DrawCanvas);
+        }
+
+        private void ProgressButton_Click(object sender, RoutedEventArgs e)
+        {
+            m_progressWaitHandle?.Set();
+        }
+
+        private void ScrollerView_OnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+        {
+            m_diagram.Boxes.BoxesById[5].IsCollapsed = !m_diagram.Boxes.BoxesById[5].IsCollapsed;
+            RenderBoxes(m_diagram.VisualTree, DrawCanvas);
+        }
+
+        private void BoxOnDoubleTapped(object sender, DoubleTappedRoutedEventArgs doubleTappedRoutedEventArgs)
+        {
+            var shape = (Rectangle) sender;
+            var box = (Box) shape.DataContext;
+            box.IsCollapsed = !box.IsCollapsed;
+            QuickLayout();
+        }
+
+        #region Layout Event Handlers
+
         private void StateOperationChanged(object sender, LayoutStateOperationChangedEventArgs args)
         {
             if (args.State.CurrentOperation > LayoutState.Operation.Preparing)
@@ -93,7 +123,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
 
             if (args.State.CurrentOperation == LayoutState.Operation.Completed)
             {
-                Dispatcher.RunAsync(CoreDispatcherPriority.High, () => RenderBoxes(args, DrawCanvas));
+                Dispatcher.RunAsync(CoreDispatcherPriority.High, () => RenderBoxes(args.State.VisualTree, DrawCanvas));
             }
         }
 
@@ -101,7 +131,12 @@ namespace Staffer.OrgChart.CSharp.Test.App
         {
             if (args.State.CurrentOperation > LayoutState.Operation.VerticalLayout && args.State.CurrentOperation < LayoutState.Operation.Completed)
             {
-                Dispatcher.RunAsync(CoreDispatcherPriority.High, () => RenderBoxes(args, DrawCanvas));
+                Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
+                {
+                    RenderBoxes(args.State.VisualTree, DrawCanvas);
+                    RenderCurrentBoundary(args, DrawCanvas);
+                });
+
                 // wait until user releases the wait handle
                 try
                 {
@@ -116,16 +151,18 @@ namespace Staffer.OrgChart.CSharp.Test.App
             }
         }
 
+        #endregion
+
+        #region Rendering
+
         private void UpdateListView(Tree<int, Box> visualTree)
         {
             m_nodesForTreeCollection = new ObservableCollection<NodeViewModel>(visualTree.Roots.Select(x => new NodeViewModel {Node = x}));
             LvBoxes.ItemsSource = m_nodesForTreeCollection;
         }
 
-        private static void RenderBoxes([NotNull] BoundaryChangedEventArgs args, [NotNull]Canvas drawCanvas)
+        private static void RenderCurrentBoundary([NotNull] BoundaryChangedEventArgs args, [NotNull]Canvas drawCanvas)
         {
-            RenderBoxes(args.State, drawCanvas);
-
             var boundary = args.Boundary;
             for (var i = 0; i < boundary.Left.Count; i++)
             {
@@ -155,12 +192,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
             }
         }
 
-        private static void RenderBoxes([NotNull] LayoutStateOperationChangedEventArgs args, [NotNull]Canvas drawCanvas)
-        {
-            RenderBoxes(args.State, drawCanvas);
-        }
-
-        private static void RenderBoxes(LayoutState state, Canvas drawCanvas)
+        private void RenderBoxes(Tree<int, Box> visualTree, Canvas drawCanvas)
         {
             drawCanvas.Children.Clear();
 
@@ -169,8 +201,9 @@ namespace Staffer.OrgChart.CSharp.Test.App
             var top = double.MaxValue;
             var bottom = double.MinValue;
 
-            foreach (var box in state.Diagram.Boxes.BoxesById.Values)
+            Func<Tree<int, Box>.TreeNode, bool> renderBox = node =>
             {
+                var box = node.Element;
                 var frame = box.Frame;
 
                 left = Math.Min(left, frame.Exterior.TopLeft.X);
@@ -178,56 +211,58 @@ namespace Staffer.OrgChart.CSharp.Test.App
                 top = Math.Min(top, frame.Exterior.TopLeft.Y);
                 bottom = Math.Max(bottom, frame.Exterior.BottomRight.Y);
 
-                drawCanvas.Children.Add(new Rectangle
+                var visualRectangle = new Rectangle
                 {
-                    RenderTransform = new TranslateTransform {X = frame.Exterior.TopLeft.X, Y = frame.Exterior.TopLeft.Y},
+                    RenderTransform =
+                        new TranslateTransform {X = frame.Exterior.TopLeft.X, Y = frame.Exterior.TopLeft.Y},
                     Width = frame.Exterior.Size.Width,
                     Height = frame.Exterior.Size.Height,
                     Fill = new SolidColorBrush(box.IsAutoGenerated ? Colors.DarkGray : Colors.Beige),
                     Stroke = new SolidColorBrush(Colors.Black),
-                    StrokeThickness = 1
-                });
+                    StrokeThickness = 1,
+                    DataContext = box
+                };
+
+                visualRectangle.DoubleTapped += BoxOnDoubleTapped;
+
+                drawCanvas.Children.Add(visualRectangle);
 
                 drawCanvas.Children.Add(new TextBlock
                 {
                     RenderTransform =
                         new TranslateTransform {X = frame.Exterior.TopLeft.X + 5, Y = frame.Exterior.TopLeft.Y + 5},
-                    Width = frame.Exterior.Size.Width,
-                    Height = frame.Exterior.Size.Height,
-                    Text = box.Id.ToString()
+                    Width = double.NaN,
+                    Height = double.NaN,
+                    Text = box.Id.ToString(),
+                    IsHitTestVisible = false
                 });
-            }
+
+                if (!box.IsCollapsed && box.Frame.Connector != null)
+                {
+                    foreach (var edge in box.Frame.Connector.Segments)
+                    {
+                        drawCanvas.Children.Add(new Line
+                        {
+                            X1 = edge.From.X,
+                            Y1 = edge.From.Y,
+                            X2 = edge.To.X,
+                            Y2 = edge.To.Y,
+                            Stroke = new SolidColorBrush(Colors.Black),
+                            StrokeThickness = 1,
+                            IsHitTestVisible = false
+                        });
+                    }
+                }
+
+                return !box.IsCollapsed;
+            };
+
+            visualTree.IterateParentFirst(renderBox);
 
             drawCanvas.Width = right - left;
             drawCanvas.Height = bottom - top;
         }
 
-        private void ProgressButton_Click(object sender, RoutedEventArgs e)
-        {
-            m_progressWaitHandle?.Set();
-        }
-
-        private void DrawCanvas_OnPointerWheelChanged(object sender, PointerRoutedEventArgs e)
-        {
-            var delta = e.GetCurrentPoint(DrawCanvas).Properties.MouseWheelDelta;
-
-            var transform = DrawCanvas.RenderTransform as ScaleTransform;
-            double scale;
-            if (transform == null)
-            {
-                transform = new ScaleTransform();
-                scale = 1.0;
-            }
-            else
-            {
-                scale = transform.ScaleX;
-            }
-
-            scale += delta / 500.0;
-            transform.ScaleX = scale;
-            transform.ScaleY = scale;
-
-            DrawCanvas.RenderTransform = transform;
-        }
+        #endregion
     }
 }

@@ -3,7 +3,7 @@
     /// <summary>
     /// An edge in the diagram logical coordinate space.
     /// </summary>
-    public class Edge
+    public struct Edge
     {
         /// <summary>
         /// Coordinates of the beginning.

@@ -45,6 +45,11 @@ namespace Staffer.OrgChart.Layout.CSharp
             state.CurrentOperation = LayoutState.Operation.HorizontalLayout;
             HorizontalLayout(state, tree.Roots[0]);
 
+            state.CurrentOperation = LayoutState.Operation.ConnectorsLayout;
+            RouteConnectors(state);
+
+            state.Diagram.VisualTree = state.VisualTree;
+
             state.CurrentOperation = LayoutState.Operation.Completed;
         }
 
@@ -53,6 +58,11 @@ namespace Staffer.OrgChart.Layout.CSharp
         /// </summary>
         public static void HorizontalLayout([NotNull]LayoutState state, [NotNull]Tree<int, Box>.TreeNode branchRoot)
         {
+            if (branchRoot.Element.IsCollapsed)
+            {
+                return;
+            }
+
             var level = state.PushLayoutLevel(branchRoot);
             try
             {
@@ -69,6 +79,11 @@ namespace Staffer.OrgChart.Layout.CSharp
         /// </summary>
         public static void VerticalLayout([NotNull]LayoutState state, [NotNull]Tree<int, Box>.TreeNode branchRoot)
         {
+            if (branchRoot.Element.IsCollapsed)
+            {
+                return;
+            }
+
             var level = state.PushLayoutLevel(branchRoot);
             try
             {
@@ -118,7 +133,17 @@ namespace Staffer.OrgChart.Layout.CSharp
 
         private static void RouteConnectors([NotNull]LayoutState state)
         {
-            throw new NotImplementedException();
+            state.VisualTree.IterateParentFirst(node =>
+            {
+                if (node.Element.IsCollapsed)
+                {
+                    return false;
+                }
+
+                var layoutStrategy = state.RequireLayoutStrategy(node);
+                layoutStrategy.RouteConnectors(state, node);
+                return true;
+            });
         }
     }
 }

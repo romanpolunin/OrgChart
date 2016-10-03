@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace Staffer.OrgChart.Layout.CSharp
@@ -49,6 +50,12 @@ namespace Staffer.OrgChart.Layout.CSharp
         /// </summary>
         [NotNull] public readonly Frame Frame;
 
+        /// <summary>
+        /// When <c>true</c>, layout operations can be applied only to this box.
+        /// Its children will not participate in the layout.
+        /// </summary>
+        public bool IsCollapsed;
+        
         /// <summary>
         /// <c>true</c> is this box is bound to some data item.
         /// </summary>

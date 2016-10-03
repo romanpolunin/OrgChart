@@ -36,7 +36,7 @@
                 </controls:TreeView.ItemTemplate>
             </controls:TreeView>
         </StackPanel>
-        <ScrollViewer ZoomMode="Enabled" Grid.Row="0" Grid.Column="1" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer Name="ScrollViewer" ZoomMode="Enabled" Grid.Row="0" Grid.Column="1" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" DoubleTapped="ScrollerView_OnDoubleTapped">
             <Canvas x:Name="DrawCanvas"></Canvas>
         </ScrollViewer>
     </Grid>

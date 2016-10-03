@@ -32,7 +32,7 @@ namespace Staffer.OrgChart.CSharp.Test.Layout
             TestDataGen.GenerateBoxSizes(boxContainer);
 
             var diagram = new Diagram();
-            diagram.SetBoxes(boxContainer);
+            diagram.Boxes = boxContainer;
 
             diagram.LayoutSettings.LayoutStrategies.Add("default", new LinearLayoutStrategy());
             diagram.LayoutSettings.DefaultLayoutStrategyId = "default";

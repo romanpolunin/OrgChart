@@ -5,15 +5,39 @@
     /// </summary>
     public class Diagram
     {
+        private Tree<int, Box> m_visualTree;
+        private BoxContainer m_boxes;
+
         /// <summary>
         /// Diagram layout styles.
         /// </summary>
         public DiagramLayoutSettings LayoutSettings { get; }
 
         /// <summary>
-        /// All boxes.
+        /// All boxes. If modified, resets <see cref="VisualTree"/> to <c>null</c>.
         /// </summary>
-        public BoxContainer Boxes { get; private set; }
+        public BoxContainer Boxes
+        {
+            get { return m_boxes; }
+            set
+            {
+                m_visualTree = null;
+                m_boxes = value;
+            }
+        }
+
+        /// <summary>
+        /// Visual tree of boxes.
+        /// </summary>
+        [CanBeNull]
+        public Tree<int, Box> VisualTree
+        {
+            get { return m_visualTree; }
+            set
+            {
+                m_visualTree = value;
+            }
+        }
 
         /// <summary>
         /// Ctr.
@@ -21,14 +45,6 @@
         public Diagram()
         {
             LayoutSettings = new DiagramLayoutSettings();
-        }
-
-        /// <summary>
-        /// Sets collection of boxes in this diagram.
-        /// </summary>
-        public void SetBoxes([NotNull] BoxContainer boxContainer)
-        {
-            Boxes = boxContainer;
         }
     }
 }

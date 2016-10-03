@@ -1,7 +1,9 @@
-﻿namespace Staffer.OrgChart.Layout.CSharp
+﻿using System;
+
+namespace Staffer.OrgChart.Layout.CSharp
 {
     /// <summary>
-    /// A connector between two <see cref="Frame"/> objects.
+    /// A visual connector between two or more objects.
     /// </summary>
     public class Connector
     {
@@ -10,6 +12,10 @@
         /// </summary>
         public Connector([NotNull]Edge[] segments)
         {
+            if (segments.Length == 0)
+            {
+                throw new ArgumentException("Need at least one segment", nameof(Segments));
+            }
             Segments = segments;
         }
 

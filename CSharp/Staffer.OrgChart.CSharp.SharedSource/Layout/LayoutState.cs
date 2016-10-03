@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using Windows.Devices.Usb;
+using System.Diagnostics;
 
 namespace Staffer.OrgChart.Layout.CSharp
 {
@@ -32,14 +32,19 @@ namespace Staffer.OrgChart.Layout.CSharp
             /// </summary>
             HorizontalLayout,
             /// <summary>
+            /// Creating and positioning connectors.
+            /// </summary>
+            ConnectorsLayout,
+            /// <summary>
             /// All layout operations have been completed.
             /// </summary>
             Completed
         }
-        
+
         /// <summary>
         /// State of the layout operation for a particular level of hierarchy.
         /// </summary>
+        [DebuggerDisplay("{BranchRoot.Element.Id}, {Boundary.Top}..{Boundary.Bottom}, {EffectiveLayoutStrategy.GetType().Name}")]
         public struct LayoutLevel
         {
             /// <summary>
@@ -158,21 +163,7 @@ namespace Staffer.OrgChart.Layout.CSharp
         /// </summary>
         public LayoutLevel PushLayoutLevel([NotNull] Tree<int, Box>.TreeNode node)
         {
-            LayoutStrategyBase layoutStrategy;
-            if (node.Element.LayoutStrategyId != null)
-            {
-                // is it explicitly specified?
-                layoutStrategy = Diagram.LayoutSettings.LayoutStrategies[node.Element.LayoutStrategyId];
-            }
-            else if (m_layoutStack.Count > 0)
-            {
-                // can we inherit it from previous level?
-                layoutStrategy = m_layoutStack.Peek().EffectiveLayoutStrategy;
-            }
-            else
-            {
-                layoutStrategy = Diagram.LayoutSettings.RequireDefaultLayoutStrategy();
-            }
+            var layoutStrategy = RequireLayoutStrategy(node);
 
             if (m_pooledBoundaries.Count == 0)
             {
@@ -201,6 +192,30 @@ namespace Staffer.OrgChart.Layout.CSharp
             BoundaryChanged?.Invoke(this, new BoundaryChangedEventArgs(boundary, result, this));
 
             return result;
+        }
+
+        /// <summary>
+        /// Determines an instance of <see cref="LayoutStrategyBase"/> to be used for layout of this node.
+        /// </summary>
+        [NotNull]
+        public LayoutStrategyBase RequireLayoutStrategy(Tree<int, Box>.TreeNode node)
+        {
+            LayoutStrategyBase layoutStrategy;
+            if (node.Element.LayoutStrategyId != null)
+            {
+                // is it explicitly specified?
+                layoutStrategy = Diagram.LayoutSettings.LayoutStrategies[node.Element.LayoutStrategyId];
+            }
+            else if (m_layoutStack.Count > 0)
+            {
+                // can we inherit it from previous level?
+                layoutStrategy = m_layoutStack.Peek().EffectiveLayoutStrategy;
+            }
+            else
+            {
+                layoutStrategy = Diagram.LayoutSettings.RequireDefaultLayoutStrategy();
+            }
+            return layoutStrategy;
         }
 
         /// <summary>
