@@ -48,7 +48,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
 
             // re-create source data, diagram and layout data structures
             m_dataSource = new TestDataSource();
-            new TestDataGen().GenerateDataItems(m_dataSource, 20);
+            new TestDataGen().GenerateDataItems(m_dataSource, 1000);
 
             var boxContainer = new BoxContainer(m_dataSource);
 

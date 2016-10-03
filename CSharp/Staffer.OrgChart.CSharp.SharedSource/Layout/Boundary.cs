@@ -44,15 +44,15 @@ namespace Staffer.OrgChart.Layout.CSharp
         /// Each individual element in <see cref="Left"/> and <see cref="Right"/> collections
         /// represents one step of the boundary.
         /// </summary>
-        public readonly double Resolution;
+        public double Resolution { get; }
         /// <summary>
         /// Top edge.
         /// </summary>
-        public double Top;
+        public double Top { get; private set; }
         /// <summary>
         /// Bottom edge.
         /// </summary>
-        public double Bottom;
+        public double Bottom { get; private set; }
 
         /// <summary>
         /// Left edge. Each element is a point in some logical space.
@@ -135,7 +135,7 @@ namespace Staffer.OrgChart.Layout.CSharp
         /// <summary>
         /// Merges another boundary into this one, potentially pushing its edges out.
         /// </summary>
-        public void HorizontalMergeFrom([NotNull]Boundary other)
+        public void MergeFrom([NotNull]Boundary other)
         {
             if (Top > other.Top)
             {
@@ -188,12 +188,12 @@ namespace Staffer.OrgChart.Layout.CSharp
             // process overlapping part only
             for (int i = myFrom, k = theirFrom; i < myTo && k < theirTo; i++, k++)
             {
-                if (Left[i].X > other.Left[k].X)
+                if (other.Left[k].BoxId != Box.None && Left[i].X > other.Left[k].X)
                 {
                     Left[i] = other.Left[k];
                 }
 
-                if (Right[i].X < other.Right[k].X)
+                if (other.Right[k].BoxId != Box.None && Right[i].X < other.Right[k].X)
                 {
                     Right[i] = other.Right[k];
                 }
@@ -252,44 +252,26 @@ namespace Staffer.OrgChart.Layout.CSharp
         }
 
         /// <summary>
-        /// Returns max horizontal overlap between myself and <paramref name="rect"/>.
+        /// Re-initializes left and right edges based on actual coordinates of boxes.
         /// </summary>
-        public double ComputeOverlap(Rect rect)
+        public void ReloadFromBranch([NotNull]IReadOnlyDictionary<int, Box> boxes)
         {
             AssertState();
 
-            int myFrom, myTo;
-
-            if (Top > rect.TopLeft.Y)
+            for (var i = 0; i < Left.Count; i++)
             {
-                myFrom = 0;
-            }
-            else
-            {
-                myFrom = (int) Math.Floor((rect.TopLeft.Y - Top)/Resolution);
-            }
-
-            if (Bottom > rect.BottomRight.Y)
-            {
-                myTo = Left.Count - (int)Math.Ceiling((rect.BottomRight.Y - Bottom)/Resolution);
-            }
-            else
-            {
-                myTo = Left.Count - 1;
-            }
-
-            // process overlapping part only
-            var offense = 0.0d;
-            for (var i = myFrom; i <= myTo; i++)
-            {
-                var diff = Right[i].X - rect.TopLeft.X;
-                if (diff > offense)
+                var left = Left[i];
+                if (left.BoxId != Box.None)
                 {
-                    offense = diff;
+                    Left[i] = new Step(left.BoxId, left.ParentBoxId, boxes[left.BoxId].Frame.Exterior.TopLeft.X);
+                }
+
+                var right = Right[i];
+                if (right.BoxId != Box.None)
+                {
+                    Right[i] = new Step(right.BoxId, right.ParentBoxId, boxes[right.BoxId].Frame.Exterior.BottomRight.X);
                 }
             }
-
-            return offense;
         }
 
         private void AssertState()

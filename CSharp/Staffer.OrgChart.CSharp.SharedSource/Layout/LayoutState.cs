@@ -246,12 +246,12 @@ namespace Staffer.OrgChart.Layout.CSharp
 
                         if (overlap > 0)
                         {
-                            LayoutAlgorithm.FixHorizontalOverlap(this, innerLevel, overlap);
+                            LayoutAlgorithm.MoveBranch(this, innerLevel, overlap);
                             BoundaryChanged?.Invoke(this,
                                 new BoundaryChangedEventArgs(innerLevel.Boundary, innerLevel, this));
                         }
 
-                        higherLevel.Boundary.HorizontalMergeFrom(innerLevel.Boundary);
+                        higherLevel.Boundary.MergeFrom(innerLevel.Boundary);
                     }
                         break;
                     default:
