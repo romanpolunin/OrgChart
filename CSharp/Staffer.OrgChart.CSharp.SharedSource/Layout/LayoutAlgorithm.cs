@@ -33,10 +33,13 @@ namespace Staffer.OrgChart.Layout.CSharp
             tree.UpdateHierarchyStats();
             state.AttachVisualTree(tree);
 
-            // apply box sizes
-            foreach (var box in state.Diagram.Boxes.BoxesById.Values.Where(x => x.IsDataBound))
+            if (state.BoxSizeFunc != null)
             {
-                box.Frame.Exterior = new Rect(state.BoxSizeFunc(box.DataId));
+                // apply box sizes
+                foreach (var box in state.Diagram.Boxes.BoxesById.Values.Where(x => x.IsDataBound))
+                {
+                    box.Frame.Exterior = new Rect(state.BoxSizeFunc(box.DataId));
+                }
             }
 
             state.CurrentOperation = LayoutState.Operation.VerticalLayout;
@@ -97,6 +100,11 @@ namespace Staffer.OrgChart.Layout.CSharp
 
         private static void RouteConnectors([NotNull]LayoutState state)
         {
+            if (state.VisualTree == null)
+            {
+                throw new InvalidOperationException("Visual tree not attached");
+            }
+
             state.VisualTree.IterateParentFirst(node =>
             {
                 if (node.Element.IsCollapsed)
@@ -117,7 +125,7 @@ namespace Staffer.OrgChart.Layout.CSharp
         /// <summary>
         /// Moves a given branch horizontally, except its root box.
         /// </summary>
-        public static void MoveChildrenOnly([NotNull]LayoutState state, [NotNull] LayoutState.LayoutLevel layoutLevel, double offset)
+        public static void MoveChildrenOnly([NotNull]LayoutState state, LayoutState.LayoutLevel layoutLevel, double offset)
         {
             foreach (var child in layoutLevel.BranchRoot.Children)
             {
@@ -137,7 +145,7 @@ namespace Staffer.OrgChart.Layout.CSharp
         /// <summary>
         /// Moves a given branch horizontally, including its root box.
         /// </summary>
-        public static void MoveBranch([NotNull]LayoutState state, [NotNull] LayoutState.LayoutLevel layoutLevel, double offset)
+        public static void MoveBranch([NotNull]LayoutState state, LayoutState.LayoutLevel layoutLevel, double offset)
         {
             Tree<int, Box>.TreeNode.IterateChildFirst(layoutLevel.BranchRoot,
                 node =>

@@ -43,6 +43,8 @@ namespace Staffer.OrgChart.CSharp.Test.Layout
             };
 
             LayoutAlgorithm.Apply(state);
+
+            Assert.AreEqual(5, state.VisualTree.Depth);
         }
     }
 }

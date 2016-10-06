@@ -223,20 +223,21 @@ namespace Staffer.OrgChart.Layout.CSharp
         public void UpdateHierarchyStats()
         {
             // initialize hierarchy level numbers
+            Depth = 0;
             IterateParentFirst(x =>
             {
                 if (x.ParentNode != null)
                 {
                     x.Level = x.ParentNode.Level + 1;
+                    Depth = Math.Max(1 + x.Level, Depth);
                 }
                 else
                 {
                     x.Level = 0;
+                    Depth = 1;
                 }
                 return true;
             });
-
-            Depth = 1 + Nodes.Values.Max(x => x.Level);
         }
     }
 }

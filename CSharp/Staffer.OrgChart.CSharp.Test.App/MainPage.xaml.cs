@@ -60,7 +60,6 @@ namespace Staffer.OrgChart.CSharp.Test.App
             m_diagram.LayoutSettings.DefaultLayoutStrategyId = "default";
 
             var state = new LayoutState(m_diagram);
-            state.BoxSizeFunc = dataId => boxContainer.BoxesByDataId[dataId].Frame.Exterior.Size;
 
             if (CbInteractiveMode.IsChecked.GetValueOrDefault(false))
             {

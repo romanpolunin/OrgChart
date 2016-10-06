@@ -111,7 +111,7 @@ namespace Staffer.OrgChart.Layout.CSharp
         /// Return value is the size of the corresponding box.
         /// This one should be implemented by the part of rendering engine that performs content layout inside a box.
         /// </summary>
-        [NotNull]
+        [CanBeNull]
         public Func<string, Size> BoxSizeFunc { get; set; }
 
         /// <summary>
