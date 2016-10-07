@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Staffer.OrgChart.Layout.CSharp
+namespace Staffer.OrgChart.Layout
 {
     /// <summary>
     /// A visual connector between two or more objects.

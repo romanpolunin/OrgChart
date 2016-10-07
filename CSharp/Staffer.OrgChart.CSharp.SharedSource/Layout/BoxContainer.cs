@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Staffer.OrgChart.Layout.CSharp
+namespace Staffer.OrgChart.Layout
 {
     /// <summary>
     /// A container for a bunch of <see cref="Box"/> objects. Defines scope of uniqueness of their identifiers.

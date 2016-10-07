@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using Staffer.OrgChart.Layout.CSharp;
+using Staffer.OrgChart.Layout;
 
-namespace Staffer.OrgChart.CSharp.Test.Layout
+namespace Staffer.OrgChart.Test
 {
     /// <summary>
     /// Test data source implementation.

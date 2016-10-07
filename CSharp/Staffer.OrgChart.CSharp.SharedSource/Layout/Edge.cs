@@ -1,4 +1,4 @@
-﻿namespace Staffer.OrgChart.Layout.CSharp
+﻿namespace Staffer.OrgChart.Layout
 {
     /// <summary>
     /// An edge in the diagram logical coordinate space.

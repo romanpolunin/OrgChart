@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using Staffer.OrgChart.Layout;
 
-namespace Staffer.OrgChart.Layout.CSharp
+namespace Staffer.OrgChart.Misc
 {
     /// <summary>
     /// General-purpose tree builder.

@@ -1,4 +1,6 @@
-﻿namespace Staffer.OrgChart.Layout.CSharp
+﻿using Staffer.OrgChart.Misc;
+
+namespace Staffer.OrgChart.Layout
 {
     /// <summary>
     /// Arranges child boxes in a single line under the parent.

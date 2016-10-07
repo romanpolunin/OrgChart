@@ -1,7 +1,7 @@
-﻿using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Linq;
-using Staffer.OrgChart.Layout.CSharp;
+using Staffer.OrgChart.Layout;
+using Staffer.OrgChart.Misc;
 
 namespace Staffer.OrgChart.CSharp.Test.App
 {

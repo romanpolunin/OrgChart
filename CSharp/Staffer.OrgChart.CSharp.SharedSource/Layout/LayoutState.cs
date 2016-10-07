@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Staffer.OrgChart.Misc;
 
-namespace Staffer.OrgChart.Layout.CSharp
+namespace Staffer.OrgChart.Layout
 {
     /// <summary>
     /// Holds state for a particular layout operation, 

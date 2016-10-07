@@ -1,4 +1,7 @@
-﻿namespace Staffer.OrgChart.Layout.CSharp
+﻿using System;
+using Staffer.OrgChart.Misc;
+
+namespace Staffer.OrgChart.Layout
 {
     /// <summary>
     /// A collection of <see cref="Frame"/> and <see cref="Connector"/> objects.

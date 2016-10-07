@@ -1,4 +1,6 @@
-﻿namespace Staffer.OrgChart.Layout.CSharp
+﻿using Staffer.OrgChart.Misc;
+
+namespace Staffer.OrgChart.Layout
 {
     /// <summary>
     /// Alignment of a parent box above children nodes.

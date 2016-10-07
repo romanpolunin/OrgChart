@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Staffer.OrgChart.Layout.CSharp
+namespace Staffer.OrgChart.Layout
 {
     /// <summary>
     /// TODO: remove.

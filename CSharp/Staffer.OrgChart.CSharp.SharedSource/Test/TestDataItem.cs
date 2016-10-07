@@ -1,7 +1,7 @@
 ﻿using System;
-using Staffer.OrgChart.Layout.CSharp;
+using Staffer.OrgChart.Layout;
 
-namespace Staffer.OrgChart.CSharp.Test.Layout
+namespace Staffer.OrgChart.Test
 {
     /// <summary>
     /// A data item wrapper.

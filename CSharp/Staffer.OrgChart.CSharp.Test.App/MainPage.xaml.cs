@@ -18,8 +18,9 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using Windows.UI.Xaml.Shapes;
-using Staffer.OrgChart.CSharp.Test.Layout;
-using Staffer.OrgChart.Layout.CSharp;
+using Staffer.OrgChart.Layout;
+using Staffer.OrgChart.Misc;
+using Staffer.OrgChart.Test;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -48,7 +49,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
 
             // re-create source data, diagram and layout data structures
             m_dataSource = new TestDataSource();
-            new TestDataGen().GenerateDataItems(m_dataSource, 1000);
+            new TestDataGen().GenerateDataItems(m_dataSource, 500);
 
             var boxContainer = new BoxContainer(m_dataSource);
 
@@ -195,22 +196,26 @@ namespace Staffer.OrgChart.CSharp.Test.App
         {
             drawCanvas.Children.Clear();
 
-            var left = double.MaxValue;
-            var right = double.MinValue;
-            var top = double.MaxValue;
-            var bottom = double.MinValue;
+            var boundingRect = LayoutAlgorithm.ComputeVisualBoundingRect(visualTree);
+            drawCanvas.Width = boundingRect.Size.Width;
+            drawCanvas.Height = boundingRect.Size.Height;
+            drawCanvas.RenderTransform = new TranslateTransform
+            {
+                X = -boundingRect.TopLeft.X,
+                Y = -boundingRect.TopLeft.Y
+            };
 
             Func<Tree<int, Box>.TreeNode, bool> renderBox = node =>
             {
+                if (node.Level == 0)
+                {
+                    return true;
+                }
+
                 var box = node.Element;
                 var frame = box.Frame;
 
-                left = Math.Min(left, frame.Exterior.TopLeft.X);
-                right = Math.Max(right, frame.Exterior.BottomRight.X);
-                top = Math.Min(top, frame.Exterior.TopLeft.Y);
-                bottom = Math.Max(bottom, frame.Exterior.BottomRight.Y);
-
-                var visualRectangle = new Rectangle
+                var boxRectangle = new Rectangle
                 {
                     RenderTransform =
                         new TranslateTransform {X = frame.Exterior.TopLeft.X, Y = frame.Exterior.TopLeft.Y},
@@ -222,9 +227,9 @@ namespace Staffer.OrgChart.CSharp.Test.App
                     DataContext = box
                 };
 
-                visualRectangle.DoubleTapped += BoxOnDoubleTapped;
+                boxRectangle.DoubleTapped += BoxOnDoubleTapped;
 
-                drawCanvas.Children.Add(visualRectangle);
+                drawCanvas.Children.Add(boxRectangle);
 
                 drawCanvas.Children.Add(new TextBlock
                 {
@@ -257,9 +262,6 @@ namespace Staffer.OrgChart.CSharp.Test.App
             };
 
             visualTree.IterateParentFirst(renderBox);
-
-            drawCanvas.Width = right - left;
-            drawCanvas.Height = bottom - top;
         }
 
         #endregion

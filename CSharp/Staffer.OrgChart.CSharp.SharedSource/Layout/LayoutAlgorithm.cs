@@ -1,13 +1,53 @@
 ﻿using System;
 using System.Linq;
+using Staffer.OrgChart.Misc;
 
-namespace Staffer.OrgChart.Layout.CSharp
+namespace Staffer.OrgChart.Layout
 {
     /// <summary>
     /// Applies layout.
     /// </summary>
     public static class LayoutAlgorithm
     {
+        /// <summary>
+        /// Computes bounding rectangle in diagram space.
+        /// Useful for rendering the chart, as boxes frequently go into negative side horizontally, and have a special root box on top - all of those should not be accounted for.
+        /// </summary>
+        public static Rect ComputeVisualBoundingRect([NotNull]Tree<int, Box> visualTree)
+        {
+            if (visualTree.Roots.Count != 1)
+            {
+                throw new InvalidOperationException("Visual tree is not initialized");
+            }
+
+            var left = double.MaxValue;
+            var right = double.MinValue;
+            var top = double.MaxValue;
+            var bottom = double.MinValue;
+
+            visualTree.IterateParentFirst(node =>
+            {
+                if (node.Level == 0)
+                {
+                    // system root is not accounted for
+                    return true;
+                }
+
+                var box = node.Element;
+                var topleft = box.Frame.Exterior.TopLeft;
+                left = Math.Min(left, topleft.X);
+                top = Math.Min(top, topleft.Y);
+
+                var bottomRight = box.Frame.Exterior.BottomRight;
+                right = Math.Max(right, bottomRight.X);
+                bottom = Math.Max(bottom, bottomRight.Y);
+
+                return !box.IsCollapsed;
+            });
+
+            return new Rect(left, top, right - left, bottom - top);
+        }
+
         /// <summary>
         /// Initializes <paramref name="state"/> and performs all layout operations.
         /// </summary>

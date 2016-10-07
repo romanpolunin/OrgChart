@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace Staffer.OrgChart.Layout.CSharp
+namespace Staffer.OrgChart.Layout
 {
     /// <summary>
     /// A rectangle in the diagram logical coordinate space.

@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Staffer.OrgChart.Layout.CSharp;
+using Staffer.OrgChart.Layout;
+using Staffer.OrgChart.Test;
 
 namespace Staffer.OrgChart.CSharp.Test.Layout
 {

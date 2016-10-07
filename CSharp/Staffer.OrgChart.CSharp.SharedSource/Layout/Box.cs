@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace Staffer.OrgChart.Layout.CSharp
+namespace Staffer.OrgChart.Layout
 {
     /// <summary>
     /// A box in some <see cref="Diagram"/>. Has <see cref="Frame"/> and layout-related config such as <see cref="LayoutStrategyId"/>.
@@ -19,12 +18,12 @@ namespace Staffer.OrgChart.Layout.CSharp
         /// <summary>
         /// Identifier of this box. Unique in the scope of the parent <see cref="BoxContainer"/>.
         /// </summary>
-        [NotNull] public readonly int Id;
+        public readonly int Id;
         /// <summary>
         /// Identifier of the parent box, usually driven by corresponding relationship between underlying data items.
         /// This parent is for the visual connections and arrangement of children boxes with their parents.
         /// </summary>
-        [NotNull] public int VisualParentId;
+        public int VisualParentId;
 
         /// <summary>
         /// Identifier of some externally provided data item for which this box was created.
