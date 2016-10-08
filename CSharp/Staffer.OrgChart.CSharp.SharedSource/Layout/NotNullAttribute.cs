@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Staffer.OrgChart.Layout
+namespace Staffer.OrgChart.Annotations
 {
     /// <summary>
     /// TODO: remove.

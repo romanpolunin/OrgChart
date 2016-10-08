@@ -20,7 +20,9 @@
         </Grid.ColumnDefinitions>
         <StackPanel Grid.Row="0" Grid.Column="0">
             <CheckBox Name="CbInteractiveMode">Incremental</CheckBox>
-            <Button Click="StartButton_Click">Start</Button>
+            <Button Click="StartWithFullReset_Click">Start With Full Reset</Button>
+            <Button Click="StartCurrent_Click">Start Current</Button>
+            <Button Click="StartWithCleanLayout_Click">Start With Clean Layout</Button>
             <Button Click="ProgressButton_Click" IsEnabled="{Binding Path=IsChecked, ElementName=CbInteractiveMode}">Progress</Button>
             <controls:TreeView x:Name="LvBoxes">
                 <controls:TreeView.ItemTemplate>
@@ -36,7 +38,7 @@
                 </controls:TreeView.ItemTemplate>
             </controls:TreeView>
         </StackPanel>
-        <ScrollViewer Name="ScrollViewer" ZoomMode="Enabled" Grid.Row="0" Grid.Column="1" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" DoubleTapped="ScrollerView_OnDoubleTapped">
+        <ScrollViewer Name="ScrollViewer" ZoomMode="Enabled" Grid.Row="0" Grid.Column="1" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
             <Canvas x:Name="DrawCanvas"></Canvas>
         </ScrollViewer>
     </Grid>

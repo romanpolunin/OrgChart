@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Staffer.OrgChart.Annotations;
 
 namespace Staffer.OrgChart.Layout
 {

@@ -1,23 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.UI;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Navigation;
 using Windows.UI.Xaml.Shapes;
+using Staffer.OrgChart.Annotations;
 using Staffer.OrgChart.Layout;
 using Staffer.OrgChart.Misc;
 using Staffer.OrgChart.Test;
@@ -41,27 +34,50 @@ namespace Staffer.OrgChart.CSharp.Test.App
         private Diagram m_diagram;
         private ObservableCollection<NodeViewModel> m_nodesForTreeCollection;
 
-        private void StartButton_Click(object sender, RoutedEventArgs e)
+        private void StartWithFullReset_Click(object sender, RoutedEventArgs e)
+        {
+            StartLayout(true, true);
+        }
+
+        public void StartCurrent_Click(object sender, RoutedEventArgs e)
+        {
+            StartLayout(false, false);
+        }
+
+        public void StartWithCleanLayout_Click(object sender, RoutedEventArgs e)
+        {
+            StartLayout(false, true);
+        }
+
+        private void StartLayout(bool resetBoxes, bool resetLayout)
         {
             // release any existing progress on background layout
             m_progressWaitHandle?.Dispose();
             m_progressWaitHandle = new AutoResetEvent(true);
 
             // re-create source data, diagram and layout data structures
-            m_dataSource = new TestDataSource();
-            new TestDataGen().GenerateDataItems(m_dataSource, 150);
+            if (resetBoxes)
+            {
+                m_dataSource = new TestDataSource();
+                new TestDataGen().GenerateDataItems(m_dataSource, 800);
 
-            var boxContainer = new BoxContainer(m_dataSource);
+                var boxContainer = new BoxContainer(m_dataSource);
 
-            TestDataGen.GenerateBoxSizes(boxContainer);
+                TestDataGen.GenerateBoxSizes(boxContainer);
 
-            m_diagram = new Diagram {Boxes = boxContainer};
+                m_diagram = new Diagram {Boxes = boxContainer};
 
-            m_diagram.LayoutSettings.LayoutStrategies.Add("default", new LinearLayoutStrategy { ParentAlignment = BranchParentAlignment.Center});
-            m_diagram.LayoutSettings.DefaultLayoutStrategyId = "default";
+                m_diagram.LayoutSettings.LayoutStrategies.Add("default",
+                    new LinearLayoutStrategy {ParentAlignment = BranchParentAlignment.Center});
+                m_diagram.LayoutSettings.DefaultLayoutStrategyId = "default";
+            }
+            else if (resetLayout)
+            {
+                LayoutAlgorithm.ResetBoxPositions(m_diagram);
+            }
 
             var state = new LayoutState(m_diagram);
-
+            
             if (CbInteractiveMode.IsChecked.GetValueOrDefault(false))
             {
                 state.BoundaryChanged += StateBoundaryChanged;
@@ -83,6 +99,11 @@ namespace Staffer.OrgChart.CSharp.Test.App
             });
         }
 
+        private void ProgressButton_Click(object sender, RoutedEventArgs e)
+        {
+            m_progressWaitHandle?.Set();
+        }
+
         private void QuickLayout()
         {
             var state = new LayoutState(m_diagram);
@@ -90,17 +111,6 @@ namespace Staffer.OrgChart.CSharp.Test.App
 
             LayoutAlgorithm.Apply(state);
 
-            RenderBoxes(m_diagram.VisualTree, DrawCanvas);
-        }
-
-        private void ProgressButton_Click(object sender, RoutedEventArgs e)
-        {
-            m_progressWaitHandle?.Set();
-        }
-
-        private void ScrollerView_OnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
-        {
-            m_diagram.Boxes.BoxesById[5].IsCollapsed = !m_diagram.Boxes.BoxesById[5].IsCollapsed;
             RenderBoxes(m_diagram.VisualTree, DrawCanvas);
         }
 
@@ -155,7 +165,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
 
         #region Rendering
 
-        private void UpdateListView(Tree<int, Box> visualTree)
+        private void UpdateListView(Tree<int, Box, NodeLayoutInfo> visualTree)
         {
             m_nodesForTreeCollection = new ObservableCollection<NodeViewModel>(visualTree.Roots.Select(x => new NodeViewModel {Node = x}));
             LvBoxes.ItemsSource = m_nodesForTreeCollection;
@@ -198,7 +208,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
             }
         }
 
-        private void RenderBoxes(Tree<int, Box> visualTree, Canvas drawCanvas)
+        private void RenderBoxes(Tree<int, Box, NodeLayoutInfo> visualTree, Canvas drawCanvas)
         {
             drawCanvas.Children.Clear();
 
@@ -211,7 +221,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
                 Y = -boundingRect.Top
             };
 
-            Func<Tree<int, Box>.TreeNode, bool> renderBox = node =>
+            Func<Tree<int, Box, NodeLayoutInfo>.TreeNode, bool> renderBox = node =>
             {
                 if (node.Level == 0)
                 {
@@ -219,6 +229,11 @@ namespace Staffer.OrgChart.CSharp.Test.App
                 }
 
                 var box = node.Element;
+                if (!box.AffectsLayout)
+                {
+                    return true;
+                }
+
                 var frame = box.Frame;
 
                 var boxRectangle = new Rectangle
@@ -227,8 +242,8 @@ namespace Staffer.OrgChart.CSharp.Test.App
                         new TranslateTransform {X = frame.Exterior.Left, Y = frame.Exterior.Top},
                     Width = frame.Exterior.Size.Width,
                     Height = frame.Exterior.Size.Height,
-                    Fill = new SolidColorBrush(box.IsAutoGenerated ? Colors.DarkGray : Colors.Beige),
-                    Stroke = new SolidColorBrush(Colors.Black),
+                    Fill = new SolidColorBrush(box.IsSpecial ? Colors.DarkGray : box.IsCollapsed ? Colors.BurlyWood : Colors.Beige) {Opacity = box.IsSpecial ? 0.1 : 1},
+                    Stroke = new SolidColorBrush(box.IsSpecial ? Colors.DarkGray : Colors.Black) { Opacity = box.IsSpecial ? 0.1 : 1 },
                     StrokeThickness = 1,
                     DataContext = box
                 };
@@ -243,7 +258,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
                         new TranslateTransform {X = frame.Exterior.Left + 5, Y = frame.Exterior.Top + 5},
                     Width = double.NaN,
                     Height = double.NaN,
-                    Text = box.Id.ToString(),
+                    Text = box.IsSpecial ? "" : box.Id.ToString(),
                     IsHitTestVisible = false
                 });
 
@@ -264,10 +279,10 @@ namespace Staffer.OrgChart.CSharp.Test.App
                     }
                 }
 
-                return !box.IsCollapsed;
+                return true;
             };
 
-            visualTree.IterateParentFirst(renderBox);
+            visualTree.IterateChildFirst(renderBox);
         }
 
         #endregion

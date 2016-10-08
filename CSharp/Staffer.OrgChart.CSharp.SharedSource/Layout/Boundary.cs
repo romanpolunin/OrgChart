@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Staffer.OrgChart.Annotations;
 using Staffer.OrgChart.Misc;
 
 namespace Staffer.OrgChart.Layout
@@ -106,10 +107,15 @@ namespace Staffer.OrgChart.Layout
 
             // adjust the top edge to fit the logical grid
             var rect = box.Frame.Exterior;
-            var top = Math.Floor(rect.Top / Resolution) * Resolution - Resolution;
-            var bottom = top + rect.Size.Height + Resolution;
 
-            BoundingRect = new Rect(rect.Left, top, rect.Size.Width, bottom - top);
+            BoundingRect = AdjustRect(rect);
+        }
+
+        private Rect AdjustRect(Rect rect)
+        {
+            var top = Math.Floor(rect.Top / Resolution) * Resolution;
+            var bottom = Math.Ceiling(rect.Bottom / Resolution) * Resolution;
+            return new Rect(rect.Left, top, rect.Size.Width, bottom - top);
         }
 
         /// <summary>
@@ -151,8 +157,8 @@ namespace Staffer.OrgChart.Layout
                 Right.Add(new Step(null, double.MinValue));
             }
 
-            int myFrom, myTo;
-            int theirFrom, theirTo;
+            int myFrom;
+            int theirFrom;
 
             if (BoundingRect.Top > other.BoundingRect.Top)
             {
@@ -165,19 +171,8 @@ namespace Staffer.OrgChart.Layout
                 theirFrom = 0;
             }
 
-            if (BoundingRect.Bottom > other.BoundingRect.Bottom)
-            {
-                myTo = Left.Count - (int)Math.Ceiling((other.BoundingRect.Bottom - BoundingRect.Bottom) /Resolution);
-                theirTo = other.Left.Count - 1;
-            }
-            else
-            {
-                myTo = Left.Count - 1;
-                theirTo = other.Left.Count - (int)Math.Ceiling((BoundingRect.Bottom - other.BoundingRect.Bottom) /Resolution);
-            }
-
-            // process overlapping part only
-            for (int i = myFrom, k = theirFrom; i < myTo && k < theirTo; i++, k++)
+            // from top - take overlapping part only, but go as for down as possible
+            for (int i = myFrom, k = theirFrom; k < other.Left.Count; i++, k++)
             {
                 if (other.Left[k].Box != null && Left[i].X > other.Left[k].X)
                 {
@@ -191,6 +186,70 @@ namespace Staffer.OrgChart.Layout
             }
 
             BoundingRect += other.BoundingRect;
+        }
+
+        /// <summary>
+        /// Merges a box into this one, potentially pushing its edges out.
+        /// </summary>
+        public void MergeFrom([NotNull]Box box)
+        {
+            var rect = box.Frame.Exterior;
+            if (BoundingRect.Top > rect.Top)
+            {
+                throw new ArgumentException("Other cannot be above myself");
+            }
+
+            // Adjust number of steps in left and right edges
+            var newHeight = Math.Max(BoundingRect.Bottom, rect.Bottom) - Math.Min(BoundingRect.Top, rect.Top);
+
+            var n = (int)Math.Ceiling(newHeight / Resolution);
+            if (Left.Capacity < n)
+            {
+                Left.Capacity = n;
+                Right.Capacity = n;
+            }
+
+            while (Left.Count < n)
+            {
+                Left.Add(new Step(null, double.MaxValue));
+                Right.Add(new Step(null, double.MinValue));
+            }
+
+            int myFrom, myTo;
+
+            if (BoundingRect.Top > rect.Top)
+            {
+                myFrom = 0;
+            }
+            else
+            {
+                myFrom = (int)Math.Floor((rect.Top - BoundingRect.Top)/Resolution);
+            }
+
+            if (BoundingRect.Bottom > rect.Bottom)
+            {
+                myTo = Left.Count - (int)Math.Ceiling((BoundingRect.Bottom - rect.Bottom) /Resolution);
+            }
+            else
+            {
+                myTo = Left.Count;
+            }
+
+            // process overlapping part only
+            for (var i = myFrom; i < myTo; i++)
+            {
+                if (Left[i].X > rect.Left)
+                {
+                    Left[i] = new Step(box, rect.Left);
+                }
+
+                if (Right[i].X < rect.Right)
+                {
+                    Right[i] = new Step(box, rect.Right);
+                }
+            }
+
+            BoundingRect += AdjustRect(rect);
         }
 
         /// <summary>
@@ -243,7 +302,7 @@ namespace Staffer.OrgChart.Layout
         /// <summary>
         /// Re-initializes left and right edges based on actual coordinates of boxes.
         /// </summary>
-        public void ReloadFromBranch(Tree<int, Box>.TreeNode branchRoot, [NotNull] IReadOnlyDictionary<int, Box> boxes)
+        public void ReloadFromBranch(Tree<int, Box, NodeLayoutInfo>.TreeNode branchRoot, [NotNull] IReadOnlyDictionary<int, Box> boxes)
         {
             var leftmost = double.MaxValue;
             var rightmost = double.MinValue;

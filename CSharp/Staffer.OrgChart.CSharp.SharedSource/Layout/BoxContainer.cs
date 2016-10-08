@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Staffer.OrgChart.Annotations;
 
 namespace Staffer.OrgChart.Layout
 {
@@ -54,19 +55,15 @@ namespace Staffer.OrgChart.Layout
 
             // generate system root box, 
             // but don't add it to the list of boxes yet
-            SystemRoot = new Box(++m_lastBoxId, true);
+            SystemRoot = Box.Special(++m_lastBoxId, Box.None);
             
             // add data-bound boxes
             foreach (var dataId in source.AllDataItemIds)
             {
-                AddBox(dataId);
-            }
+                var parentDataId = string.IsNullOrEmpty(dataId) ? null : source.GetParentKeyFunc(dataId);
+                var visualParentId = string.IsNullOrEmpty(parentDataId) ? SystemRoot.Id : m_boxesByDataId[parentDataId].Id;
 
-            // initialize hierarchy links
-            foreach (var box in m_boxesById.Values)
-            {
-                var parentDataId = string.IsNullOrEmpty(box.DataId) ? null : source.GetParentKeyFunc(box.DataId);
-                box.VisualParentId = string.IsNullOrEmpty(parentDataId) ? SystemRoot.Id : m_boxesByDataId[parentDataId].Id;
+                AddBox(dataId, visualParentId);
             }
 
             // now add the root
@@ -77,10 +74,11 @@ namespace Staffer.OrgChart.Layout
         /// Creates a new <see cref="Box"/> and adds it to collection.
         /// </summary>
         /// <param name="dataId">Optional identifier of the external data item</param>
+        /// <param name="visualParentId"></param>
         /// <returns>Newly created Box object</returns>
-        public Box AddBox(string dataId)
+        public Box AddBox(string dataId, int visualParentId)
         {
-            var box = new Box(NextBoxId(), dataId);
+            var box = new Box(dataId, NextBoxId(), visualParentId);
             m_boxesById.Add(box.Id, box);
             if (!string.IsNullOrEmpty(dataId))
             {

@@ -124,7 +124,7 @@
       <Link>Layout\BoxContainer.cs</Link>
     </Compile>
     <Compile Include="..\staffer.orgchart.csharp.sharedsource\layout\CanBeNullAttribute.cs">
-      <Link>Layout\CanBeNullAttribute.cs</Link>
+      <Link>Annotations\CanBeNullAttribute.cs</Link>
     </Compile>
     <Compile Include="..\staffer.orgchart.csharp.sharedsource\layout\Connector.cs">
       <Link>Layout\Connector.cs</Link>
@@ -163,7 +163,7 @@
       <Link>Layout\MultiLineHangerLayoutStrategy.cs</Link>
     </Compile>
     <Compile Include="..\staffer.orgchart.csharp.sharedsource\layout\NotNullAttribute.cs">
-      <Link>Layout\NotNullAttribute.cs</Link>
+      <Link>Annotations\NotNullAttribute.cs</Link>
     </Compile>
     <Compile Include="..\staffer.orgchart.csharp.sharedsource\layout\Point.cs">
       <Link>Layout\Point.cs</Link>
@@ -186,6 +186,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Properties\Staffer.OrgChart.Layout.CSharp.Universal.rd.xml" />
   </ItemGroup>
+  <ItemGroup />
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>

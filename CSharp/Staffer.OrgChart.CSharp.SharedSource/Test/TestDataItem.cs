@@ -1,4 +1,5 @@
 ﻿using System;
+using Staffer.OrgChart.Annotations;
 using Staffer.OrgChart.Layout;
 
 namespace Staffer.OrgChart.Test

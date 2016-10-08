@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Staffer.OrgChart.Annotations;
 using Staffer.OrgChart.Layout;
 
 namespace Staffer.OrgChart.Test

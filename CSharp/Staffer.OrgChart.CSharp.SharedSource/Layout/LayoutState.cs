@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Staffer.OrgChart.Annotations;
 using Staffer.OrgChart.Misc;
 
 namespace Staffer.OrgChart.Layout
@@ -25,6 +26,10 @@ namespace Staffer.OrgChart.Layout
             /// </summary>
             Preparing,
             /// <summary>
+            /// Pre-layout modifications of the visual tree.
+            /// </summary>
+            PreprocessVisualTree,
+            /// <summary>
             /// Vertical layout in progress.
             /// </summary>
             VerticalLayout,
@@ -45,17 +50,13 @@ namespace Staffer.OrgChart.Layout
         /// <summary>
         /// State of the layout operation for a particular level of hierarchy.
         /// </summary>
-        [DebuggerDisplay("{BranchRoot.Element.Id}, {Boundary.Top}..{Boundary.Bottom}, {EffectiveLayoutStrategy.GetType().Name}")]
+        [DebuggerDisplay("{BranchRoot.Element.Id}, {Boundary.BoundingRect.Top}..{Boundary.BoundingRect.Bottom}")]
         public struct LayoutLevel
         {
             /// <summary>
             /// Root parent for this subtree.
             /// </summary>
-            public readonly Tree<int, Box>.TreeNode BranchRoot;
-            /// <summary>
-            /// Layout strategy in effect at this level, derived from <see cref="BranchRoot"/> or its parents.
-            /// </summary>
-            public readonly LayoutStrategyBase EffectiveLayoutStrategy;
+            public readonly Tree<int, Box, NodeLayoutInfo>.TreeNode BranchRoot;
             /// <summary>
             /// Boundaries of this entire subtree.
             /// </summary>
@@ -64,11 +65,9 @@ namespace Staffer.OrgChart.Layout
             /// <summary>
             /// Ctr.
             /// </summary>
-            public LayoutLevel([NotNull] Tree<int, Box>.TreeNode node, [NotNull] LayoutStrategyBase effectiveLayoutStrategy,
-                [NotNull] Boundary boundary)
+            public LayoutLevel([NotNull] Tree<int, Box, NodeLayoutInfo>.TreeNode node, [NotNull] Boundary boundary)
             {
                 BranchRoot = node;
-                EffectiveLayoutStrategy = effectiveLayoutStrategy;
                 Boundary = boundary;
             }
         }
@@ -119,7 +118,7 @@ namespace Staffer.OrgChart.Layout
         /// Visual tree of boxes.
         /// </summary>
         [CanBeNull]
-        public Tree<int, Box> VisualTree { get; private set; }
+        public Tree<int, Box, NodeLayoutInfo> VisualTree { get; private set; }
 
         /// <summary>
         /// Gets fired when any <see cref="Boundary"/> is modified by methods of this object.
@@ -144,7 +143,7 @@ namespace Staffer.OrgChart.Layout
         /// <summary>
         /// Initializes the visual tree and pool of boundary objects.
         /// </summary>
-        public void AttachVisualTree(Tree<int, Box> tree)
+        public void AttachVisualTree(Tree<int, Box, NodeLayoutInfo> tree)
         {
             if (VisualTree != null)
             {
@@ -162,10 +161,8 @@ namespace Staffer.OrgChart.Layout
         /// Push a new box onto the layout stack, thus getting deeper into layout hierarchy.
         /// Automatically allocates a Bondary object from pool.
         /// </summary>
-        public LayoutLevel PushLayoutLevel([NotNull] Tree<int, Box>.TreeNode node)
+        public LayoutLevel PushLayoutLevel([NotNull] Tree<int, Box, NodeLayoutInfo>.TreeNode node)
         {
-            var layoutStrategy = RequireLayoutStrategy(node);
-
             if (m_pooledBoundaries.Count == 0)
             {
                 throw new InvalidOperationException("Hierarchy is deeper than expected");
@@ -187,7 +184,7 @@ namespace Staffer.OrgChart.Layout
                     throw new InvalidOperationException("This operation can only be invoked when performing vertical or horizontal layouts");
             }
 
-            var result = new LayoutLevel(node, layoutStrategy, boundary);
+            var result = new LayoutLevel(node, boundary);
             m_layoutStack.Push(result);
 
             BoundaryChanged?.Invoke(this, new BoundaryChangedEventArgs(boundary, result, this));
@@ -196,27 +193,22 @@ namespace Staffer.OrgChart.Layout
         }
 
         /// <summary>
-        /// Determines an instance of <see cref="LayoutStrategyBase"/> to be used for layout of this node.
+        /// Merges a provided spacer box into the current branch boundary.
         /// </summary>
-        [NotNull]
-        public LayoutStrategyBase RequireLayoutStrategy(Tree<int, Box>.TreeNode node)
+        public void MergeSpacer([NotNull]Box spacerBox)
         {
-            LayoutStrategyBase layoutStrategy;
-            if (node.Element.LayoutStrategyId != null)
+            if (CurrentOperation != Operation.HorizontalLayout)
             {
-                // is it explicitly specified?
-                layoutStrategy = Diagram.LayoutSettings.LayoutStrategies[node.Element.LayoutStrategyId];
+                throw new InvalidOperationException("Spacers can only be merged during horizontal layout");
             }
-            else if (m_layoutStack.Count > 0)
+
+            if (m_layoutStack.Count == 0)
             {
-                // can we inherit it from previous level?
-                layoutStrategy = m_layoutStack.Peek().EffectiveLayoutStrategy;
+                throw new InvalidOperationException("Cannot merge spacers at top nesting level");
             }
-            else
-            {
-                layoutStrategy = Diagram.LayoutSettings.RequireDefaultLayoutStrategy();
-            }
-            return layoutStrategy;
+
+            var level = m_layoutStack.Peek();
+            level.Boundary.MergeFrom(spacerBox);
         }
 
         /// <summary>
@@ -242,14 +234,15 @@ namespace Staffer.OrgChart.Layout
 
                     case Operation.HorizontalLayout:
                     {
-                        var overlap = higherLevel.Boundary.ComputeOverlap(innerLevel.Boundary,
-                            higherLevel.EffectiveLayoutStrategy.SiblingSpacing, Diagram.LayoutSettings.BranchSpacing);
+                        var strategy = higherLevel.BranchRoot.RequireState().RequireLayoutStrategy();
+
+                        var overlap = higherLevel.Boundary.ComputeOverlap(
+                            innerLevel.Boundary, strategy.SiblingSpacing, Diagram.LayoutSettings.BranchSpacing);
 
                         if (overlap > 0)
                         {
                             LayoutAlgorithm.MoveBranch(this, innerLevel, overlap);
-                            BoundaryChanged?.Invoke(this,
-                                new BoundaryChangedEventArgs(innerLevel.Boundary, innerLevel, this));
+                            BoundaryChanged?.Invoke(this, new BoundaryChangedEventArgs(innerLevel.Boundary, innerLevel, this));
                         }
 
                         higherLevel.Boundary.MergeFrom(innerLevel.Boundary);

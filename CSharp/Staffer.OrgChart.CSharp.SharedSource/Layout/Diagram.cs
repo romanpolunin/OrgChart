@@ -1,4 +1,4 @@
-﻿using System;
+﻿using Staffer.OrgChart.Annotations;
 using Staffer.OrgChart.Misc;
 
 namespace Staffer.OrgChart.Layout
@@ -8,7 +8,7 @@ namespace Staffer.OrgChart.Layout
     /// </summary>
     public class Diagram
     {
-        private Tree<int, Box> m_visualTree;
+        private Tree<int, Box, NodeLayoutInfo> m_visualTree;
         private BoxContainer m_boxes;
 
         /// <summary>
@@ -33,7 +33,7 @@ namespace Staffer.OrgChart.Layout
         /// Visual tree of boxes.
         /// </summary>
         [CanBeNull]
-        public Tree<int, Box> VisualTree
+        public Tree<int, Box, NodeLayoutInfo> VisualTree
         {
             get { return m_visualTree; }
             set

@@ -1,4 +1,6 @@
-﻿using Staffer.OrgChart.Misc;
+﻿using System;
+using Staffer.OrgChart.Annotations;
+using Staffer.OrgChart.Misc;
 
 namespace Staffer.OrgChart.Layout
 {
@@ -46,6 +48,16 @@ namespace Staffer.OrgChart.Layout
         public double SiblingSpacing = 20;
 
         /// <summary>
+        /// Length of the small angled connector segment entering every child box.
+        /// </summary>
+        public double ChildConnectorHookLength = 5;
+
+        /// <summary>
+        /// A chance for layout strategy to insert special auto-generated boxes into the visual tree. 
+        /// </summary>
+        public abstract void PreProcessThisNode([NotNull] LayoutState state, [NotNull] Tree<int, Box, NodeLayoutInfo>.TreeNode node);
+
+        /// <summary>
         /// Applies layout changes to a given box and its children.
         /// </summary>
         public abstract void ApplyVerticalLayout([NotNull] LayoutState state, LayoutState.LayoutLevel level);
@@ -58,6 +70,6 @@ namespace Staffer.OrgChart.Layout
         /// <summary>
         /// Allocates and routes connectors.
         /// </summary>
-        public abstract void RouteConnectors([NotNull]LayoutState state, [NotNull]Tree<int, Box>.TreeNode node);
+        public abstract void RouteConnectors([NotNull]LayoutState state, [NotNull]Tree<int, Box, NodeLayoutInfo>.TreeNode node);
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using Staffer.OrgChart.Layout;
+using System.Reflection;
+using Staffer.OrgChart.Annotations;
 
 namespace Staffer.OrgChart.Misc
 {
@@ -9,7 +10,8 @@ namespace Staffer.OrgChart.Misc
     /// </summary>
     /// <typeparam name="TKey">Type of the element identifier</typeparam>
     /// <typeparam name="TValue">Type of the element</typeparam>
-    public class Tree<TKey, TValue>
+    /// <typeparam name="TValueState">Type of the additional state object bound to the element</typeparam>
+    public class Tree<TKey, TValue, TValueState>
         where TValue : class
     {
         /// <summary>
@@ -17,6 +19,9 @@ namespace Staffer.OrgChart.Misc
         /// </summary>
         public class TreeNode
         {
+            private List<TreeNode> m_children;
+            private TValueState m_state;
+
             /// <summary>
             /// Hierarchy level.
             /// </summary>
@@ -28,14 +33,74 @@ namespace Staffer.OrgChart.Misc
             public TValue Element { get; }
 
             /// <summary>
+            /// Optional additional information associated with the <see cref="Element"/> in this node.
+            /// </summary>
+            public TValueState State
+            {
+                [NotNull]
+                set
+                {
+                    m_state = value;
+                }
+            }
+
+            private static readonly bool ValueIsByRef = !typeof(TValueState).GetTypeInfo().IsValueType;
+
+            /// <summary>
+            /// Returns value of <see cref="State"/>, throws if it is default or <c>null</c>.
+            /// </summary>
+            [NotNull]
+            public TValueState RequireState()
+            {
+                if (ValueIsByRef && ReferenceEquals(m_state, null))
+                {
+                    throw new InvalidOperationException("State is not set");
+                }
+                return m_state;
+            }
+
+            /// <summary>
             /// Reference to parent node wrapper.
             /// </summary>
+            [CanBeNull]
             public TreeNode ParentNode { get; set; }
 
             /// <summary>
             /// References to child node wrappers.
             /// </summary>
-            public List<TreeNode> Children { get; }
+            [CanBeNull]
+            public IReadOnlyList<TreeNode> Children => m_children;
+
+            /// <summary>
+            /// Number of children nodes.
+            /// </summary>
+            public int ChildCount => m_children == null ? 0 : m_children.Count;
+
+            /// <summary>
+            /// Adds a new child to the list. Returns reference to self.
+            /// </summary>
+            public TreeNode AddChild([NotNull] TreeNode child)
+            {
+                if (m_children == null)
+                {
+                    m_children = new List<TreeNode>();
+                }
+
+                m_children.Add(child);
+                child.ParentNode = this;
+                child.Level = Level + 1;
+
+                return this;
+            }
+
+            /// <summary>
+            /// Adds a new child to the list. Returns reference to self.
+            /// </summary>
+            public TreeNode AddChild([NotNull] TValue child)
+            {
+                AddChild(new TreeNode(child));
+                return this;
+            }
 
             /// <summary>
             /// Ctr.
@@ -43,7 +108,6 @@ namespace Staffer.OrgChart.Misc
             public TreeNode([NotNull]TValue element)
             {
                 Element = element;
-                Children = new List<TreeNode>();
             }
 
             /// <summary>
@@ -55,11 +119,14 @@ namespace Staffer.OrgChart.Misc
             /// <returns>True if <paramref name="func"/> never returned <c>false</c></returns>
             public static bool IterateChildFirst([NotNull]TreeNode root, [NotNull] Func<TreeNode, bool> func)
             {
-                foreach (var child in root.Children)
+                if (root.Children != null)
                 {
-                    if (!IterateChildFirst(child, func))
+                    foreach (var child in root.Children)
                     {
-                        return false;
+                        if (!IterateChildFirst(child, func))
+                        {
+                            return false;
+                        }
                     }
                 }
 
@@ -80,11 +147,14 @@ namespace Staffer.OrgChart.Misc
                     return false;
                 }
 
-                foreach (var child in root.Children)
+                if (root.Children != null)
                 {
-                    // Ignore returned value, in this mode children at each level 
-                    // decide for themselves whether they want to iterate further down.
-                    IterateParentFirst(child, func);
+                    foreach (var child in root.Children)
+                    {
+                        // Ignore returned value, in this mode children at each level 
+                        // decide for themselves whether they want to iterate further down.
+                        IterateParentFirst(child, func);
+                    }
                 }
 
                 return true;
@@ -171,10 +241,10 @@ namespace Staffer.OrgChart.Misc
         /// <param name="source">Source collection of elements, will be iterated only once</param>
         /// <param name="getKeyFunc">Func to extract key of the element. Key must not be null and must be unique across all elements of <paramref name="source"/></param>
         /// <param name="getParentKeyFunc">Func to extract parent key of the element</param>
-        public static Tree<TKey, TValue> Build([NotNull] IEnumerable<TValue> source, Func<TValue, TKey> getKeyFunc,
+        public static Tree<TKey, TValue, TValueState> Build([NotNull] IEnumerable<TValue> source, Func<TValue, TKey> getKeyFunc,
             Func<TValue, TKey> getParentKeyFunc)
         {
-            var result = new Tree<TKey, TValue>(getParentKeyFunc, getKeyFunc);
+            var result = new Tree<TKey, TValue, TValueState>(getParentKeyFunc, getKeyFunc);
 
             // build dictionary of nodes
             foreach (var item in source)
@@ -203,8 +273,7 @@ namespace Staffer.OrgChart.Misc
                 TreeNode parentNode;
                 if (result.Nodes.TryGetValue(parentKey, out parentNode))
                 {
-                    node.ParentNode = parentNode;
-                    parentNode.Children.Add(node);
+                    parentNode.AddChild(node);
                 }
                 else
                 {

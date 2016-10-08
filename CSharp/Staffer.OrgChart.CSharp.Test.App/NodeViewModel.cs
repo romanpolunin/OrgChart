@@ -8,7 +8,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
     public class NodeViewModel
     {
         private ObservableCollection<NodeViewModel> m_children;
-        public Tree<int, Box>.TreeNode Node { get; set; }
+        public Tree<int, Box, NodeLayoutInfo>.TreeNode Node { get; set; }
 
         public string Text => Node.Element.Id.ToString();
 
