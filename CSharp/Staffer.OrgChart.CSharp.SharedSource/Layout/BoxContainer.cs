@@ -66,14 +66,7 @@ namespace Staffer.OrgChart.Layout
             foreach (var box in m_boxesById.Values)
             {
                 var parentDataId = string.IsNullOrEmpty(box.DataId) ? null : source.GetParentKeyFunc(box.DataId);
-                if (string.IsNullOrEmpty(parentDataId))
-                {
-                    box.VisualParentId = SystemRoot.Id;
-                }
-                else
-                {
-                    box.VisualParentId = m_boxesByDataId[parentDataId].Id;
-                }
+                box.VisualParentId = string.IsNullOrEmpty(parentDataId) ? SystemRoot.Id : m_boxesByDataId[parentDataId].Id;
             }
 
             // now add the root

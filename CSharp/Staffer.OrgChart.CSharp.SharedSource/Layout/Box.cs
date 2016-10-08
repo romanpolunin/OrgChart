@@ -7,7 +7,7 @@ namespace Staffer.OrgChart.Layout
     /// A box in some <see cref="Diagram"/>. Has <see cref="Frame"/> and layout-related config such as <see cref="LayoutStrategyId"/>.
     /// This is a purely visual object, created based on underlying chart's data.
     /// </summary>
-    [DebuggerDisplay("{Id}, {Frame.Exterior.TopLeft.X}:{Frame.Exterior.TopLeft.Y}, {Frame.Exterior.Size.Width}x{Frame.Exterior.Size.Height}")]
+    [DebuggerDisplay("{Id}, {Frame.Exterior.Left}:{Frame.Exterior.Top}, {Frame.Exterior.Size.Width}x{Frame.Exterior.Size.Height}")]
     public class Box
     {
         /// <summary>
@@ -54,6 +54,12 @@ namespace Staffer.OrgChart.Layout
         /// Its children will not participate in the layout.
         /// </summary>
         public bool IsCollapsed;
+        
+        /// <summary>
+        /// When <c>true</c>, this box and its children will not participate in the layout.
+        /// Is automatically set to <c>true</c> when any parent upwards is <see cref="IsCollapsed"/>.
+        /// </summary>
+        public bool IsVisible;
         
         /// <summary>
         /// <c>true</c> is this box is bound to some data item.

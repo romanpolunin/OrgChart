@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 
 namespace Staffer.OrgChart.Layout
 {
@@ -16,6 +17,22 @@ namespace Staffer.OrgChart.Layout
         /// Computed bottom-right corner.
         /// </summary>
         public Point BottomRight => new Point(TopLeft.X + Size.Width, TopLeft.Y + Size.Height);
+        /// <summary>
+        /// Left edge.
+        /// </summary>
+        public double Left => TopLeft.X;
+        /// <summary>
+        /// Right edge.
+        /// </summary>
+        public double Right => TopLeft.X + Size.Width;
+        /// <summary>
+        /// Top edge.
+        /// </summary>
+        public double Top => TopLeft.Y;
+        /// <summary>
+        /// Bottom edge.
+        /// </summary>
+        public double Bottom => TopLeft.Y + Size.Height;
 
         /// <summary>
         /// Size of the rectangle.
@@ -47,6 +64,18 @@ namespace Staffer.OrgChart.Layout
         {
             TopLeft = new Point(0, 0);
             Size = size;
+        }
+
+        /// <summary>
+        /// Computes a rect that encloses both of given rectangles.
+        /// </summary>
+        public static Rect operator +(Rect x, Rect y)
+        {
+            var left = Math.Min(x.Left, y.Left);
+            var top = Math.Min(x.Top, y.Top);
+            var right = Math.Max(x.Right, y.Right);
+            var bottom = Math.Max(x.Bottom, y.Bottom);
+            return new Rect(left, top, right - left, bottom - top);
         }
     }
 }

@@ -6,7 +6,7 @@ namespace Staffer.OrgChart.Layout
     /// A rectangular frame in the diagram logical coordinate space,
     /// with its shape and connectors.
     /// </summary>
-    [DebuggerDisplay("{Exterior.TopLeft.X}:{Exterior.TopLeft.Y}, {Exterior.Size.Width}x{Exterior.Size.Height}")]
+    [DebuggerDisplay("{Exterior.Left}:{Exterior.Top}, {Exterior.Size.Width}x{Exterior.Size.Height}")]
     public class Frame
     {
         /// <summary>

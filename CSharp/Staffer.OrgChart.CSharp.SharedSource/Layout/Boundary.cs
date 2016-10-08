@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Staffer.OrgChart.Misc;
 
 namespace Staffer.OrgChart.Layout
 {
@@ -18,11 +19,8 @@ namespace Staffer.OrgChart.Layout
             /// <summary>
             /// Which <see cref="Box"/> holds this edge.
             /// </summary>
-            public readonly int BoxId;
-            /// <summary>
-            /// Which <see cref="Box"/> is the parent of <see cref="BoxId"/>.
-            /// </summary>
-            public readonly int ParentBoxId;
+            [CanBeNull]
+            public readonly Box Box;
             /// <summary>
             /// Horizontal position of the edge.
             /// </summary>
@@ -31,10 +29,9 @@ namespace Staffer.OrgChart.Layout
             /// <summary>
             /// Ctr.
             /// </summary>
-            public Step(int boxId, int parentBoxId, double x)
+            public Step([CanBeNull]Box box, double x)
             {
-                BoxId = boxId;
-                ParentBoxId = parentBoxId;
+                Box = box;
                 X = x;
             }
         }
@@ -46,17 +43,13 @@ namespace Staffer.OrgChart.Layout
         /// </summary>
         public double Resolution { get; }
         /// <summary>
-        /// Top edge.
+        /// Bounding rectangle.
         /// </summary>
-        public double Top { get; private set; }
-        /// <summary>
-        /// Bottom edge.
-        /// </summary>
-        public double Bottom { get; private set; }
+        public Rect BoundingRect { get; private set; }
 
         /// <summary>
         /// Left edge. Each element is a point in some logical space.
-        /// Vertical position is determined by the index of the element offset from <see cref="Top"/>,
+        /// Vertical position is determined by the index of the element offset from Top,
         /// using certain resolution (resolution is defined externally).
         /// </summary>
         public List<Step> Left;
@@ -88,7 +81,7 @@ namespace Staffer.OrgChart.Layout
         {
             Prepare(box);
 
-            var n = (int)Math.Ceiling((Bottom - Top) / Resolution);
+            var n = (int)Math.Ceiling(BoundingRect.Size.Height / Resolution);
             if (Left.Capacity < n)
             {
                 Left.Capacity = n;
@@ -98,8 +91,8 @@ namespace Staffer.OrgChart.Layout
             var rect = box.Frame.Exterior;
             for (var i = 0; i < n; i++)
             {
-                Left.Add(new Step(box.Id, box.VisualParentId, rect.TopLeft.X));
-                Right.Add(new Step(box.Id, box.VisualParentId, rect.BottomRight.X));
+                Left.Add(new Step(box, rect.Left));
+                Right.Add(new Step(box, rect.Right));
             }
         }
 
@@ -113,8 +106,10 @@ namespace Staffer.OrgChart.Layout
 
             // adjust the top edge to fit the logical grid
             var rect = box.Frame.Exterior;
-            Top = Math.Floor(rect.TopLeft.Y / Resolution) * Resolution - Resolution;
-            Bottom = Top + rect.Size.Height + Resolution;
+            var top = Math.Floor(rect.Top / Resolution) * Resolution - Resolution;
+            var bottom = top + rect.Size.Height + Resolution;
+
+            BoundingRect = new Rect(rect.Left, top, rect.Size.Width, bottom - top);
         }
 
         /// <summary>
@@ -122,14 +117,12 @@ namespace Staffer.OrgChart.Layout
         /// </summary>
         public void VerticalMergeFrom([NotNull]Boundary other)
         {
-            if (Top > other.Top)
+            if (BoundingRect.Top > other.BoundingRect.Top)
             {
                 throw new ArgumentException("Other cannot be above myself");
             }
-
-            AssertState();
-
-            Bottom = Math.Max(Bottom, other.Bottom);
+            
+            BoundingRect += other.BoundingRect;
         }
 
         /// <summary>
@@ -137,15 +130,13 @@ namespace Staffer.OrgChart.Layout
         /// </summary>
         public void MergeFrom([NotNull]Boundary other)
         {
-            if (Top > other.Top)
+            if (BoundingRect.Top > other.BoundingRect.Top)
             {
                 throw new ArgumentException("Other cannot be above myself");
             }
 
-            AssertState();
-
             // Adjust number of steps in left and right edges
-            var newHeight = Math.Max(Bottom, other.Bottom) - Math.Min(Top, other.Top);
+            var newHeight = Math.Max(BoundingRect.Bottom, other.BoundingRect.Bottom) - Math.Min(BoundingRect.Top, other.BoundingRect.Top);
 
             var n = (int)Math.Ceiling(newHeight / Resolution);
             if (Left.Capacity < n)
@@ -156,50 +147,50 @@ namespace Staffer.OrgChart.Layout
 
             while (Left.Count < n)
             {
-                Left.Add(new Step(Box.None, Box.None, double.MaxValue));
-                Right.Add(new Step(Box.None, Box.None, double.MinValue));
+                Left.Add(new Step(null, double.MaxValue));
+                Right.Add(new Step(null, double.MinValue));
             }
 
             int myFrom, myTo;
             int theirFrom, theirTo;
 
-            if (Top > other.Top)
+            if (BoundingRect.Top > other.BoundingRect.Top)
             {
                 myFrom = 0;
-                theirFrom = (int)Math.Floor((Top - other.Top)/Resolution);
+                theirFrom = (int)Math.Floor((BoundingRect.Top - other.BoundingRect.Top)/Resolution);
             }
             else
             {
-                myFrom = (int)Math.Floor((other.Top - Top)/Resolution);
+                myFrom = (int)Math.Floor((other.BoundingRect.Top - BoundingRect.Top)/Resolution);
                 theirFrom = 0;
             }
 
-            if (Bottom > other.Bottom)
+            if (BoundingRect.Bottom > other.BoundingRect.Bottom)
             {
-                myTo = Left.Count - (int)Math.Ceiling((other.Bottom - Bottom)/Resolution);
+                myTo = Left.Count - (int)Math.Ceiling((other.BoundingRect.Bottom - BoundingRect.Bottom) /Resolution);
                 theirTo = other.Left.Count - 1;
             }
             else
             {
                 myTo = Left.Count - 1;
-                theirTo = other.Left.Count - (int)Math.Ceiling((Bottom - other.Bottom)/Resolution);
+                theirTo = other.Left.Count - (int)Math.Ceiling((BoundingRect.Bottom - other.BoundingRect.Bottom) /Resolution);
             }
 
             // process overlapping part only
             for (int i = myFrom, k = theirFrom; i < myTo && k < theirTo; i++, k++)
             {
-                if (other.Left[k].BoxId != Box.None && Left[i].X > other.Left[k].X)
+                if (other.Left[k].Box != null && Left[i].X > other.Left[k].X)
                 {
                     Left[i] = other.Left[k];
                 }
 
-                if (other.Right[k].BoxId != Box.None && Right[i].X < other.Right[k].X)
+                if (other.Right[k].Box != null && Right[i].X < other.Right[k].X)
                 {
                     Right[i] = other.Right[k];
                 }
             }
 
-            Bottom = Math.Max(Bottom, other.Bottom);
+            BoundingRect += other.BoundingRect;
         }
 
         /// <summary>
@@ -207,38 +198,36 @@ namespace Staffer.OrgChart.Layout
         /// </summary>
         public double ComputeOverlap([NotNull]Boundary other, double siblingSpacing, double branchSpacing)
         {
-            AssertState();
-
             int myFrom, myTo;
             int theirFrom, theirTo;
 
-            if (Top > other.Top)
+            if (BoundingRect.Top > other.BoundingRect.Top)
             {
                 myFrom = 0;
-                theirFrom = (int)Math.Floor((Top - other.Top)/Resolution);
+                theirFrom = (int)Math.Floor((BoundingRect.Top - other.BoundingRect.Top) /Resolution);
             }
             else
             {
-                myFrom = (int)Math.Floor((other.Top - Top)/Resolution);
+                myFrom = (int)Math.Floor((other.BoundingRect.Top - BoundingRect.Top) /Resolution);
                 theirFrom = 0;
             }
 
-            if (Bottom > other.Bottom)
+            if (BoundingRect.Bottom > other.BoundingRect.Bottom)
             {
-                myTo = Left.Count - (int)Math.Ceiling((other.Bottom - Bottom)/Resolution);
+                myTo = Left.Count - (int)Math.Ceiling((BoundingRect.Bottom - other.BoundingRect.Bottom) /Resolution);
                 theirTo = other.Left.Count - 1;
             }
             else
             {
                 myTo = Left.Count - 1;
-                theirTo = other.Left.Count - (int)Math.Ceiling((Bottom - other.Bottom)/Resolution);
+                theirTo = other.Left.Count - (int)Math.Ceiling((other.BoundingRect.Bottom - BoundingRect.Bottom) /Resolution);
             }
 
             // process overlapping part only
             var offense = 0.0d;
             for (int i = myFrom, k = theirFrom; i < myTo && k < theirTo; i++, k++)
             {
-                var siblings = Right[i].ParentBoxId == other.Left[k].ParentBoxId;
+                var siblings = Right[i].Box?.VisualParentId == other.Left[k].Box?.VisualParentId;
                 var desiredSpacing = siblings ? siblingSpacing : branchSpacing;
 
                 var diff = Right[i].X + desiredSpacing - other.Left[k].X;
@@ -254,32 +243,29 @@ namespace Staffer.OrgChart.Layout
         /// <summary>
         /// Re-initializes left and right edges based on actual coordinates of boxes.
         /// </summary>
-        public void ReloadFromBranch([NotNull]IReadOnlyDictionary<int, Box> boxes)
+        public void ReloadFromBranch(Tree<int, Box>.TreeNode branchRoot, [NotNull] IReadOnlyDictionary<int, Box> boxes)
         {
-            AssertState();
-
+            var leftmost = double.MaxValue;
+            var rightmost = double.MinValue;
             for (var i = 0; i < Left.Count; i++)
             {
                 var left = Left[i];
-                if (left.BoxId != Box.None)
+                if (left.Box != null)
                 {
-                    Left[i] = new Step(left.BoxId, left.ParentBoxId, boxes[left.BoxId].Frame.Exterior.TopLeft.X);
+                    Left[i] = new Step(left.Box, left.Box.Frame.Exterior.Left);
+                    leftmost = Math.Min(leftmost, Left[i].X);
                 }
 
                 var right = Right[i];
-                if (right.BoxId != Box.None)
+                if (right.Box != null)
                 {
-                    Right[i] = new Step(right.BoxId, right.ParentBoxId, boxes[right.BoxId].Frame.Exterior.BottomRight.X);
+                    Right[i] = new Step(right.Box, right.Box.Frame.Exterior.Right);
+                    rightmost = Math.Max(rightmost, Right[i].X);
                 }
             }
-        }
-
-        private void AssertState()
-        {
-            if (Top > Bottom)
-            {
-                throw new InvalidOperationException($"Bottom {Bottom} is under top {Top}");
-            }
+            
+            BoundingRect = new Rect(new Point(Left[0].X, BoundingRect.Top),
+                new Size(rightmost - leftmost, BoundingRect.Size.Height));
         }
     }
 }

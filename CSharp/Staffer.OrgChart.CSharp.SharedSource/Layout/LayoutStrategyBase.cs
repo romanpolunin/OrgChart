@@ -31,6 +31,11 @@ namespace Staffer.OrgChart.Layout
     public abstract class LayoutStrategyBase
     {
         /// <summary>
+        /// Alignment of the parent box above child boxes.
+        /// </summary>
+        public BranchParentAlignment ParentAlignment;
+
+        /// <summary>
         /// Minimum distance between a parent box and any child box.
         /// </summary>
         public double ParentChildSpacing = 20;

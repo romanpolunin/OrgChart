@@ -1,4 +1,4 @@
-﻿using Staffer.OrgChart.Misc;
+using Staffer.OrgChart.Misc;
 
 namespace Staffer.OrgChart.Layout
 {
@@ -6,8 +6,14 @@ namespace Staffer.OrgChart.Layout
     /// Arranges child boxes in a single line under the parent.
     /// Can be configured to position parent in the middle, on the left or right from children.
     /// </summary>
-    public class LinearLayoutStrategy : LayoutStrategyBase
+    public class MultiLineHangerLayoutStrategy : LayoutStrategyBase
     {
+        /// <summary>
+        /// Maximum number of sibling child boxes in a single row.
+        /// Excess is wrapped to next lines.
+        /// </summary>
+        public int MaxSiblingsPerRow;
+
         /// <summary>
         /// Applies layout changes to a given box and its children.
         /// </summary>
@@ -18,17 +24,23 @@ namespace Staffer.OrgChart.Layout
             {
                 var top = node.Element.Frame.Exterior.Bottom + ParentChildSpacing;
 
+                var countInRow = 0;
                 foreach (var child in node.Children)
                 {
                     var rect = child.Element.Frame.Exterior;
 
                     child.Element.Frame.Exterior = new Rect(rect.Left, top, rect.Size.Width, rect.Size.Height);
-                }
 
-                foreach (var child in node.Children)
-                {
                     // re-enter layout algorithm for child branch
                     LayoutAlgorithm.VerticalLayout(state, child);
+
+                    countInRow++;
+
+                    if (countInRow == MaxSiblingsPerRow)
+                    {
+                        countInRow = 0;
+                        //top = 
+                    }
                 }
             }
         }
@@ -58,10 +70,6 @@ namespace Staffer.OrgChart.Layout
                     var diff = center - desiredCenter;
                     LayoutAlgorithm.MoveChildrenOnly(state, level, diff);
                 }
-
-                var spacer = new Rect(
-                    new Point(node.Element.Frame.Exterior.Left, node.Element.Frame.Exterior.Bottom),
-                    new Size());
             }
         }
 

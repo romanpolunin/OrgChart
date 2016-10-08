@@ -7,7 +7,7 @@
     <ProjectGuid>{43755292-55A3-4143-8B9E-EF16CD5B056A}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Staffer.OrgChart.Layout.CSharp</RootNamespace>
+    <RootNamespace>Staffer.OrgChart</RootNamespace>
     <AssemblyName>Staffer.OrgChart.Layout.CSharp.Windows</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -34,7 +34,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <DocumentationFile>bin\Release\Staffer.OrgChart.Layout.CSharp.Windows.xml</DocumentationFile>
+    <DocumentationFile>bin\Release\Staffer.OrgChart.Layout.CSharp.Windows.XML</DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
@@ -89,6 +89,9 @@
     </Compile>
     <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\LinearLayoutStrategy.cs">
       <Link>Layout\LinearLayoutStrategy.cs</Link>
+    </Compile>
+    <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\MultiLineHangerLayoutStrategy.cs">
+      <Link>Layout\MultiLineHangerLayoutStrategy.cs</Link>
     </Compile>
     <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\NotNullAttribute.cs">
       <Link>Layout\NotNullAttribute.cs</Link>

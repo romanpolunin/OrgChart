@@ -7,7 +7,7 @@
     <ProjectGuid>{6296A993-3AEE-4E15-BD0B-44A800CAA40A}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Staffer.OrgChart.Layout.CSharp.Universal</RootNamespace>
+    <RootNamespace>Staffer.OrgChart</RootNamespace>
     <AssemblyName>Staffer.OrgChart.Layout.CSharp.Universal</AssemblyName>
     <DefaultLanguage>en-US</DefaultLanguage>
     <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
@@ -90,6 +90,8 @@
     <PlatformTarget>x64</PlatformTarget>
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <ErrorReport>prompt</ErrorReport>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <DocumentationFile>bin\x64\Debug\Staffer.OrgChart.Layout.CSharp.Universal.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <PlatformTarget>x64</PlatformTarget>
@@ -101,6 +103,8 @@
     <PlatformTarget>x64</PlatformTarget>
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <ErrorReport>prompt</ErrorReport>
+    <DocumentationFile>bin\x64\Release\Staffer.OrgChart.Layout.CSharp.Universal.XML</DocumentationFile>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
     <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
@@ -154,6 +158,9 @@
     </Compile>
     <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\LinearLayoutStrategy.cs">
       <Link>Layout\LinearLayoutStrategy.cs</Link>
+    </Compile>
+    <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\MultiLineHangerLayoutStrategy.cs">
+      <Link>Layout\MultiLineHangerLayoutStrategy.cs</Link>
     </Compile>
     <Compile Include="..\staffer.orgchart.csharp.sharedsource\layout\NotNullAttribute.cs">
       <Link>Layout\NotNullAttribute.cs</Link>
