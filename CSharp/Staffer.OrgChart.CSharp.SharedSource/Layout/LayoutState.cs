@@ -153,7 +153,7 @@ namespace Staffer.OrgChart.Layout
             VisualTree = tree;
             for (var i = 0; i < tree.Depth; i++)
             {
-                m_pooledBoundaries.Add(new Boundary(Diagram.LayoutSettings.Resolution));
+                m_pooledBoundaries.Add(new Boundary());
             }
         }
 
@@ -209,6 +209,8 @@ namespace Staffer.OrgChart.Layout
 
             var level = m_layoutStack.Peek();
             level.Boundary.MergeFrom(spacerBox);
+
+            BoundaryChanged?.Invoke(this, new BoundaryChangedEventArgs(level.Boundary, level, this));
         }
 
         /// <summary>

@@ -236,7 +236,7 @@ namespace Staffer.OrgChart.Layout
                     });
             }
 
-            layoutLevel.Boundary.ReloadFromBranch(layoutLevel.BranchRoot, state.Diagram.Boxes.BoxesById);
+            layoutLevel.Boundary.ReloadFromBranch(layoutLevel.BranchRoot);
         }
 
         /// <summary>
@@ -253,7 +253,7 @@ namespace Staffer.OrgChart.Layout
                     return true;
                 });
 
-            layoutLevel.Boundary.ReloadFromBranch(layoutLevel.BranchRoot, state.Diagram.Boxes.BoxesById);
+            layoutLevel.Boundary.ReloadFromBranch(layoutLevel.BranchRoot);
         }
     }
 }

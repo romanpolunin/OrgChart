@@ -13,11 +13,11 @@ namespace Staffer.OrgChart.CSharp.Test.App
         public string Text => Node.Element.Id.ToString();
 
         public ObservableCollection<NodeViewModel> Children {
-            get {
-                return m_children ??
-                       (m_children =
-                           new ObservableCollection<NodeViewModel>(
-                               Node.Children?.Select(x => new NodeViewModel {Node = x})));
+            get
+            {
+                return m_children ?? (m_children = Node.Children == null
+                    ? new ObservableCollection<NodeViewModel>()
+                    : new ObservableCollection<NodeViewModel>(Node.Children.Select(x => new NodeViewModel {Node = x})));
             }
         }
     }

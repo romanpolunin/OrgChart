@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Staffer.OrgChart.Annotations;
 using Staffer.OrgChart.Misc;
 
@@ -15,34 +16,63 @@ namespace Staffer.OrgChart.Layout
         /// Each individual element in <see cref="Left"/> and <see cref="Right"/> collections
         /// represents one step of the boundary.
         /// </summary>
+        [DebuggerDisplay("{X}, {Top} - {Bottom}, {Box.Id}")]
         public struct Step
         {
             /// <summary>
             /// Which <see cref="Box"/> holds this edge.
             /// </summary>
-            [CanBeNull]
+            [NotNull]
             public readonly Box Box;
             /// <summary>
             /// Horizontal position of the edge.
             /// </summary>
             public readonly double X;
+            /// <summary>
+            /// Top edge.
+            /// </summary>
+            public readonly double Top;
+            /// <summary>
+            /// Bottom edge.
+            /// </summary>
+            public readonly double Bottom;
 
             /// <summary>
             /// Ctr.
             /// </summary>
-            public Step([CanBeNull]Box box, double x)
+            public Step([NotNull]Box box, double x, double top, double bottom)
             {
                 Box = box;
                 X = x;
+                Top = top;
+                Bottom = bottom;
+            }
+
+            /// <summary>
+            /// Returns a new <see cref="Step"/> whose <see cref="Top"/> property was set to <paramref name="newTop"/>.
+            /// </summary>
+            public Step ChangeTop(double newTop)
+            {
+                return new Step(Box, X, newTop, Bottom);
+            }
+
+            /// <summary>
+            /// Returns a new <see cref="Step"/> whose <see cref="Bottom"/> property was set to <paramref name="newBottom"/>.
+            /// </summary>
+            public Step ChangeBottom(double newBottom)
+            {
+                return new Step(Box, X, Top, newBottom);
+            }
+
+            /// <summary>
+            /// Returns a new <see cref="Step"/> whose <see cref="Box"/> property was set to <paramref name="newBox"/> and <see cref="X"/> to <paramref name="newX"/>.
+            /// </summary>
+            public Step ChangeBox([NotNull]Box newBox, double newX)
+            {
+                return new Step(newBox, newX, Top, Bottom);
             }
         }
 
-        /// <summary>
-        /// Number of logical units per step of the boundary.
-        /// Each individual element in <see cref="Left"/> and <see cref="Right"/> collections
-        /// represents one step of the boundary.
-        /// </summary>
-        public double Resolution { get; }
         /// <summary>
         /// Bounding rectangle.
         /// </summary>
@@ -60,19 +90,26 @@ namespace Staffer.OrgChart.Layout
         public List<Step> Right;
 
         /// <summary>
+        /// A temporary Boundary used for merging Boxes in, since they don't come with their own Boundary.
+        /// </summary>
+        private readonly Boundary m_spacerMerger;
+
+        /// <summary>
         /// Ctr.
         /// </summary>
-        /// <param name="resolution">Resolution of the boundary, cannot be less than 1.0</param>
-        public Boundary(double resolution)
+        public Boundary() : this(true)
         {
-            if (resolution < 1.0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(resolution));
-            }
+        }
 
-            Resolution = resolution;
+        private Boundary(bool frompublic)
+        {
             Left = new List<Step>();
             Right = new List<Step>();
+
+            if (frompublic)
+            {
+                m_spacerMerger = new Boundary(false);
+            }
         }
 
         /// <summary>
@@ -82,19 +119,8 @@ namespace Staffer.OrgChart.Layout
         {
             Prepare(box);
 
-            var n = (int)Math.Ceiling(BoundingRect.Size.Height / Resolution);
-            if (Left.Capacity < n)
-            {
-                Left.Capacity = n;
-                Right.Capacity = n;
-            }
-
-            var rect = box.Frame.Exterior;
-            for (var i = 0; i < n; i++)
-            {
-                Left.Add(new Step(box, rect.Left));
-                Right.Add(new Step(box, rect.Right));
-            }
+            Left.Add(new Step(box, box.Frame.Exterior.Left, box.Frame.Exterior.Top, box.Frame.Exterior.Bottom));
+            Right.Add(new Step(box, box.Frame.Exterior.Right, box.Frame.Exterior.Top, box.Frame.Exterior.Bottom));
         }
 
         /// <summary>
@@ -106,16 +132,7 @@ namespace Staffer.OrgChart.Layout
             Right.Clear();
 
             // adjust the top edge to fit the logical grid
-            var rect = box.Frame.Exterior;
-
-            BoundingRect = AdjustRect(rect);
-        }
-
-        private Rect AdjustRect(Rect rect)
-        {
-            var top = Math.Floor(rect.Top / Resolution) * Resolution;
-            var bottom = Math.Ceiling(rect.Bottom / Resolution) * Resolution;
-            return new Rect(rect.Left, top, rect.Size.Width, bottom - top);
+            BoundingRect = box.Frame.Exterior;
         }
 
         /// <summary>
@@ -125,7 +142,7 @@ namespace Staffer.OrgChart.Layout
         {
             if (BoundingRect.Top > other.BoundingRect.Top)
             {
-                throw new ArgumentException("Other cannot be above myself");
+                throw new ArgumentException("Other should not be above myself");
             }
             
             BoundingRect += other.BoundingRect;
@@ -138,54 +155,240 @@ namespace Staffer.OrgChart.Layout
         {
             if (BoundingRect.Top > other.BoundingRect.Top)
             {
-                throw new ArgumentException("Other cannot be above myself");
+                throw new ArgumentException("Other bounding rect should not be above myself");
             }
 
-            // Adjust number of steps in left and right edges
-            var newHeight = Math.Max(BoundingRect.Bottom, other.BoundingRect.Bottom) - Math.Min(BoundingRect.Top, other.BoundingRect.Top);
-
-            var n = (int)Math.Ceiling(newHeight / Resolution);
-            if (Left.Capacity < n)
+            if (other.BoundingRect.Top >= other.BoundingRect.Bottom)
             {
-                Left.Capacity = n;
-                Right.Capacity = n;
+                throw new ArgumentException("Cannot merge boundary of height " + (other.BoundingRect.Bottom - other.BoundingRect.Top));
             }
 
-            while (Left.Count < n)
+            var merge = 'r';
+            while (merge != '\0')
             {
-                Left.Add(new Step(null, double.MaxValue));
-                Right.Add(new Step(null, double.MinValue));
-            }
-
-            int myFrom;
-            int theirFrom;
-
-            if (BoundingRect.Top > other.BoundingRect.Top)
-            {
-                myFrom = 0;
-                theirFrom = (int)Math.Floor((BoundingRect.Top - other.BoundingRect.Top)/Resolution);
-            }
-            else
-            {
-                myFrom = (int)Math.Floor((other.BoundingRect.Top - BoundingRect.Top)/Resolution);
-                theirFrom = 0;
-            }
-
-            // from top - take overlapping part only, but go as for down as possible
-            for (int i = myFrom, k = theirFrom; k < other.Left.Count; i++, k++)
-            {
-                if (other.Left[k].Box != null && Left[i].X > other.Left[k].X)
+                var mySteps = merge == 'r' ? Right : Left;
+                var theirSteps = merge == 'r' ? other.Right : other.Left;
+                var i = 0;
+                var k = 0;
+                for (; k < theirSteps.Count && i < mySteps.Count;)
                 {
-                    Left[i] = other.Left[k];
+                    var my = mySteps[i];
+                    var th = theirSteps[k];
+
+                    if (my.Bottom <= th.Top)
+                    {
+                        // haven't reached the top of their boundary yet
+                        i++;
+                        continue;
+                    }
+
+                    if (th.Bottom <= my.Top && i == 0)
+                    {
+                        // haven't reached the top of my boundary yet
+                        mySteps.Insert(k, th);
+                        k++;
+
+                        ValidateState();
+                        continue;
+                    }
+
+                    var theirWins = (merge == 'r' && my.X <= th.X) || (merge == 'l' && my.X >= th.X);
+
+                    if (my.Top == th.Top)
+                    {
+                        if (my.Bottom == th.Bottom)
+                        {
+                            // case 1: exactly same length and vertical position
+                            // th: ********
+                            // my: ********
+                            if (theirWins)
+                            {
+                                mySteps[i] = th; // replace entire step
+                            }
+                            i++;
+                            k++;
+
+                            ValidateState();
+                        }
+                        else if (my.Bottom < th.Bottom)
+                        {
+                            // case 2: tops aligned, but my is shorter 
+                            // th: ********
+                            // my: ***
+                            if (theirWins)
+                            {
+                                mySteps[i] = my.ChangeBox(th.Box, th.X); // replace my with a piece of theirs
+                            }
+                            theirSteps[k] = th.ChangeTop(my.Bottom); // push their top down
+                            i++;
+
+                            ValidateState();
+                        }
+                        else
+                        {
+                            // case 3: tops aligned, but my is longer
+                            // th: ***
+                            // my: ********
+                            if (theirWins)
+                            {
+                                mySteps[i] = my.ChangeTop(th.Bottom); // contract my to their bottom
+                                mySteps.Insert(i, th); // insert theirs before my
+                                i++;
+                            }
+                            k++;
+
+                            ValidateState();
+                        }
+                    }
+                    else if (my.Bottom == th.Bottom)
+                    {
+                        if (my.Top < th.Top)
+                        {
+                            // case 4: bottoms aligned, but my is longer
+                            // th:      ***
+                            // my: ********
+                            if (theirWins)
+                            {
+                                mySteps[i] = my.ChangeBottom(th.Top); // contract my to their top
+                                mySteps.Insert(i + 1, th); // insert theirs after my
+                                i++;
+                            }
+                            i++;
+                            k++;
+
+                            ValidateState();
+                        }
+                        else
+                        {
+                            // case 5: bottoms aligned, but my is shorter
+                            // th: ********
+                            // my:      ***
+                            if (theirWins)
+                            {
+                                // replace my with theirs, we're guaranteed not to offend my previous
+                                mySteps[i] = th; 
+                            }
+                            else
+                            {
+                                // insert a piece of theirs before my, we're guaranteed not to offend my previous
+                                mySteps.Insert(i, th.ChangeBottom(my.Top));
+                                i++;
+                            }
+                            i++;
+                            k++;
+
+                            ValidateState();
+                        }
+                    }
+                    else if (my.Top < th.Top && my.Bottom < th.Bottom)
+                    {
+                        // case 6: their overlaps my bottom
+                        // th:     ********
+                        // my: *******
+                        if (theirWins)
+                        {
+                            mySteps[i] = my.ChangeBottom(th.Top); // contract myself to their top
+                            mySteps.Insert(i + 1, new Step(th.Box, th.X, th.Top, my.Bottom)); // insert a piece of theirs after my
+                            i++;
+                        }
+                        theirSteps[k] = th.ChangeTop(my.Bottom); // push theirs down
+                        i++;
+
+                        ValidateState();
+                    }
+                    else if (my.Top < th.Top && my.Bottom > th.Bottom)
+                    {
+                        // case 7: their cuts my into three pieces
+                        // th:     ***** 
+                        // my: ************
+                        if (theirWins)
+                        {
+                            mySteps[i] = my.ChangeBottom(th.Top); // contract my to their top
+                            mySteps.Insert(i + 1, th); // insert their after my
+                            mySteps.Insert(i + 2, my.ChangeTop(th.Bottom)); // insert my tail after theirs
+                            i += 2;
+                        }
+                        k++;
+
+                        ValidateState();
+                    }
+                    else if (my.Bottom > th.Bottom)
+                    {
+                        // case 8: their overlaps my top
+                        // th: ********
+                        // my:    ********
+                        if (theirWins)
+                        {
+                            mySteps[i] = my.ChangeTop(th.Bottom); // contract my to their bottom
+                            // insert theirs before my, we're guaranteed not to offend my previous
+                            mySteps.Insert(i, th);
+                        }
+                        else
+                        {
+                            mySteps.Insert(i, th.ChangeBottom(my.Top));
+                        }
+                        i++;
+                        k++;
+
+                        ValidateState();
+                    }
+                    else
+                    {
+                        // case 9: their completely covers my
+                        // th: ************
+                        // my:    *****
+                        if (theirWins)
+                        {
+                            mySteps[i] = th.ChangeBottom(my.Bottom); // replace my with a piece of theirs
+                        }
+                        else
+                        {
+                            mySteps.Insert(i, th.ChangeBottom(my.Top));
+                            i++;
+                        }
+                        theirSteps[k] = th.ChangeTop(my.Bottom); // push theirs down
+                        i++;
+
+                        ValidateState();
+                    }
                 }
 
-                if (other.Right[k].Box != null && Right[i].X < other.Right[k].X)
+                if (i == mySteps.Count)
                 {
-                    Right[i] = other.Right[k];
+                    while (k < theirSteps.Count)
+                    {
+                        mySteps.Add(theirSteps[k]);
+                        k++;
+
+                        ValidateState();
+                    }
                 }
+
+                merge = merge == 'r' ? 'l' : '\0';
             }
 
             BoundingRect += other.BoundingRect;
+        }
+
+        [Conditional("DEBUG")]
+        private void ValidateState()
+        {
+            for (var i = 1; i < Left.Count; i++)
+            {
+                if (Left[i].Top < Left[i - 1].Bottom || Left[i].Top <= Left[i - 1].Top || Left[i].Bottom <= Left[i].Top || Left[i].Bottom <= Left[i - 1].Bottom)
+                {
+                    throw new Exception("State error at Left index " + i);
+                }
+            }
+
+            for (var i = 1; i < Right.Count; i++)
+            {
+                if (Right[i].Top < Right[i - 1].Bottom || Right[i].Top <= Right[i - 1].Top || Right[i].Bottom <= Right[i].Top ||
+                    Right[i].Bottom <= Right[i - 1].Bottom)
+                {
+                    throw new Exception("State error at Right index " + i);
+                }
+            }
         }
 
         /// <summary>
@@ -196,60 +399,16 @@ namespace Staffer.OrgChart.Layout
             var rect = box.Frame.Exterior;
             if (BoundingRect.Top > rect.Top)
             {
-                throw new ArgumentException("Other cannot be above myself");
+                throw new ArgumentException("Other should not be above myself");
             }
 
-            // Adjust number of steps in left and right edges
-            var newHeight = Math.Max(BoundingRect.Bottom, rect.Bottom) - Math.Min(BoundingRect.Top, rect.Top);
-
-            var n = (int)Math.Ceiling(newHeight / Resolution);
-            if (Left.Capacity < n)
+            if (rect.Size.Height == 0)
             {
-                Left.Capacity = n;
-                Right.Capacity = n;
+                return;
             }
 
-            while (Left.Count < n)
-            {
-                Left.Add(new Step(null, double.MaxValue));
-                Right.Add(new Step(null, double.MinValue));
-            }
-
-            int myFrom, myTo;
-
-            if (BoundingRect.Top > rect.Top)
-            {
-                myFrom = 0;
-            }
-            else
-            {
-                myFrom = (int)Math.Floor((rect.Top - BoundingRect.Top)/Resolution);
-            }
-
-            if (BoundingRect.Bottom > rect.Bottom)
-            {
-                myTo = Left.Count - (int)Math.Ceiling((BoundingRect.Bottom - rect.Bottom) /Resolution);
-            }
-            else
-            {
-                myTo = Left.Count;
-            }
-
-            // process overlapping part only
-            for (var i = myFrom; i < myTo; i++)
-            {
-                if (Left[i].X > rect.Left)
-                {
-                    Left[i] = new Step(box, rect.Left);
-                }
-
-                if (Right[i].X < rect.Right)
-                {
-                    Right[i] = new Step(box, rect.Right);
-                }
-            }
-
-            BoundingRect += AdjustRect(rect);
+            m_spacerMerger.PrepareForHorizontalLayout(box);
+            MergeFrom(m_spacerMerger);
         }
 
         /// <summary>
@@ -257,42 +416,43 @@ namespace Staffer.OrgChart.Layout
         /// </summary>
         public double ComputeOverlap([NotNull]Boundary other, double siblingSpacing, double branchSpacing)
         {
-            int myFrom, myTo;
-            int theirFrom, theirTo;
-
-            if (BoundingRect.Top > other.BoundingRect.Top)
-            {
-                myFrom = 0;
-                theirFrom = (int)Math.Floor((BoundingRect.Top - other.BoundingRect.Top) /Resolution);
-            }
-            else
-            {
-                myFrom = (int)Math.Floor((other.BoundingRect.Top - BoundingRect.Top) /Resolution);
-                theirFrom = 0;
-            }
-
-            if (BoundingRect.Bottom > other.BoundingRect.Bottom)
-            {
-                myTo = Left.Count - (int)Math.Ceiling((BoundingRect.Bottom - other.BoundingRect.Bottom) /Resolution);
-                theirTo = other.Left.Count - 1;
-            }
-            else
-            {
-                myTo = Left.Count - 1;
-                theirTo = other.Left.Count - (int)Math.Ceiling((other.BoundingRect.Bottom - BoundingRect.Bottom) /Resolution);
-            }
-
-            // process overlapping part only
+            int i = 0, k = 0;
             var offense = 0.0d;
-            for (int i = myFrom, k = theirFrom; i < myTo && k < theirTo; i++, k++)
+            while (i < Right.Count && k < other.Left.Count)
             {
-                var siblings = Right[i].Box?.VisualParentId == other.Left[k].Box?.VisualParentId;
-                var desiredSpacing = siblings ? siblingSpacing : branchSpacing;
+                var my = Right[i];
+                var th = other.Left[k];
 
-                var diff = Right[i].X + desiredSpacing - other.Left[k].X;
-                if (diff > offense)
+                if (my.Bottom <= th.Top)
                 {
-                    offense = diff;
+                    i++;
+                }
+                else if (th.Bottom <= my.Top)
+                {
+                    k++;
+                }
+                else
+                {
+                    var desiredSpacing = my.Box.IsSpecial || th.Box.IsSpecial
+                        ? 0 // when dealing with spacers, no need for additional cushion around them
+                        : my.Box.VisualParentId == th.Box.VisualParentId
+                            ? siblingSpacing // two siblings kicking each other
+                            : branchSpacing; // these are two different branches
+
+                    var diff = my.X + desiredSpacing - th.X;
+                    if (diff > offense)
+                    {
+                        offense = diff;
+                    }
+
+                    if (my.Bottom >= th.Bottom)
+                    {
+                        k++;
+                    }
+                    if (th.Bottom >= my.Bottom)
+                    {
+                        i++;
+                    }
                 }
             }
 
@@ -302,28 +462,27 @@ namespace Staffer.OrgChart.Layout
         /// <summary>
         /// Re-initializes left and right edges based on actual coordinates of boxes.
         /// </summary>
-        public void ReloadFromBranch(Tree<int, Box, NodeLayoutInfo>.TreeNode branchRoot, [NotNull] IReadOnlyDictionary<int, Box> boxes)
+        public void ReloadFromBranch(Tree<int, Box, NodeLayoutInfo>.TreeNode branchRoot)
         {
             var leftmost = double.MaxValue;
             var rightmost = double.MinValue;
             for (var i = 0; i < Left.Count; i++)
             {
                 var left = Left[i];
-                if (left.Box != null)
-                {
-                    Left[i] = new Step(left.Box, left.Box.Frame.Exterior.Left);
-                    leftmost = Math.Min(leftmost, Left[i].X);
-                }
-
-                var right = Right[i];
-                if (right.Box != null)
-                {
-                    Right[i] = new Step(right.Box, right.Box.Frame.Exterior.Right);
-                    rightmost = Math.Max(rightmost, Right[i].X);
-                }
+                var rect = left.Box.Frame.Exterior;
+                Left[i] = left.ChangeBox(left.Box, rect.Left);
+                leftmost = Math.Min(leftmost, rect.Left);
             }
-            
-            BoundingRect = new Rect(new Point(Left[0].X, BoundingRect.Top),
+
+            for (var i = 0; i < Right.Count; i++)
+            {
+                var right = Right[i];
+                var rect = right.Box.Frame.Exterior;
+                Right[i] = right.ChangeBox(right.Box, rect.Right);
+                rightmost = Math.Max(rightmost, rect.Right);
+            }
+
+            BoundingRect = new Rect(new Point(leftmost, BoundingRect.Top),
                 new Size(rightmost - leftmost, BoundingRect.Size.Height));
         }
     }

@@ -70,7 +70,7 @@ namespace Staffer.OrgChart.Test
             const int widthVariation = 50;
             const int heightVariation = 50;
 
-            var random = new Random(Environment.TickCount);
+            var random = new Random(0);
             foreach (var box in boxContainer.BoxesById.Values)
             {
                 box.Frame.Exterior = box.IsSpecial

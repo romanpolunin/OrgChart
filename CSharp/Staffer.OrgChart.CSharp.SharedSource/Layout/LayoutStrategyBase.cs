@@ -1,5 +1,4 @@
-﻿using System;
-using Staffer.OrgChart.Annotations;
+﻿using Staffer.OrgChart.Annotations;
 using Staffer.OrgChart.Misc;
 
 namespace Staffer.OrgChart.Layout
@@ -41,6 +40,11 @@ namespace Staffer.OrgChart.Layout
         /// Minimum distance between a parent box and any child box.
         /// </summary>
         public double ParentChildSpacing = 20;
+
+        /// <summary>
+        /// Width of the area used to protect long vertical segments of connectors.
+        /// </summary>
+        public double ParentConnectorShield = 50;
 
         /// <summary>
         /// Minimum distance between two sibling boxes.

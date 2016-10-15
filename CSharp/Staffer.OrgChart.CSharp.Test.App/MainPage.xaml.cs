@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
@@ -59,7 +60,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
             if (resetBoxes)
             {
                 m_dataSource = new TestDataSource();
-                new TestDataGen().GenerateDataItems(m_dataSource, 800);
+                new TestDataGen().GenerateDataItems(m_dataSource, 500);
 
                 var boxContainer = new BoxContainer(m_dataSource);
 
@@ -180,32 +181,24 @@ namespace Staffer.OrgChart.CSharp.Test.App
                 return;
             }
 
-            for (var i = 0; i < boundary.Left.Count; i++)
+            Action<List<Boundary.Step>> render = steps =>
             {
-                var step = boundary.Left[i];
-                if (step.Box != null && step.X != double.MinValue && step.X != double.MaxValue)
+                foreach (var step in steps)
+                {
                     drawCanvas.Children.Add(new Line
                     {
                         X1 = step.X,
-                        Y1 = top + i*args.State.Diagram.LayoutSettings.Resolution,
+                        Y1 = step.Top,
                         X2 = step.X,
-                        Y2 = top + (i + 1)*args.State.Diagram.LayoutSettings.Resolution,
+                        Y2 = step.Bottom,
                         Stroke = new SolidColorBrush(Colors.Red),
                         StrokeThickness = 2
                     });
+                }
+            };
 
-                step = boundary.Right[i];
-                if (step.Box != null && step.X != double.MinValue && step.X != double.MaxValue)
-                    drawCanvas.Children.Add(new Line
-                    {
-                        X1 = step.X,
-                        Y1 = top + i*args.State.Diagram.LayoutSettings.Resolution,
-                        X2 = step.X,
-                        Y2 = top + (i + 1)*args.State.Diagram.LayoutSettings.Resolution,
-                        Stroke = new SolidColorBrush(Colors.Red),
-                        StrokeThickness = 2
-                    });
-            }
+            render(boundary.Left);
+            render(boundary.Right);
         }
 
         private void RenderBoxes(Tree<int, Box, NodeLayoutInfo> visualTree, Canvas drawCanvas)

@@ -13,7 +13,7 @@ namespace Staffer.OrgChart.Layout
         /// <summary>
         /// A chance for layout strategy to append special auto-generated boxes into the visual tree. 
         /// </summary>
-        public override void PreProcessThisNode(LayoutState state, [NotNull] Tree<int, Box, NodeLayoutInfo>.TreeNode node)
+        public override void PreProcessThisNode([NotNull]LayoutState state, [NotNull] Tree<int, Box, NodeLayoutInfo>.TreeNode node)
         {
             var normalChildCount = node.ChildCount;
             if (normalChildCount > 0)
@@ -65,7 +65,7 @@ namespace Staffer.OrgChart.Layout
                         rect.Size.Width,
                         rect.Size.Height);
 
-                    siblingsRowExterior += new Dimensions(top, top + rect.Size.Height + level.Boundary.Resolution);
+                    siblingsRowExterior += new Dimensions(top, top + rect.Size.Height);
                 }
 
                 for (var i = 0; i < nodeState.NormalChildCount; i++)
@@ -109,15 +109,23 @@ namespace Staffer.OrgChart.Layout
 
                     if (node.ChildCount > nodeState.NormalChildCount)
                     {
-                        var spacerNode = node.Children[nodeState.NormalChildCount];
-                        var spacerBox = spacerNode.Element;
-                        spacerBox.Frame.Exterior = new Rect(
+                        var horizontalSpacerBox = node.Children[nodeState.NormalChildCount].Element;
+                        horizontalSpacerBox.Frame.Exterior = new Rect(
                             leftmost + diff,
                             node.Children[0].Element.Frame.SiblingsRowV.From - ParentChildSpacing,
                             rightmost - leftmost,
                             ParentChildSpacing);
 
-                        state.MergeSpacer(spacerBox);
+                        state.MergeSpacer(horizontalSpacerBox);
+
+                        var verticalSpacerBox = node.Children[nodeState.NormalChildCount + 1].Element;
+                        verticalSpacerBox.Frame.Exterior = new Rect(
+                            center - ParentConnectorShield/2,
+                            rect.Bottom,
+                            ParentConnectorShield,
+                            horizontalSpacerBox.Frame.Exterior.Top - rect.Bottom);
+
+                        state.MergeSpacer(verticalSpacerBox);
                     }
                 }
                 else

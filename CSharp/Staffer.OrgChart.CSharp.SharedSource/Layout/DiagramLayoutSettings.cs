@@ -9,7 +9,6 @@ namespace Staffer.OrgChart.Layout
     /// </summary>
     public class DiagramLayoutSettings
     {
-        private double m_resolution;
         private double m_branchSpacing;
 
         /// <summary>
@@ -40,30 +39,10 @@ namespace Staffer.OrgChart.Layout
         }
 
         /// <summary>
-        /// Resolution of the Z-buffer used by layout algorithm.
-        /// Indicates number of logical coordinate units per step of the scan grid.
-        /// The smaller is this number, the more precise is the process of detecting collisions between boxes,
-        /// larger values will lead to some unnecessary gaps being added - algorithm becomes overly sensitive.
-        /// </summary>
-        public double Resolution
-        {
-            get { return m_resolution; }
-            set
-            {
-                if (value < 1.0)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(value));
-                }
-                m_resolution = value;
-            }
-        }
-
-        /// <summary>
         /// Ctr.
         /// </summary>
         public DiagramLayoutSettings()
         {
-            Resolution = 5;
             BranchSpacing = 50;
             LayoutStrategies = new Dictionary<string, LayoutStrategyBase>();
         }
