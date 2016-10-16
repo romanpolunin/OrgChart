@@ -153,7 +153,7 @@ namespace Staffer.OrgChart.Layout
             VisualTree = tree;
             for (var i = 0; i < tree.Depth; i++)
             {
-                m_pooledBoundaries.Add(new Boundary());
+                m_pooledBoundaries.Add(new Boundary(Diagram.LayoutSettings.BoxVerticalMargin));
             }
         }
 

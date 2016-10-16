@@ -39,11 +39,19 @@ namespace Staffer.OrgChart.Layout
         }
 
         /// <summary>
+        /// A margin to add on top and under each box, to prevent edges from coming too close to each other.
+        /// Normally, branch connector spacers prevent most of such visual effects,
+        /// but it is still possible to have one box almost touching another when there's no other cushion around it.
+        /// </summary>
+        public int BoxVerticalMargin { get; set; }
+
+        /// <summary>
         /// Ctr.
         /// </summary>
         public DiagramLayoutSettings()
         {
             BranchSpacing = 50;
+            BoxVerticalMargin = 5;
             LayoutStrategies = new Dictionary<string, LayoutStrategyBase>();
         }
 
