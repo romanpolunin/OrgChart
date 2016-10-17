@@ -43,7 +43,7 @@ namespace Staffer.OrgChart.Test
             var prevLayerSize = 1;
             while (firstInLayer < itemCount)
             {
-                var layerSize = prevLayerSize + random.Next(prevLayerSize * 2);
+                var layerSize = 15;//prevLayerSize + random.Next(prevLayerSize * 2);
                 for (var i = firstInLayer; i < firstInLayer + layerSize && i < itemCount; i++)
                 {
                     var parentIndex = firstInLayer - 1 - random.Next(prevLayerSize);

@@ -5,43 +5,6 @@ using Staffer.OrgChart.Annotations;
 namespace Staffer.OrgChart.Layout
 {
     /// <summary>
-    /// Additional information attached to every box in the nodes of visual tree.
-    /// </summary>
-    public class NodeLayoutInfo
-    {
-        /// <summary>
-        /// Effective layout strategy, derived from settings or inherited from parent.
-        /// </summary>
-        public LayoutStrategyBase EffectiveLayoutStrategy
-        {
-            [NotNull]
-            set { m_effectiveLayoutStrategy = value; }
-        }
-
-        /// <summary>
-        /// Returns value of <see cref="EffectiveLayoutStrategy"/>, throws if <c>null</c>.
-        /// </summary>
-        [NotNull]
-        public LayoutStrategyBase RequireLayoutStrategy()
-        {
-            if (m_effectiveLayoutStrategy == null)
-            {
-                throw new Exception(nameof(EffectiveLayoutStrategy) + " is not set");
-            }
-
-            return m_effectiveLayoutStrategy;
-        }
-
-        /// <summary>
-        /// Number of "normal", visible children in this node's immediate children list.
-        /// Does not include special auto-generated spacer boxes used for protecting connectors and other things.
-        /// </summary>
-        public int NormalChildCount;
-
-        private LayoutStrategyBase m_effectiveLayoutStrategy;
-    }
-
-    /// <summary>
     /// A box in some <see cref="Diagram"/>. Has <see cref="Frame"/> and layout-related config such as <see cref="LayoutStrategyId"/>.
     /// This is a purely visual object, created based on underlying chart's data.
     /// </summary>

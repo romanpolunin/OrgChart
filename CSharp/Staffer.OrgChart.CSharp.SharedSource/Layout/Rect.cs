@@ -26,6 +26,14 @@ namespace Staffer.OrgChart.Layout
         /// </summary>
         public double Right => TopLeft.X + Size.Width;
         /// <summary>
+        /// Horizontal center.
+        /// </summary>
+        public double CenterH => TopLeft.X + Size.Width/2;
+        /// <summary>
+        /// Vertical center.
+        /// </summary>
+        public double CenterV => TopLeft.Y + Size.Height/2;
+        /// <summary>
         /// Top edge.
         /// </summary>
         public double Top => TopLeft.Y;
