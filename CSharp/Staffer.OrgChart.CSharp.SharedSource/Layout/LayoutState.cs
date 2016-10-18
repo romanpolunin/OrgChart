@@ -256,6 +256,9 @@ namespace Staffer.OrgChart.Layout
                 }
 
                 BoundaryChanged?.Invoke(this, new BoundaryChangedEventArgs(higherLevel.Boundary, higherLevel, this));
+
+                var rootNodeState = higherLevel.BranchRoot.RequireState();
+                rootNodeState.BranchExterior = higherLevel.Boundary.BoundingRect;
             }
 
             // return boundary to the pool

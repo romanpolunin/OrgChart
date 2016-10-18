@@ -44,6 +44,11 @@ namespace Staffer.OrgChart.Misc
                 }
             }
 
+            /// <summary>
+            /// Returns <c>true</c> if <see cref="State"/> is set to a non-null value.
+            /// </summary>
+            public bool HaveState => m_state != null;
+
             private static readonly bool ValueIsByRef = !typeof(TValueState).GetTypeInfo().IsValueType;
 
             /// <summary>

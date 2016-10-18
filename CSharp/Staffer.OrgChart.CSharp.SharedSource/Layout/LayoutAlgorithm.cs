@@ -148,13 +148,13 @@ namespace Staffer.OrgChart.Layout
         {
             if (!branchRoot.Element.AffectsLayout)
             {
-                return;
+                throw new InvalidOperationException($"Branch root {branchRoot.Element.Id} does not affect layout");
             }
 
             var level = state.PushLayoutLevel(branchRoot);
             try
             {
-                if (branchRoot.ChildCount > 0)
+                if (branchRoot.HaveState)
                 {
                     branchRoot.RequireState().RequireLayoutStrategy().ApplyHorizontalLayout(state, level);
                 }
@@ -172,13 +172,13 @@ namespace Staffer.OrgChart.Layout
         {
             if (!branchRoot.Element.AffectsLayout)
             {
-                return;
+                throw new InvalidOperationException($"Branch root {branchRoot.Element.Id} does not affect layout");
             }
 
             var level = state.PushLayoutLevel(branchRoot);
             try
             {
-                if (branchRoot.ChildCount > 0)
+                if (branchRoot.HaveState)
                 {
                     branchRoot.RequireState().RequireLayoutStrategy().ApplyVerticalLayout(state, level);
                 }
@@ -198,7 +198,7 @@ namespace Staffer.OrgChart.Layout
 
             state.VisualTree.IterateParentFirst(node =>
             {
-                if (node.Element.IsCollapsed || node.ChildCount == 0)
+                if (node.Element.IsCollapsed || !node.HaveState)
                 {
                     return false;
                 }
@@ -237,6 +237,22 @@ namespace Staffer.OrgChart.Layout
             }
 
             layoutLevel.Boundary.ReloadFromBranch(layoutLevel.BranchRoot);
+        }
+
+        /// <summary>
+        /// Moves a given branch horizontally, except its root box.
+        /// DOES NOT update branch boundaries.
+        /// </summary>
+        public static void MoveOneChild([NotNull]LayoutState state, [NotNull]Tree<int, Box, NodeLayoutInfo>.TreeNode root, double offset)
+        {
+            Tree<int, Box, NodeLayoutInfo>.TreeNode.IterateChildFirst(root,
+                node =>
+                {
+                    var rect = node.Element.Frame.Exterior;
+                    node.Element.Frame.Exterior = new Rect(new Point(rect.Left + offset, rect.Top),
+                        rect.Size);
+                    return true;
+                });
         }
 
         /// <summary>

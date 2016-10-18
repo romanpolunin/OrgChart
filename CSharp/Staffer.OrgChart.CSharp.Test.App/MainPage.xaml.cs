@@ -60,7 +60,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
             if (resetBoxes)
             {
                 m_dataSource = new TestDataSource();
-                new TestDataGen().GenerateDataItems(m_dataSource, 16);
+                new TestDataGen().GenerateDataItems(m_dataSource, 200);
 
                 var boxContainer = new BoxContainer(m_dataSource);
 
@@ -68,9 +68,13 @@ namespace Staffer.OrgChart.CSharp.Test.App
 
                 m_diagram = new Diagram {Boxes = boxContainer};
 
-                m_diagram.LayoutSettings.LayoutStrategies.Add("default",
+                m_diagram.LayoutSettings.LayoutStrategies.Add("linear",
+                    new LinearLayoutStrategy {ParentAlignment = BranchParentAlignment.Center});
+                m_diagram.LayoutSettings.LayoutStrategies.Add("multiline",
                     new MultiLineHangerLayoutStrategy {ParentAlignment = BranchParentAlignment.Center});
-                m_diagram.LayoutSettings.DefaultLayoutStrategyId = "default";
+                m_diagram.LayoutSettings.DefaultLayoutStrategyId = "multiline";
+
+                boxContainer.BoxesById[2].LayoutStrategyId = "multiline";
             }
             else if (resetLayout)
             {

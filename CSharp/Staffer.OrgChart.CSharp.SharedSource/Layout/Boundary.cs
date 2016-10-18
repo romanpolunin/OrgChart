@@ -133,13 +133,10 @@ namespace Staffer.OrgChart.Layout
             Prepare(box);
 
             var rect = box.Frame.Exterior;
-            Left.Add(new Step(box, rect.Left, rect.Top - VerticalMargin, rect.Bottom + VerticalMargin));
-            Right.Add(new Step(box, rect.Right, rect.Top - VerticalMargin, rect.Bottom + VerticalMargin));
 
-            if (VerticalMargin > 0)
-            {
-                BoundingRect = new Rect(Left[0].X, Left[0].Top, rect.Size.Width, rect.Size.Height + VerticalMargin*2);
-            }
+            var margin = box.IsSpecial ? VerticalMargin : 0;
+            Left.Add(new Step(box, rect.Left, rect.Top - margin, rect.Bottom + margin));
+            Right.Add(new Step(box, rect.Right, rect.Top - margin, rect.Bottom + margin));
         }
 
         /// <summary>
@@ -159,11 +156,6 @@ namespace Staffer.OrgChart.Layout
         /// </summary>
         public void VerticalMergeFrom([NotNull]Boundary other)
         {
-            if (BoundingRect.Top > other.BoundingRect.Top)
-            {
-                throw new ArgumentException("Other should not be above myself");
-            }
-            
             BoundingRect += other.BoundingRect;
         }
 
@@ -172,11 +164,6 @@ namespace Staffer.OrgChart.Layout
         /// </summary>
         public void MergeFrom([NotNull]Boundary other)
         {
-            if (BoundingRect.Top > other.BoundingRect.Top)
-            {
-                throw new ArgumentException("Other bounding rect should not be above myself");
-            }
-
             if (other.BoundingRect.Top >= other.BoundingRect.Bottom)
             {
                 throw new ArgumentException("Cannot merge boundary of height " + (other.BoundingRect.Bottom - other.BoundingRect.Top));
@@ -201,10 +188,10 @@ namespace Staffer.OrgChart.Layout
                         continue;
                     }
 
-                    if (th.Bottom <= my.Top && i == 0)
+                    if (th.Bottom <= my.Top)
                     {
                         // haven't reached the top of my boundary yet
-                        mySteps.Insert(k, th);
+                        mySteps.Insert(i, th);
                         k++;
 
                         ValidateState();
@@ -416,10 +403,6 @@ namespace Staffer.OrgChart.Layout
         public void MergeFrom([NotNull]Box box)
         {
             var rect = box.Frame.Exterior;
-            if (BoundingRect.Top > rect.Top)
-            {
-                throw new ArgumentException("Other should not be above myself");
-            }
 
             if (rect.Size.Height == 0)
             {
