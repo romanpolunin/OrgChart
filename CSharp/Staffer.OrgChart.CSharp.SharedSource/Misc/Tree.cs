@@ -49,7 +49,7 @@ namespace Staffer.OrgChart.Misc
             /// </summary>
             public bool HaveState => m_state != null;
 
-            private static readonly bool ValueIsByRef = !typeof(TValueState).GetTypeInfo().IsValueType;
+            private static readonly bool ValueIsByRef = true;//!typeof(TValueState).GetTypeInfo().IsValueType;
 
             /// <summary>
             /// Returns value of <see cref="State"/>, throws if it is default or <c>null</c>.
@@ -74,7 +74,7 @@ namespace Staffer.OrgChart.Misc
             /// References to child node wrappers.
             /// </summary>
             [CanBeNull]
-            public IReadOnlyList<TreeNode> Children => m_children;
+            public IList<TreeNode> Children => m_children;
 
             /// <summary>
             /// Number of children nodes.

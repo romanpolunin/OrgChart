@@ -16,12 +16,12 @@ namespace Staffer.OrgChart.Layout
         /// <summary>
         /// Access to internal collection of boxes.
         /// </summary>
-        public IReadOnlyDictionary<int, Box> BoxesById => m_boxesById;
+        public IDictionary<int, Box> BoxesById => m_boxesById;
 
         /// <summary>
         /// Access to internal collection of boxes.
         /// </summary>
-        public IReadOnlyDictionary<string, Box> BoxesByDataId => m_boxesByDataId;
+        public IDictionary<string, Box> BoxesByDataId => m_boxesByDataId;
 
         /// <summary>
         /// Auto-generated system root box. Added to guarantee a single-root hierarchy.
