@@ -44,6 +44,11 @@ namespace Staffer.OrgChart.Misc
                 }
             }
 
+            /// <summary>
+            /// Returns <c>true</c> if <see cref="State"/> is set to a non-null value.
+            /// </summary>
+            public bool HaveState => m_state != null;
+
             private static readonly bool ValueIsByRef = !typeof(TValueState).GetTypeInfo().IsValueType;
 
             /// <summary>
@@ -81,16 +86,7 @@ namespace Staffer.OrgChart.Misc
             /// </summary>
             public TreeNode AddChild([NotNull] TreeNode child)
             {
-                if (m_children == null)
-                {
-                    m_children = new List<TreeNode>();
-                }
-
-                m_children.Add(child);
-                child.ParentNode = this;
-                child.Level = Level + 1;
-
-                return this;
+                return InsertChild(ChildCount, child);
             }
 
             /// <summary>
@@ -98,7 +94,31 @@ namespace Staffer.OrgChart.Misc
             /// </summary>
             public TreeNode AddChild([NotNull] TValue child)
             {
-                AddChild(new TreeNode(child));
+                return InsertChild(ChildCount, child);
+            }
+
+            /// <summary>
+            /// Adds a new child to the list. Returns reference to self.
+            /// </summary>
+            public TreeNode InsertChild(int index, [NotNull] TValue child)
+            {
+                return InsertChild(index, new TreeNode(child));
+            }
+
+            /// <summary>
+            /// Adds a new child to the list. Returns reference to self.
+            /// </summary>
+            public TreeNode InsertChild(int index, [NotNull] TreeNode child)
+            {
+                if (m_children == null)
+                {
+                    m_children = new List<TreeNode>();
+                }
+
+                m_children.Insert(index, child);
+                child.ParentNode = this;
+                child.Level = Level + 1;
+
                 return this;
             }
 

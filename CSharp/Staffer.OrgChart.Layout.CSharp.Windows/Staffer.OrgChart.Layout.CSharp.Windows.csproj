@@ -54,6 +54,9 @@
     <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\BoxContainer.cs">
       <Link>Layout\BoxContainer.cs</Link>
     </Compile>
+    <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\BranchParentAlignment.cs">
+      <Link>Layout\BranchParentAlignment.cs</Link>
+    </Compile>
     <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\CanBeNullAttribute.cs">
       <Link>Annotations\CanBeNullAttribute.cs</Link>
     </Compile>
@@ -92,6 +95,9 @@
     </Compile>
     <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\MultiLineHangerLayoutStrategy.cs">
       <Link>Layout\MultiLineHangerLayoutStrategy.cs</Link>
+    </Compile>
+    <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\NodeLayoutInfo.cs">
+      <Link>Layout\NodeLayoutInfo.cs</Link>
     </Compile>
     <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\NotNullAttribute.cs">
       <Link>Annotations\NotNullAttribute.cs</Link>
