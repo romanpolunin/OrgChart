@@ -16,7 +16,8 @@ namespace Staffer.OrgChart.Layout
         /// </summary>
         public static Rect ComputeBranchVisualBoundingRect([NotNull]Tree<int, Box, NodeLayoutInfo> visualTree)
         {
-            var result = visualTree.Roots[0].Element.Frame.Exterior;
+            var result = new Rect();
+            var initialized = false;
 
             Tree<int, Box, NodeLayoutInfo>.TreeNode.IterateParentFirst(visualTree.Roots[0], node =>
             {
@@ -24,7 +25,15 @@ namespace Staffer.OrgChart.Layout
 
                 if (box.AffectsLayout && !box.IsSpecial)
                 {
-                    result += box.Frame.Exterior;
+                    if (initialized)
+                    {
+                        result += box.Frame.Exterior;
+                    }
+                    else
+                    {
+                        initialized = true;
+                        result = box.Frame.Exterior;
+                    }
                 }
 
                 return !box.IsCollapsed;
