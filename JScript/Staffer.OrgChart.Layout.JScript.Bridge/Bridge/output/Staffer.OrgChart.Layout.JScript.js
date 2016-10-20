@@ -3759,6 +3759,12 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
                 items.setItem(to, temp);
             }
 
+            // introduce more than root
+            for (var i3 = 0; i3 < 4; i3 = (i3 + 1) | 0) {
+                var ix = random.next$1(items.getCount());
+                items.getItem(ix).parentId = null;
+            }
+
             $t = Bridge.getEnumerator(items);
             while ($t.moveNext()) {
                 var item = $t.getCurrent();
@@ -3854,8 +3860,8 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
                 var nodeState = node.requireState();
                 nodeState.siblingsCount = node.getElement().isCollapsed ? 0 : normalChildCount;
 
-                // only add spacers for non-collapsed boxes under system root
-                if (node.getLevel() > 0 && !node.getElement().isCollapsed) {
+                // only add spacers for non-collapsed boxes
+                if (!node.getElement().isCollapsed) {
                     var verticalSpacer = Staffer.OrgChart.Layout.Box.special(Staffer.OrgChart.Layout.Box.None, node.getElement().id);
                     node.addChild(verticalSpacer);
 
@@ -4162,8 +4168,8 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
             var nodeState = node.requireState();
             nodeState.siblingsCount = node.getElement().isCollapsed ? 0 : node.getChildCount();
 
-            // only add spacers for non-collapsed boxes under system root
-            if (node.getLevel() > 0 && !node.getElement().isCollapsed) {
+            // only add spacers for non-collapsed boxes
+            if (!node.getElement().isCollapsed) {
                 var lastRowBoxCount = node.getChildCount() % this.maxSiblingsPerRow;
 
                 // add one (for vertical spacer) into the count of layout columns

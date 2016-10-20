@@ -21,8 +21,8 @@ namespace Staffer.OrgChart.Layout
                 var nodeState = node.RequireState();
                 nodeState.SiblingsCount = node.Element.IsCollapsed ? 0 : normalChildCount;
 
-                // only add spacers for non-collapsed boxes under system root
-                if (node.Level > 0 && !node.Element.IsCollapsed)
+                // only add spacers for non-collapsed boxes
+                if (!node.Element.IsCollapsed)
                 {
                     var verticalSpacer = Box.Special(Box.None, node.Element.Id);
                     node.AddChild(verticalSpacer);

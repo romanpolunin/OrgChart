@@ -35,8 +35,8 @@ namespace Staffer.OrgChart.Layout
             var nodeState = node.RequireState();
             nodeState.SiblingsCount = node.Element.IsCollapsed ? 0 : node.ChildCount;
 
-            // only add spacers for non-collapsed boxes under system root
-            if (node.Level > 0 && !node.Element.IsCollapsed)
+            // only add spacers for non-collapsed boxes
+            if (!node.Element.IsCollapsed)
             {
                 var lastRowBoxCount = node.ChildCount%MaxSiblingsPerRow;
 
