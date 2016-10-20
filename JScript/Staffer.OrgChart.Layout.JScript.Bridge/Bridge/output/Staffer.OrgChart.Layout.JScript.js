@@ -1066,7 +1066,7 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
          * @return  {void}
          */
         reloadBoxes: function (source) {
-            var $t;
+            var $t, $t1;
             this.m_boxesByDataId.clear();
             this.m_boxesById.clear();
             this.m_lastBoxId = 0;
@@ -1075,14 +1075,23 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
             // but don't add it to the list of boxes yet
             this.setSystemRoot(Staffer.OrgChart.Layout.Box.special(((this.m_lastBoxId = (this.m_lastBoxId + 1) | 0)), Staffer.OrgChart.Layout.Box.None));
 
-            // add data-bound boxes
+            var map = new (System.Collections.Generic.Dictionary$2(String,System.Int32))();
+
+            // generate identifiers mapping, need this first since data comes in random order
             $t = Bridge.getEnumerator(source.Staffer$OrgChart$Layout$IChartDataSource$getAllDataItemIds(), null, String);
             while ($t.moveNext()) {
                 var dataId = $t.getCurrent();
-                var parentDataId = System.String.isNullOrEmpty(dataId) ? null : source.Staffer$OrgChart$Layout$IChartDataSource$getGetParentKeyFunc()(dataId);
-                var visualParentId = System.String.isNullOrEmpty(parentDataId) ? this.getSystemRoot().id : this.m_boxesByDataId.get(parentDataId).id;
+                map.add(dataId, this.nextBoxId());
+            }
 
-                this.addBox(dataId, visualParentId);
+            // add data-bound boxes
+            $t1 = Bridge.getEnumerator(source.Staffer$OrgChart$Layout$IChartDataSource$getAllDataItemIds(), null, String);
+            while ($t1.moveNext()) {
+                var dataId1 = $t1.getCurrent();
+                var parentDataId = System.String.isNullOrEmpty(dataId1) ? null : source.Staffer$OrgChart$Layout$IChartDataSource$getGetParentKeyFunc()(dataId1);
+                var visualParentId = System.String.isNullOrEmpty(parentDataId) ? this.getSystemRoot().id : map.get(parentDataId);
+
+                this.addBox$1(dataId1, map.get(dataId1), visualParentId);
             }
 
             // now add the root
@@ -1101,6 +1110,15 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
          */
         addBox: function (dataId, visualParentId) {
             var box = new Staffer.OrgChart.Layout.Box.ctor(dataId, this.nextBoxId(), visualParentId);
+            this.m_boxesById.add(box.id, box);
+            if (!System.String.isNullOrEmpty(dataId)) {
+                this.m_boxesByDataId.add(box.dataId, box);
+            }
+
+            return box;
+        },
+        addBox$1: function (dataId, id, visualParentId) {
+            var box = new Staffer.OrgChart.Layout.Box.ctor(dataId, id, visualParentId);
             this.m_boxesById.add(box.id, box);
             if (!System.String.isNullOrEmpty(dataId)) {
                 this.m_boxesByDataId.add(box.dataId, box);
@@ -3730,6 +3748,15 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
 
                 firstInLayer = (firstInLayer + layerSize) | 0;
                 prevLayerSize = layerSize;
+            }
+
+            // now shuffle the items a bit, to prevent clients from assuming that data always comes in hierarchical order
+            for (var i2 = 0; i2 < ((Bridge.Int.div(items.getCount(), 2)) | 0); i2 = (i2 + 1) | 0) {
+                var from = random.next$1(items.getCount());
+                var to = random.next$1(items.getCount());
+                var temp = items.getItem(from);
+                items.setItem(from, items.getItem(to));
+                items.setItem(to, temp);
             }
 
             $t = Bridge.getEnumerator(items);

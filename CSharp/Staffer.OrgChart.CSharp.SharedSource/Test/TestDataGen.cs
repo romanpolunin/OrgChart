@@ -54,6 +54,16 @@ namespace Staffer.OrgChart.Test
                 prevLayerSize = layerSize;
             }
 
+            // now shuffle the items a bit, to prevent clients from assuming that data always comes in hierarchical order
+            for (var i = 0; i < items.Count/2; i++)
+            {
+                var from = random.Next(items.Count);
+                var to = random.Next(items.Count);
+                var temp = items[from];
+                items[from] = items[to];
+                items[to] = temp;
+            }
+
             foreach (var item in items)
             {
                 yield return item;

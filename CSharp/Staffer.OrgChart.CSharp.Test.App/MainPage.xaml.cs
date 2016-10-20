@@ -255,7 +255,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
                         new TranslateTransform {X = frame.Exterior.Left + 5, Y = frame.Exterior.Top + 5},
                     Width = double.NaN,
                     Height = double.NaN,
-                    Text = box.IsSpecial ? "" : box.Id.ToString(),
+                    Text = box.IsSpecial ? "" : $"{box.Id} ({box.DataId})",
                     IsHitTestVisible = false
                 });
 

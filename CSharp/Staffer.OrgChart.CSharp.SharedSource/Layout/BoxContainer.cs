@@ -57,13 +57,21 @@ namespace Staffer.OrgChart.Layout
             // but don't add it to the list of boxes yet
             SystemRoot = Box.Special(++m_lastBoxId, Box.None);
             
+            var map = new Dictionary<string, int>();
+            
+            // generate identifiers mapping, need this first since data comes in random order
+            foreach (var dataId in source.AllDataItemIds)
+            {
+                map.Add(dataId, NextBoxId());
+            }
+
             // add data-bound boxes
             foreach (var dataId in source.AllDataItemIds)
             {
                 var parentDataId = string.IsNullOrEmpty(dataId) ? null : source.GetParentKeyFunc(dataId);
-                var visualParentId = string.IsNullOrEmpty(parentDataId) ? SystemRoot.Id : m_boxesByDataId[parentDataId].Id;
+                var visualParentId = string.IsNullOrEmpty(parentDataId) ? SystemRoot.Id : map[parentDataId];
 
-                AddBox(dataId, visualParentId);
+                AddBox(dataId, map[dataId], visualParentId);
             }
 
             // now add the root
@@ -79,6 +87,18 @@ namespace Staffer.OrgChart.Layout
         public Box AddBox(string dataId, int visualParentId)
         {
             var box = new Box(dataId, NextBoxId(), visualParentId);
+            m_boxesById.Add(box.Id, box);
+            if (!string.IsNullOrEmpty(dataId))
+            {
+                m_boxesByDataId.Add(box.DataId, box);
+            }
+
+            return box;
+        }
+        
+        private Box AddBox(string dataId, int id, int visualParentId)
+        {
+            var box = new Box(dataId, id, visualParentId);
             m_boxesById.Add(box.Id, box);
             if (!string.IsNullOrEmpty(dataId))
             {
