@@ -60,7 +60,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
             if (resetBoxes)
             {
                 m_dataSource = new TestDataSource();
-                new TestDataGen().GenerateDataItems(m_dataSource, 200);
+                new TestDataGen().GenerateDataItems(m_dataSource, 20);
 
                 var boxContainer = new BoxContainer(m_dataSource);
 
@@ -70,11 +70,14 @@ namespace Staffer.OrgChart.CSharp.Test.App
 
                 m_diagram.LayoutSettings.LayoutStrategies.Add("linear",
                     new LinearLayoutStrategy {ParentAlignment = BranchParentAlignment.Center});
+
                 m_diagram.LayoutSettings.LayoutStrategies.Add("multiline",
                     new MultiLineHangerLayoutStrategy {ParentAlignment = BranchParentAlignment.Center});
-                m_diagram.LayoutSettings.DefaultLayoutStrategyId = "multiline";
 
-                boxContainer.BoxesById[2].LayoutStrategyId = "multiline";
+                m_diagram.LayoutSettings.LayoutStrategies.Add("singlecolumn",
+                    new SingleColumnLayoutStrategy {ParentAlignment = BranchParentAlignment.Right});
+
+                m_diagram.LayoutSettings.DefaultLayoutStrategyId = "singlecolumn";
             }
             else if (resetLayout)
             {
@@ -233,6 +236,17 @@ namespace Staffer.OrgChart.CSharp.Test.App
 
                 var frame = box.Frame;
 
+                var branchFrameRectangle = new Rectangle
+                {
+                    RenderTransform =
+                        new TranslateTransform {X = node.Element.Frame.BranchExterior.Left, Y = node.Element.Frame.BranchExterior.Top},
+                    Width = node.Element.Frame.BranchExterior.Size.Width,
+                    Height = node.Element.Frame.BranchExterior.Size.Height,
+                    Stroke = new SolidColorBrush(Colors.Blue) { Opacity = 0.6 },
+                    StrokeThickness = 0.5,
+                    DataContext = box
+                };
+
                 var boxRectangle = new Rectangle
                 {
                     RenderTransform =
@@ -248,6 +262,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
                 boxRectangle.DoubleTapped += BoxOnDoubleTapped;
 
                 drawCanvas.Children.Add(boxRectangle);
+                drawCanvas.Children.Add(branchFrameRectangle);
 
                 drawCanvas.Children.Add(new TextBlock
                 {

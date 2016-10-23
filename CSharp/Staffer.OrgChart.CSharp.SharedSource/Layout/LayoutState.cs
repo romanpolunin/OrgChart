@@ -232,11 +232,12 @@ namespace Staffer.OrgChart.Layout
                 {
                     case Operation.VerticalLayout:
                         higherLevel.Boundary.VerticalMergeFrom(innerLevel.Boundary);
+                        higherLevel.BranchRoot.Element.Frame.BranchExterior = higherLevel.Boundary.BoundingRect;
                         break;
 
                     case Operation.HorizontalLayout:
                     {
-                        var strategy = higherLevel.BranchRoot.RequireState().RequireLayoutStrategy();
+                        var strategy = higherLevel.BranchRoot.State.RequireLayoutStrategy();
 
                         var overlap = higherLevel.Boundary.ComputeOverlap(
                             innerLevel.Boundary, strategy.SiblingSpacing, Diagram.LayoutSettings.BranchSpacing);
@@ -248,6 +249,7 @@ namespace Staffer.OrgChart.Layout
                         }
 
                         higherLevel.Boundary.MergeFrom(innerLevel.Boundary);
+                        higherLevel.BranchRoot.Element.Frame.BranchExterior = higherLevel.Boundary.BoundingRect;
                     }
                         break;
                     default:
@@ -256,9 +258,6 @@ namespace Staffer.OrgChart.Layout
                 }
 
                 BoundaryChanged?.Invoke(this, new BoundaryChangedEventArgs(higherLevel.Boundary, higherLevel, this));
-
-                var rootNodeState = higherLevel.BranchRoot.RequireState();
-                rootNodeState.BranchExterior = higherLevel.Boundary.BoundingRect;
             }
 
             // return boundary to the pool

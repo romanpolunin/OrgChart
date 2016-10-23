@@ -124,27 +124,24 @@ namespace Staffer.OrgChart.Layout
                     return false;
                 }
 
-                var nodeState = new NodeLayoutInfo();
-                node.State = nodeState;
-
                 // first, find and associate layout strategy in effect for this node
                 if (node.Element.LayoutStrategyId != null)
                 {
                     // is it explicitly specified?
-                    nodeState.EffectiveLayoutStrategy = state.Diagram.LayoutSettings.LayoutStrategies[node.Element.LayoutStrategyId];
+                    node.State.EffectiveLayoutStrategy = state.Diagram.LayoutSettings.LayoutStrategies[node.Element.LayoutStrategyId];
                 }
                 else if (node.ParentNode != null)
                 {
                     // can we inherit it from previous level?
-                    nodeState.EffectiveLayoutStrategy = node.ParentNode.RequireState().RequireLayoutStrategy();
+                    node.State.EffectiveLayoutStrategy = node.ParentNode.State.RequireLayoutStrategy();
                 }
                 else
                 {
-                    nodeState.EffectiveLayoutStrategy = state.Diagram.LayoutSettings.RequireDefaultLayoutStrategy();
+                    node.State.EffectiveLayoutStrategy = state.Diagram.LayoutSettings.RequireDefaultLayoutStrategy();
                 }
 
                 // now let it pre-allocate special boxes etc
-                nodeState.RequireLayoutStrategy().PreProcessThisNode(state, node);
+                node.State.RequireLayoutStrategy().PreProcessThisNode(state, node);
 
                 return !node.Element.IsCollapsed;
             });
@@ -163,9 +160,9 @@ namespace Staffer.OrgChart.Layout
             var level = state.PushLayoutLevel(branchRoot);
             try
             {
-                if (branchRoot.HaveState)
+                if (branchRoot.State.SiblingsCount > 0 && !branchRoot.Element.IsCollapsed)
                 {
-                    branchRoot.RequireState().RequireLayoutStrategy().ApplyHorizontalLayout(state, level);
+                    branchRoot.State.RequireLayoutStrategy().ApplyHorizontalLayout(state, level);
                 }
             }
             finally
@@ -187,9 +184,9 @@ namespace Staffer.OrgChart.Layout
             var level = state.PushLayoutLevel(branchRoot);
             try
             {
-                if (branchRoot.HaveState)
+                if (branchRoot.State.SiblingsCount > 0 && !branchRoot.Element.IsCollapsed)
                 {
-                    branchRoot.RequireState().RequireLayoutStrategy().ApplyVerticalLayout(state, level);
+                    branchRoot.State.RequireLayoutStrategy().ApplyVerticalLayout(state, level);
                 }
             }
             finally
@@ -207,14 +204,19 @@ namespace Staffer.OrgChart.Layout
 
             state.VisualTree.IterateParentFirst(node =>
             {
-                if (node.Element.IsCollapsed || !node.HaveState)
+                if (node.Element.IsCollapsed || node.State.SiblingsCount == 0)
                 {
                     return false;
                 }
 
-                if (!node.Element.IsSpecial || node.Level == 0)
+                if (node.Level == 0)
                 {
-                    node.RequireState().RequireLayoutStrategy().RouteConnectors(state, node);
+                    return true;
+                }
+
+                if (!node.Element.IsSpecial)
+                {
+                    node.State.RequireLayoutStrategy().RouteConnectors(state, node);
                     return true;
                 }
 
@@ -224,6 +226,8 @@ namespace Staffer.OrgChart.Layout
 
         /// <summary>
         /// Moves a given branch horizontally, except its root box.
+        /// Also updates branch exterior rects.
+        /// Also updates branch boundary for the current <paramref name="layoutLevel"/>.
         /// </summary>
         public static void MoveChildrenOnly([NotNull]LayoutState state, LayoutState.LayoutLevel layoutLevel, double offset)
         {
@@ -238,47 +242,49 @@ namespace Staffer.OrgChart.Layout
                 Tree<int, Box, NodeLayoutInfo>.TreeNode.IterateChildFirst(child,
                     node =>
                     {
-                        var rect = node.Element.Frame.Exterior;
-                        node.Element.Frame.Exterior = new Rect(new Point(rect.Left + offset, rect.Top),
-                            rect.Size);
+                        if (node.Element.AffectsLayout)
+                        {
+                            node.Element.Frame.Exterior = node.Element.Frame.Exterior.MoveH(offset);
+                            node.Element.Frame.BranchExterior = node.Element.Frame.BranchExterior.MoveH(offset);
+                        }
                         return true;
                     });
             }
 
             layoutLevel.Boundary.ReloadFromBranch(layoutLevel.BranchRoot);
+            layoutLevel.BranchRoot.Element.Frame.BranchExterior = layoutLevel.Boundary.BoundingRect;
         }
 
         /// <summary>
         /// Moves a given branch horizontally, except its root box.
-        /// DOES NOT update branch boundaries.
+        /// Also updates branch exterior rects.
+        /// Unlike <see cref="MoveChildrenOnly"/> and <see cref="MoveBranch"/>, does NOT update the boundary.
         /// </summary>
+        /// <remarks>DOES NOT update branch boundary! Must call <see cref="Boundary.ReloadFromBranch"/> after batch of updates is complete</remarks>
         public static void MoveOneChild([NotNull]LayoutState state, [NotNull]Tree<int, Box, NodeLayoutInfo>.TreeNode root, double offset)
         {
             Tree<int, Box, NodeLayoutInfo>.TreeNode.IterateChildFirst(root,
                 node =>
                 {
-                    var rect = node.Element.Frame.Exterior;
-                    node.Element.Frame.Exterior = new Rect(new Point(rect.Left + offset, rect.Top),
-                        rect.Size);
+                    if (node.Element.AffectsLayout)
+                    {
+                        node.Element.Frame.Exterior = node.Element.Frame.Exterior.MoveH(offset);
+                        node.Element.Frame.BranchExterior = node.Element.Frame.BranchExterior.MoveH(offset);
+                    }
                     return true;
                 });
         }
 
         /// <summary>
         /// Moves a given branch horizontally, including its root box.
+        /// Also updates branch exterior rects.
+        /// Also updates branch boundary for the current <paramref name="layoutLevel"/>.
         /// </summary>
         public static void MoveBranch([NotNull]LayoutState state, LayoutState.LayoutLevel layoutLevel, double offset)
         {
-            Tree<int, Box, NodeLayoutInfo>.TreeNode.IterateChildFirst(layoutLevel.BranchRoot,
-                node =>
-                {
-                    var rect = node.Element.Frame.Exterior;
-                    node.Element.Frame.Exterior = new Rect(new Point(rect.Left + offset, rect.Top),
-                        rect.Size);
-                    return true;
-                });
-
+            MoveOneChild(state, layoutLevel.BranchRoot, offset);
             layoutLevel.Boundary.ReloadFromBranch(layoutLevel.BranchRoot);
+            layoutLevel.BranchRoot.Element.Frame.BranchExterior = layoutLevel.Boundary.BoundingRect;
         }
     }
 }

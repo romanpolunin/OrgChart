@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Reflection;
 using Staffer.OrgChart.Annotations;
 
 namespace Staffer.OrgChart.Misc
@@ -12,7 +11,7 @@ namespace Staffer.OrgChart.Misc
     /// <typeparam name="TValue">Type of the element</typeparam>
     /// <typeparam name="TValueState">Type of the additional state object bound to the element</typeparam>
     public class Tree<TKey, TValue, TValueState>
-        where TValue : class
+        where TValue : class where TValueState : new()
     {
         /// <summary>
         /// Node wrapper.
@@ -20,7 +19,6 @@ namespace Staffer.OrgChart.Misc
         public class TreeNode
         {
             private List<TreeNode> m_children;
-            private TValueState m_state;
 
             /// <summary>
             /// Hierarchy level.
@@ -33,36 +31,10 @@ namespace Staffer.OrgChart.Misc
             public TValue Element { get; }
 
             /// <summary>
-            /// Optional additional information associated with the <see cref="Element"/> in this node.
-            /// </summary>
-            public TValueState State
-            {
-                [NotNull]
-                set
-                {
-                    m_state = value;
-                }
-            }
-
-            /// <summary>
-            /// Returns <c>true</c> if <see cref="State"/> is set to a non-null value.
-            /// </summary>
-            public bool HaveState => m_state != null;
-
-            private static readonly bool ValueIsByRef = true;//!typeof(TValueState).GetTypeInfo().IsValueType;
-
-            /// <summary>
-            /// Returns value of <see cref="State"/>, throws if it is default or <c>null</c>.
+            /// Additional information associated with the <see cref="Element"/> in this node.
             /// </summary>
             [NotNull]
-            public TValueState RequireState()
-            {
-                if (ValueIsByRef && ReferenceEquals(m_state, null))
-                {
-                    throw new InvalidOperationException("State is not set");
-                }
-                return m_state;
-            }
+            public TValueState State { get; }
 
             /// <summary>
             /// Reference to parent node wrapper.
@@ -128,6 +100,7 @@ namespace Staffer.OrgChart.Misc
             public TreeNode([NotNull]TValue element)
             {
                 Element = element;
+                State = new TValueState();
             }
 
             /// <summary>

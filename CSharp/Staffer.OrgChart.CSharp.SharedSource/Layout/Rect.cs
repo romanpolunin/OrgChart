@@ -13,30 +13,37 @@ namespace Staffer.OrgChart.Layout
         /// Top-left corner.
         /// </summary>
         public readonly Point TopLeft;
+
         /// <summary>
         /// Computed bottom-right corner.
         /// </summary>
         public Point BottomRight => new Point(TopLeft.X + Size.Width, TopLeft.Y + Size.Height);
+
         /// <summary>
         /// Left edge.
         /// </summary>
         public double Left => TopLeft.X;
+
         /// <summary>
         /// Right edge.
         /// </summary>
         public double Right => TopLeft.X + Size.Width;
+
         /// <summary>
         /// Horizontal center.
         /// </summary>
         public double CenterH => TopLeft.X + Size.Width/2;
+
         /// <summary>
         /// Vertical center.
         /// </summary>
         public double CenterV => TopLeft.Y + Size.Height/2;
+
         /// <summary>
         /// Top edge.
         /// </summary>
         public double Top => TopLeft.Y;
+
         /// <summary>
         /// Bottom edge.
         /// </summary>
@@ -84,6 +91,14 @@ namespace Staffer.OrgChart.Layout
             var right = Math.Max(x.Right, y.Right);
             var bottom = Math.Max(x.Bottom, y.Bottom);
             return new Rect(left, top, right - left, bottom - top);
+        }
+
+        /// <summary>
+        /// Returns a rectangle moved by <paramref name="offsetX"/> horizontally.
+        /// </summary>
+        public Rect MoveH(double offsetX)
+        {
+            return new Rect(new Point(Left + offsetX, Top), Size);
         }
     }
 }

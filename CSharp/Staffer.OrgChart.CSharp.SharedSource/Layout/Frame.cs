@@ -17,6 +17,12 @@ namespace Staffer.OrgChart.Layout
         public Rect Exterior;
 
         /// <summary>
+        /// External boundaries of this branch, updated by <see cref="LayoutAlgorithm"/> 
+        /// after each merge of <see cref="Boundary"/> containing children boxes.
+        /// </summary>
+        public Rect BranchExterior;
+
+        /// <summary>
         /// Exterior vertical boundaries of the layout row of siblings of this frame.
         /// </summary>
         public Dimensions SiblingsRowV;
@@ -34,6 +40,7 @@ namespace Staffer.OrgChart.Layout
         public void ResetLayout()
         {
             Exterior = new Rect(new Point(), Exterior.Size);
+            BranchExterior = Exterior;
             Connector = null;
             SiblingsRowV = Dimensions.MinMax();
         }

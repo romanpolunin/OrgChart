@@ -49,12 +49,6 @@ namespace Staffer.OrgChart.Layout
         /// </summary>
         public int NumberOfSiblingColumns;
 
-        /// <summary>
-        /// External boundaries of this branch, updated by <see cref="LayoutAlgorithm"/> 
-        /// after each merge of <see cref="Boundary"/> containing children boxes.
-        /// </summary>
-        public Rect BranchExterior;
-
         private LayoutStrategyBase m_effectiveLayoutStrategy;
     }
 }

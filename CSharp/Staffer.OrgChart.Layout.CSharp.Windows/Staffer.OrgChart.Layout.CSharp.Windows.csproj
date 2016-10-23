@@ -108,6 +108,9 @@
     <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\Rect.cs">
       <Link>Layout\Rect.cs</Link>
     </Compile>
+    <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\SingleColumnLayoutStrategy.cs">
+      <Link>Layout\SingleColumnLayoutStrategy.cs</Link>
+    </Compile>
     <Compile Include="..\staffer.orgchart.csharp.sharedsource\misc\Tree.cs">
       <Link>Misc\Tree.cs</Link>
     </Compile>
