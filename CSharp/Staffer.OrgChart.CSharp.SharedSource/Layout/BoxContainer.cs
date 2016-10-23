@@ -82,18 +82,11 @@ namespace Staffer.OrgChart.Layout
         /// Creates a new <see cref="Box"/> and adds it to collection.
         /// </summary>
         /// <param name="dataId">Optional identifier of the external data item</param>
-        /// <param name="visualParentId"></param>
+        /// <param name="visualParentId">Optional identifier of the box that should be parent of this one in the chart</param>
         /// <returns>Newly created Box object</returns>
         public Box AddBox(string dataId, int visualParentId)
         {
-            var box = new Box(dataId, NextBoxId(), visualParentId);
-            m_boxesById.Add(box.Id, box);
-            if (!string.IsNullOrEmpty(dataId))
-            {
-                m_boxesByDataId.Add(box.DataId, box);
-            }
-
-            return box;
+            return AddBox(dataId, NextBoxId(), visualParentId);
         }
         
         private Box AddBox(string dataId, int id, int visualParentId)
