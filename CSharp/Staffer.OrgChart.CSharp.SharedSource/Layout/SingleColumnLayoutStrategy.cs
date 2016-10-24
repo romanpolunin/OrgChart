@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Staffer.OrgChart.Annotations;
 using Staffer.OrgChart.Misc;
 
@@ -23,17 +24,17 @@ namespace Staffer.OrgChart.Layout
                 throw new InvalidOperationException("Unsupported value for " + nameof(ParentAlignment));
             }
 
-            node.State.SiblingsCount = node.Element.IsCollapsed ? 0 : node.ChildCount;
+            node.State.NumberOfSiblings = node.Element.IsCollapsed ? 0 : node.ChildCount;
 
             // only add spacers for non-collapsed boxes
-            if (node.State.SiblingsCount > 0 && node.Level > 0)
+            if (node.State.NumberOfSiblings > 0 && node.Level > 0)
             {
                 // add one (for vertical spacer) into the count of layout columns
                 node.State.NumberOfSiblingColumns = 1;
                 node.State.NumberOfSiblingRows = node.ChildCount;
 
                 // add parent's vertical carrier to the end
-                var verticalSpacer = Box.Special(Box.None, node.Element.Id);
+                var verticalSpacer = Box.Special(Box.None, node.Element.Id, false);
                 node.AddChild(verticalSpacer);
             }
         }
@@ -52,10 +53,8 @@ namespace Staffer.OrgChart.Layout
 
             var prevRowExterior = node.Element.Frame.SiblingsRowV;
 
-            for (var row = 0; row < node.State.SiblingsCount; row++)
+            for (var row = 0; row < node.State.NumberOfSiblings; row++)
             {
-                var rowExterior = Dimensions.MinMax();
-
                 // first, compute
                 var child = node.Children[row];
                 var rect = child.Element.Frame.Exterior;
@@ -68,9 +67,7 @@ namespace Staffer.OrgChart.Layout
                     rect.Size.Height);
                 child.Element.Frame.BranchExterior = child.Element.Frame.Exterior;
 
-                rowExterior += new Dimensions(top, top + rect.Size.Height);
-
-                var childBranchBottom = child.Element.Frame.Exterior.Bottom;
+                var rowExterior = new Dimensions(top, top + rect.Size.Height);
 
                 child = node.Children[row];
                 child.Element.Frame.SiblingsRowV = rowExterior;
@@ -78,7 +75,7 @@ namespace Staffer.OrgChart.Layout
                 // re-enter layout algorithm for child branch
                 LayoutAlgorithm.VerticalLayout(state, child);
 
-                childBranchBottom = child.Element.Frame.BranchExterior.Bottom;
+                var childBranchBottom = child.Element.Frame.BranchExterior.Bottom;
 
                 prevRowExterior = new Dimensions(rowExterior.From, Math.Max(childBranchBottom, rowExterior.To));
             }
@@ -94,7 +91,7 @@ namespace Staffer.OrgChart.Layout
             var nodeState = node.State;
 
             // first, perform horizontal layout for every node in this column
-            for (var row = 0; row < nodeState.SiblingsCount; row++)
+            for (var row = 0; row < nodeState.NumberOfSiblings; row++)
             {
                 var child = node.Children[row];
 
@@ -103,65 +100,53 @@ namespace Staffer.OrgChart.Layout
                 LayoutAlgorithm.HorizontalLayout(state, child);
             }
 
-            // compute the rightmost center in the column
-            var center = double.MinValue;
-            for (var row = 0; row < nodeState.SiblingsCount; row++)
+            // now align the column
+            var edges = LayoutAlgorithm.AlignHorizontalCenters(state, level, EnumerateColumn(node));
+
+            if (node.Level > 0)
             {
-                var c = node.Children[row].Element.Frame.Exterior.CenterH;
-                if (c > center)
+                var rect = node.Element.Frame.Exterior;
+                double diff;
+                if (ParentAlignment == BranchParentAlignment.Left)
                 {
-                    center = c;
+                    var desiredLeft = rect.CenterH + ParentConnectorShield/2;
+                    diff = desiredLeft - edges.From;
+                }
+                else if (ParentAlignment == BranchParentAlignment.Right)
+                {
+                    var desiredRight = rect.CenterH - ParentConnectorShield/2;
+                    diff = desiredRight - edges.To;
+                }
+                else
+                {
+                    throw new InvalidOperationException("Invalid ParentAlignment setting");
+                }
+
+                // vertical connector from parent
+                LayoutAlgorithm.MoveChildrenOnly(state, level, diff);
+
+                // spacer for the vertical carrier 
+                var verticalSpacerBox = node.Level > 0 ? node.Children[node.ChildCount - 1].Element : null;
+                if (verticalSpacerBox != null)
+                {
+                    var spacerTop = node.Element.Frame.Exterior.Bottom;
+                    var spacerBottom = node.Children[node.ChildCount - 2].Element.Frame.Exterior.Bottom;
+                    verticalSpacerBox.Frame.Exterior = new Rect(
+                        rect.CenterH - ParentConnectorShield/2,
+                        spacerTop,
+                        ParentConnectorShield,
+                        spacerBottom - spacerTop);
+                    verticalSpacerBox.Frame.BranchExterior = verticalSpacerBox.Frame.Exterior;
+                    state.MergeSpacer(verticalSpacerBox);
                 }
             }
+        }
 
-            // move those boxes in the column that are not aligned with the rightmost center
-            var leftmost = double.MaxValue;
-            var rightmost = double.MinValue;
-            for (var row = 0; row < nodeState.SiblingsCount; row++)
+        private IEnumerable<Tree<int, Box, NodeLayoutInfo>.TreeNode> EnumerateColumn(Tree<int, Box, NodeLayoutInfo>.TreeNode branchRoot)
+        {
+            for (var i = 0; i < branchRoot.State.NumberOfSiblings; i++)
             {
-                var child = node.Children[row];
-                var frame = child.Element.Frame;
-                var c = frame.Exterior.CenterH;
-                if (c != center)
-                {
-                    LayoutAlgorithm.MoveOneChild(state, child, center - c);
-                }
-                leftmost = Math.Min(leftmost, child.Element.Frame.BranchExterior.Left);
-                rightmost = Math.Max(rightmost, child.Element.Frame.BranchExterior.Right);
-            }
-            
-            // update branch boundary
-            level.Boundary.ReloadFromBranch(node);
-
-            var rect = node.Element.Frame.Exterior;
-            double diff;
-            if (ParentAlignment == BranchParentAlignment.Left)
-            {
-                var desiredLeft = rect.CenterH + ParentConnectorShield/2;
-                diff = desiredLeft - leftmost;
-            }
-            else 
-            {
-                var desiredRight = rect.CenterH - ParentConnectorShield/2;
-                diff = desiredRight - rightmost;
-            }
-
-            // vertical connector from parent
-            LayoutAlgorithm.MoveChildrenOnly(state, level, diff);
-
-            // spacer for the vertical carrier 
-            var verticalSpacerBox = node.Level > 0 ? node.Children[node.ChildCount - 1].Element : null;
-            if (verticalSpacerBox != null)
-            {
-                var spacerTop = node.Element.Frame.Exterior.Bottom;
-                var spacerBottom = node.Children[node.ChildCount - 2].Element.Frame.Exterior.Bottom;
-                verticalSpacerBox.Frame.Exterior = new Rect(
-                    rect.CenterH - ParentConnectorShield / 2,
-                    spacerTop,
-                    ParentConnectorShield,
-                    spacerBottom - spacerTop);
-                verticalSpacerBox.Frame.BranchExterior = verticalSpacerBox.Frame.Exterior;
-                state.MergeSpacer(verticalSpacerBox);
+                yield return branchRoot.Children[i];
             }
         }
 
@@ -171,19 +156,19 @@ namespace Staffer.OrgChart.Layout
         public override void RouteConnectors([NotNull] LayoutState state, [NotNull] Tree<int, Box, NodeLayoutInfo>.TreeNode node)
         {
             // one parent connector (also serves as mid-sibling carrier) and horizontal carriers
-            var count = 1 + node.State.SiblingsCount;
+            var count = 1 + node.State.NumberOfSiblings;
 
             var segments = new Edge[count];
 
             var rootRect = node.Element.Frame.Exterior;
             var center = rootRect.CenterH;
 
-            var verticalCarrierHeight = node.Children[node.State.SiblingsCount - 1].Element.Frame.Exterior.CenterV - node.Element.Frame.Exterior.Bottom;
+            var verticalCarrierHeight = node.Children[node.State.NumberOfSiblings - 1].Element.Frame.Exterior.CenterV - node.Element.Frame.Exterior.Bottom;
 
             // big vertical connector, from parent to last row
             segments[0] = new Edge(new Point(center, rootRect.Bottom), new Point(center, rootRect.Bottom + verticalCarrierHeight));
 
-            for (var ix = 0; ix < node.State.SiblingsCount; ix++)
+            for (var ix = 0; ix < node.State.NumberOfSiblings; ix++)
             {
                 var rect = node.Children[ix].Element.Frame.Exterior;
                 var destination = ParentAlignment == BranchParentAlignment.Left ? rect.Left : rect.Right;

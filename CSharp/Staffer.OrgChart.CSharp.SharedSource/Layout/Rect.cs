@@ -59,6 +59,16 @@ namespace Staffer.OrgChart.Layout
         /// </summary>
         public Rect(double x, double y, double w, double h)
         {
+            if (w < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(w));
+            }
+
+            if (h < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(h));
+            }
+
             TopLeft = new Point(x, y);
             Size = new Size(w, h);
         }

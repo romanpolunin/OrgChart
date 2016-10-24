@@ -60,7 +60,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
             if (resetBoxes)
             {
                 m_dataSource = new TestDataSource();
-                new TestDataGen().GenerateDataItems(m_dataSource, 20);
+                new TestDataGen().GenerateDataItems(m_dataSource, 200);
 
                 var boxContainer = new BoxContainer(m_dataSource);
 
@@ -77,7 +77,10 @@ namespace Staffer.OrgChart.CSharp.Test.App
                 m_diagram.LayoutSettings.LayoutStrategies.Add("singlecolumn",
                     new SingleColumnLayoutStrategy {ParentAlignment = BranchParentAlignment.Right});
 
-                m_diagram.LayoutSettings.DefaultLayoutStrategyId = "singlecolumn";
+                m_diagram.LayoutSettings.LayoutStrategies.Add("fishbone",
+                    new MultiLineFishboneLayoutStrategy {ParentAlignment = BranchParentAlignment.Center, MaxGroups = 3});
+
+                m_diagram.LayoutSettings.DefaultLayoutStrategyId = "fishbone";
             }
             else if (resetLayout)
             {

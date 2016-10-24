@@ -37,15 +37,17 @@ namespace Staffer.OrgChart.Layout
         /// Some special auto-generated spacer boxes may not be included into this number,
         /// those are manually merged into the <see cref="Boundary"/> after other boxes are ready.
         /// </summary>
-        public int SiblingsCount;
+        public int NumberOfSiblings;
 
         /// <summary>
-        /// Number of sibling rows. Used by strategies that arrange box's immediate children in more than one line.
+        /// Number of sibling rows. Used by strategies that arrange box's immediate children into more than one line.
+        /// Meaning of "row" may differ.
         /// </summary>
         public int NumberOfSiblingRows;
 
         /// <summary>
-        /// Number of sibling columns. Used by strategies that arrange box's immediate children in more than one column.
+        /// Number of sibling columns. Used by strategies that arrange box's immediate children into more than one column.
+        /// Meaning of "column" may differ, e.g. it may include one or more boxes per each logical row.
         /// </summary>
         public int NumberOfSiblingColumns;
 

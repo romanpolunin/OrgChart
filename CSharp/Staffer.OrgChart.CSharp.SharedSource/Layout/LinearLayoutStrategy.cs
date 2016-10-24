@@ -23,15 +23,15 @@ namespace Staffer.OrgChart.Layout
             var normalChildCount = node.ChildCount;
             if (normalChildCount > 0)
             {
-                node.State.SiblingsCount = node.Element.IsCollapsed ? 0 : normalChildCount;
+                node.State.NumberOfSiblings = node.Element.IsCollapsed ? 0 : normalChildCount;
 
                 // only add spacers for non-collapsed boxes
                 if (!node.Element.IsCollapsed)
                 {
-                    var verticalSpacer = Box.Special(Box.None, node.Element.Id);
+                    var verticalSpacer = Box.Special(Box.None, node.Element.Id, false);
                     node.AddChild(verticalSpacer);
 
-                    var horizontalSpacer = Box.Special(Box.None, node.Element.Id);
+                    var horizontalSpacer = Box.Special(Box.None, node.Element.Id, false);
                     node.AddChild(horizontalSpacer);
                 }
             }
@@ -50,12 +50,12 @@ namespace Staffer.OrgChart.Layout
             }
 
             var siblingsRowExterior = Dimensions.MinMax();
-            if (node.State.SiblingsCount == 0)
+            if (node.State.NumberOfSiblings == 0)
             {
                 return;
             }
 
-            for (var i = 0; i < node.State.SiblingsCount; i++)
+            for (var i = 0; i < node.State.NumberOfSiblings; i++)
             {
                 var child = node.Children[i];
                 var rect = child.Element.Frame.Exterior;
@@ -73,7 +73,7 @@ namespace Staffer.OrgChart.Layout
 
             siblingsRowExterior = new Dimensions(siblingsRowExterior.From, siblingsRowExterior.To);
 
-            for (var i = 0; i < node.State.SiblingsCount; i++)
+            for (var i = 0; i < node.State.NumberOfSiblings; i++)
             {
                 var child = node.Children[i];
                 child.Element.Frame.SiblingsRowV = siblingsRowExterior;
@@ -90,7 +90,7 @@ namespace Staffer.OrgChart.Layout
         {
             var node = level.BranchRoot;
 
-            for (var i = 0; i < node.State.SiblingsCount; i++)
+            for (var i = 0; i < node.State.NumberOfSiblings; i++)
             {
                 var child = node.Children[i];
                 // re-enter layout algorithm for child branch
@@ -99,18 +99,18 @@ namespace Staffer.OrgChart.Layout
 
             if (ParentAlignment == BranchParentAlignment.Center)
             {
-                var rect = node.Element.Frame.Exterior;
-                var leftmost = node.Children[0].Element.Frame.Exterior.CenterH;
-                var rightmost = node.Children[node.State.SiblingsCount - 1].Element.Frame.Exterior.CenterH;
-                var desiredCenter = leftmost + (rightmost - leftmost)/2;
-                var center = rect.CenterH;
-                var diff = center - desiredCenter;
-                LayoutAlgorithm.MoveChildrenOnly(state, level, diff);
-
                 if (node.Level > 0)
                 {
+                    var rect = node.Element.Frame.Exterior;
+                    var leftmost = node.Children[0].Element.Frame.Exterior.CenterH;
+                    var rightmost = node.Children[node.State.NumberOfSiblings - 1].Element.Frame.Exterior.CenterH;
+                    var desiredCenter = leftmost + (rightmost - leftmost)/2;
+                    var center = rect.CenterH;
+                    var diff = center - desiredCenter;
+                    LayoutAlgorithm.MoveChildrenOnly(state, level, diff);
+
                     // vertical connector from parent 
-                    var verticalSpacerBox = node.Children[node.State.SiblingsCount].Element;
+                    var verticalSpacerBox = node.Children[node.State.NumberOfSiblings].Element;
                     verticalSpacerBox.Frame.Exterior = new Rect(
                         center - ParentConnectorShield/2,
                         rect.Bottom,
@@ -123,11 +123,11 @@ namespace Staffer.OrgChart.Layout
                     // horizontal protector
                     var firstInRow = node.Children[0].Element.Frame;
 
-                    var horizontalSpacerBox = node.Children[node.State.SiblingsCount + 1].Element;
+                    var horizontalSpacerBox = node.Children[node.State.NumberOfSiblings + 1].Element;
                     horizontalSpacerBox.Frame.Exterior = new Rect(
                         firstInRow.Exterior.Left,
                         firstInRow.SiblingsRowV.From - ParentChildSpacing,
-                        node.Children[node.State.SiblingsCount - 1].Element.Frame.Exterior.Right - firstInRow.Exterior.Left,
+                        node.Children[node.State.NumberOfSiblings - 1].Element.Frame.Exterior.Right - firstInRow.Exterior.Left,
                         ParentChildSpacing);
                     horizontalSpacerBox.Frame.BranchExterior = horizontalSpacerBox.Frame.Exterior;
 
@@ -145,7 +145,7 @@ namespace Staffer.OrgChart.Layout
         /// </summary>
         public override void RouteConnectors([NotNull] LayoutState state, [NotNull] Tree<int, Box, NodeLayoutInfo>.TreeNode node)
         {
-            var normalChildCount = node.State.SiblingsCount;
+            var normalChildCount = node.State.NumberOfSiblings;
 
             var count = normalChildCount == 0
                 ? 0 // no visible children = no edges

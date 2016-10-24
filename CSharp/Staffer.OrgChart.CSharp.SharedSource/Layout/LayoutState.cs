@@ -48,7 +48,7 @@ namespace Staffer.OrgChart.Layout
         }
 
         /// <summary>
-        /// State of the layout operation for a particular level of hierarchy.
+        /// State of the layout operation for a particular sub-branch.
         /// </summary>
         [DebuggerDisplay("{BranchRoot.Element.Id}, {Boundary.BoundingRect.Top}..{Boundary.BoundingRect.Bottom}")]
         public struct LayoutLevel
@@ -165,7 +165,8 @@ namespace Staffer.OrgChart.Layout
         {
             if (m_pooledBoundaries.Count == 0)
             {
-                throw new InvalidOperationException("Hierarchy is deeper than expected");
+                //throw new InvalidOperationException("Hierarchy is deeper than expected");
+                m_pooledBoundaries.Add(new Boundary(Diagram.LayoutSettings.BoxVerticalMargin));
             }
 
             var boundary = m_pooledBoundaries[m_pooledBoundaries.Count - 1];
