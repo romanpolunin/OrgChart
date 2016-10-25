@@ -45,23 +45,11 @@ namespace Staffer.OrgChart.Layout
             {
                 // using column == group here, 
                 // and each group consists of two vertical stretches of boxes with a vertical carrier in between
-                if (node.State.NumberOfSiblings >= MaxGroups*2)
+                node.State.NumberOfSiblingColumns = MaxGroups;
+                node.State.NumberOfSiblingRows = node.State.NumberOfSiblings/(MaxGroups*2);
+                if (node.State.NumberOfSiblings%(MaxGroups*2) != 0)
                 {
-                    node.State.NumberOfSiblingColumns = MaxGroups;
-                    node.State.NumberOfSiblingRows = node.State.NumberOfSiblings / (MaxGroups * 2);
-                    if (node.State.NumberOfSiblings % (MaxGroups*2) != 0)
-                    {
-                        node.State.NumberOfSiblingRows++;
-                    }
-                }
-                else
-                {
-                    node.State.NumberOfSiblingColumns = node.State.NumberOfSiblings/2;
-                    if (node.State.NumberOfSiblings%2 != 0)
-                    {
-                        node.State.NumberOfSiblingColumns++;
-                    }
-                    node.State.NumberOfSiblingRows = 1;
+                    node.State.NumberOfSiblingRows++;
                 }
 
                 // a connector from parent to horizontal carrier
@@ -101,11 +89,10 @@ namespace Staffer.OrgChart.Layout
                 node.Element.Frame.SiblingsRowV = new Dimensions(node.Element.Frame.Exterior.Top, node.Element.Frame.Exterior.Bottom);
             }
 
-            var machine = new SingleFishboneLayoutAdapter(node);
-            for (var group = 0; group < node.State.NumberOfSiblingColumns; group++)
-            {
-                machine.InitRange(group);
-                LayoutAlgorithm.VerticalLayout(state, machine.SpecialRoot);
+            var adapter = new SingleFishboneLayoutAdapter(node);
+            while (adapter.NextGroup())
+            {   
+                LayoutAlgorithm.VerticalLayout(state, adapter.SpecialRoot);
             }
         }
 
@@ -127,9 +114,8 @@ namespace Staffer.OrgChart.Layout
             }
 
             var adapter = new SingleFishboneLayoutAdapter(node);
-            for (var group = 0; group < node.State.NumberOfSiblingColumns; group++)
+            while (adapter.NextGroup())
             {
-                adapter.InitRange(group);
                 LayoutAlgorithm.HorizontalLayout(state, adapter.SpecialRoot);
             }
 
@@ -182,7 +168,7 @@ namespace Staffer.OrgChart.Layout
                     var rightmost = node.Children[ix - 1].Element.Frame.Exterior.Right;
                     horizontalSpacerBox.Frame.Exterior = new Rect(
                         leftmost, node.Element.Frame.Exterior.Bottom,
-                        rightmost - leftmost, ParentChildSpacing);
+                        Math.Abs(rightmost - leftmost), ParentChildSpacing);
                     horizontalSpacerBox.Frame.BranchExterior = horizontalSpacerBox.Frame.Exterior;
                     state.MergeSpacer(horizontalSpacerBox);
                 }
@@ -224,31 +210,30 @@ namespace Staffer.OrgChart.Layout
             // one hook for each child
             var isLeft = true;
             var countOnThisSide = 0;
-            var group = 0;
-            for (var i = 0; i < node.State.NumberOfSiblings; i++)
+            var iterator = new SingleFishboneLayoutAdapter.GroupIterator(node.State.NumberOfSiblings, node.State.NumberOfSiblingColumns);
+            while (iterator.NextGroup())
             {
-                var carrier = node.Children[1 + node.State.NumberOfSiblings + group].Element.Frame.Exterior;
+                var carrier = node.Children[1 + node.State.NumberOfSiblings + iterator.Group].Element.Frame.Exterior;
                 var from = carrier.CenterH;
-                var to = isLeft ? node.Children[i].Element.Frame.Exterior.Right : node.Children[i].Element.Frame.Exterior.Left;
-                var y = node.Children[i].Element.Frame.Exterior.CenterV;
-                segments[ix++] = new Edge(new Point(from, y), new Point(to, y));
 
-                if (++countOnThisSide == node.State.NumberOfSiblingRows)
+                for (var i = iterator.FromIndex; i < iterator.FromIndex + iterator.Count; i++)
                 {
-                    countOnThisSide = 0;
-                    if (!isLeft)
+                    var to = isLeft ? node.Children[i].Element.Frame.Exterior.Right : node.Children[i].Element.Frame.Exterior.Left;
+                    var y = node.Children[i].Element.Frame.Exterior.CenterV;
+                    segments[ix++] = new Edge(new Point(from, y), new Point(to, y));
+
+                    if (++countOnThisSide == iterator.MaxOnLeft)
                     {
-                        group++;
+                        countOnThisSide = 0;
+                        if (isLeft)
+                        {
+                            // one for each vertical carrier
+                            segments[1 + node.State.NumberOfSiblings + iterator.Group] = new Edge(
+                                new Point(carrier.CenterH, carrier.Top - ChildConnectorHookLength),
+                                new Point(carrier.CenterH, node.Children[i].Element.Frame.Exterior.CenterV));
+                        }
+                        isLeft = !isLeft;
                     }
-                    else
-                    {
-                        // one for each vertical carrier
-                        var verticalCarrier = node.Children[1 + node.State.NumberOfSiblings + group].Element.Frame.Exterior;
-                        segments[1 + node.State.NumberOfSiblings + group] = new Edge(
-                            new Point(verticalCarrier.CenterH, verticalCarrier.Top - ChildConnectorHookLength),
-                            new Point(verticalCarrier.CenterH, node.Children[i].Element.Frame.Exterior.CenterV));
-                    }
-                    isLeft = !isLeft;
                 }
             }
 
@@ -275,6 +260,70 @@ namespace Staffer.OrgChart.Layout
         /// </summary>
         private class SingleFishboneLayoutAdapter : LayoutStrategyBase
         {
+            public class GroupIterator
+            {
+                private readonly int m_numberOfSiblings;
+                private readonly int m_numberOfGroups;
+
+                public int Group;
+                public int FromIndex;
+                public int Count;
+                public int MaxOnLeft;
+
+                public GroupIterator(int numberOfSiblings, int numberOfGroups)
+                {
+                    m_numberOfSiblings = numberOfSiblings;
+                    m_numberOfGroups = numberOfGroups;
+                }
+
+                public int CountInGroup()
+                {
+                    var countInRow = m_numberOfGroups * 2;
+
+                    var result = 0;
+                    var countToThisGroup = Group * 2 + 2;
+                    var firstInRow = 0;
+                    while (true)
+                    {
+                        var countInThisRow = firstInRow >= m_numberOfSiblings - countInRow ? m_numberOfSiblings - firstInRow : countInRow;
+                        if (countInThisRow >= countToThisGroup)
+                        {
+                            result += 2;
+                        }
+                        else
+                        {
+                            countToThisGroup--;
+                            if (countInThisRow >= countToThisGroup)
+                            {
+                                result++;
+                            }
+                            break;
+                        }
+                        firstInRow += countInRow;
+                    }
+
+                    return result;
+                }
+
+                public bool NextGroup()
+                {
+                    FromIndex = FromIndex + Count;
+
+                    if (FromIndex > 0)
+                    {
+                        Group++;
+                    }
+                    Count = CountInGroup();
+                    MaxOnLeft = Count / 2;
+                    if (MaxOnLeft == 0 && Count > 0)
+                    {
+                        MaxOnLeft++;
+                    }
+
+                    return Count != 0;
+                }
+            }
+
             public class TreeNodeView : Tree<int, Box, NodeLayoutInfo>.TreeNode
             {
                 public TreeNodeView([NotNull] Box element) : base(element)
@@ -301,13 +350,12 @@ namespace Staffer.OrgChart.Layout
 
             public readonly Tree<int, Box, NodeLayoutInfo>.TreeNode RealRoot;
             public readonly TreeNodeView SpecialRoot;
-
-            public int Group;
-            public int FromIndex;
-            public int Count;
+            public readonly GroupIterator Iterator;
 
             public SingleFishboneLayoutAdapter([NotNull]Tree<int, Box, NodeLayoutInfo>.TreeNode realRoot)
             {
+                Iterator = new GroupIterator(realRoot.State.NumberOfSiblings, realRoot.State.NumberOfSiblingColumns);
+
                 RealRoot = realRoot;
                 SpecialRoot = new TreeNodeView(Box.Special(Box.None, realRoot.Element.Id, true))
                 {
@@ -325,33 +373,28 @@ namespace Staffer.OrgChart.Layout
                 ChildConnectorHookLength = parentStrategy.ChildConnectorHookLength;
             }
 
-            public void InitRange(int group)
+            public bool NextGroup()
             {
-                if (group < 0)
+                if (!Iterator.NextGroup())
                 {
-                    throw new ArgumentOutOfRangeException(nameof(group));
+                    return false;
                 }
 
-                Group = group;
-                FromIndex = group*2*RealRoot.State.NumberOfSiblingRows;
-                Count = 2*RealRoot.State.NumberOfSiblingRows;
-                if (FromIndex + Count > RealRoot.State.NumberOfSiblings)
-                {
-                    Count = RealRoot.State.NumberOfSiblings - FromIndex;
-                }
-                SpecialRoot.State.NumberOfSiblings = Count;
-                SpecialRoot.Prepare(RealRoot.State.NumberOfSiblingRows*2);
+                SpecialRoot.State.NumberOfSiblings = Iterator.Count;
+                SpecialRoot.Prepare(RealRoot.State.NumberOfSiblingRows * 2);
 
-                for (var i = 0; i < Count; i++)
+                for (var i = 0; i < Iterator.Count; i++)
                 {
-                    SpecialRoot.AddChildView(RealRoot.Children[FromIndex + i]);
+                    SpecialRoot.AddChildView(RealRoot.Children[Iterator.FromIndex + i]);
                 }
-                var spacer = RealRoot.Children[RealRoot.State.NumberOfSiblings + 1 + Group];
+                var spacer = RealRoot.Children[RealRoot.State.NumberOfSiblings + 1 + Iterator.Group];
                 SpecialRoot.AddChildView(spacer);
 
                 SpecialRoot.Element.Frame.Exterior = RealRoot.Element.Frame.Exterior;
                 SpecialRoot.Element.Frame.BranchExterior = RealRoot.Element.Frame.Exterior;
                 SpecialRoot.Element.Frame.SiblingsRowV = RealRoot.Element.Frame.SiblingsRowV;
+
+                return true;
             }
 
             public override void PreProcessThisNode(LayoutState state, Tree<int, Box, NodeLayoutInfo>.TreeNode node)
@@ -363,13 +406,7 @@ namespace Staffer.OrgChart.Layout
             {
                 var prevRowBottom = SpecialRoot.Element.Frame.SiblingsRowV.To;
                 
-                var maxOnLeft = Count/2;
-                if (maxOnLeft == 0)
-                {
-                    maxOnLeft++;
-                }
-
-                for (var i = 0; i < maxOnLeft; i++)
+                for (var i = 0; i < Iterator.MaxOnLeft; i++)
                 {
                     var child = SpecialRoot.Children[i];
                     var frame = child.Element.Frame;
@@ -378,8 +415,8 @@ namespace Staffer.OrgChart.Layout
 
                     var rowExterior = new Dimensions(frame.Exterior.Top, frame.Exterior.Bottom);
 
-                    var i2 = i + maxOnLeft;
-                    if (i2 < Count)
+                    var i2 = i + Iterator.MaxOnLeft;
+                    if (i2 < Iterator.Count)
                     {
                         var child2 = SpecialRoot.Children[i2];
                         var frame2 = child2.Element.Frame;
@@ -418,14 +455,8 @@ namespace Staffer.OrgChart.Layout
                 }
 
                 var left = true;
-                var maxOnLeft = Count / 2;
-                if (maxOnLeft == 0)
-                {
-                    maxOnLeft++;
-                }
-
                 var countOnThisSide = 0;
-                for (var i = 0; i < Count; i++)
+                for (var i = 0; i < Iterator.Count; i++)
                 {
                     var child = SpecialRoot.Children[i];
                     LayoutAlgorithm.HorizontalLayout(state, child);
@@ -433,12 +464,12 @@ namespace Staffer.OrgChart.Layout
                     // we go top-bottom to layout left side of the group,
                     // then add a carrier protector
                     // then top-bottom to fill right side of the group
-                    if (++countOnThisSide == maxOnLeft)
+                    if (++countOnThisSide == Iterator.MaxOnLeft)
                     {
                         if (left)
                         {
-                            // horizontally align children in this pillar
-                            LayoutAlgorithm.AlignHorizontalCenters(state, level, EnumerateSiblings(0, maxOnLeft));
+                            // horizontally align children in left pillar
+                            LayoutAlgorithm.AlignHorizontalCenters(state, level, EnumerateSiblings(0, Iterator.MaxOnLeft));
 
                             left = false;
                             countOnThisSide = 0;
@@ -449,13 +480,23 @@ namespace Staffer.OrgChart.Layout
                                 rightmost = Math.Max(rightmost, SpecialRoot.Children[k].Element.Frame.BranchExterior.Right);
                             }
 
-                            if (Count%2 == 0)
+                            // vertical spacer does not have to be extended to the bottom of the lowest branch,
+                            // unless the lowest branch on the right side has some children and is expanded
+                            if (Iterator.Count %2 != 0)
                             {
-                                rightmost = Math.Max(rightmost, child.Element.Frame.BranchExterior.Right);
+                                rightmost = Math.Max(rightmost, child.Element.Frame.Exterior.Right);
                             }
                             else
                             {
-                                rightmost = Math.Max(rightmost, child.Element.Frame.Exterior.Right);
+                                var opposite = SpecialRoot.Children[SpecialRoot.State.NumberOfSiblings - 1];
+                                if (opposite.Element.IsCollapsed || opposite.ChildCount == 0)
+                                {
+                                    rightmost = Math.Max(rightmost, child.Element.Frame.Exterior.Right);
+                                }
+                                else
+                                {
+                                    rightmost = Math.Max(rightmost, child.Element.Frame.BranchExterior.Right);
+                                }
                             }
 
                             // integrate protector for group's vertical carrier 
@@ -463,7 +504,7 @@ namespace Staffer.OrgChart.Layout
                             spacer.Frame.Exterior = new Rect(
                                 rightmost,
                                 SpecialRoot.Children[0].Element.Frame.SiblingsRowV.From,
-                                ParentConnectorShield,
+                                SiblingSpacing,
                                 child.Element.Frame.SiblingsRowV.To - SpecialRoot.Children[0].Element.Frame.SiblingsRowV.From
                                 );
                             spacer.Frame.BranchExterior = spacer.Frame.Exterior;
@@ -471,8 +512,8 @@ namespace Staffer.OrgChart.Layout
                         }
                         else
                         {
-                            // horizontally align children in this pillar
-                            LayoutAlgorithm.AlignHorizontalCenters(state, level, EnumerateSiblings(maxOnLeft, Count));
+                            // horizontally align children in right pillar
+                            LayoutAlgorithm.AlignHorizontalCenters(state, level, EnumerateSiblings(Iterator.MaxOnLeft, Iterator.Count));
                         }
                     }
                 }

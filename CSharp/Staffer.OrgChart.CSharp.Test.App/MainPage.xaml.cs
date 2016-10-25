@@ -78,7 +78,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
                     new SingleColumnLayoutStrategy {ParentAlignment = BranchParentAlignment.Right});
 
                 m_diagram.LayoutSettings.LayoutStrategies.Add("fishbone",
-                    new MultiLineFishboneLayoutStrategy {ParentAlignment = BranchParentAlignment.Center, MaxGroups = 3});
+                    new MultiLineFishboneLayoutStrategy {ParentAlignment = BranchParentAlignment.Center, MaxGroups = 5});
 
                 m_diagram.LayoutSettings.DefaultLayoutStrategyId = "fishbone";
             }
