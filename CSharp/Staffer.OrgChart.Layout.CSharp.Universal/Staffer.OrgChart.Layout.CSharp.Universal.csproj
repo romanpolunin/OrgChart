@@ -162,6 +162,9 @@
     <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\LinearLayoutStrategy.cs">
       <Link>Layout\LinearLayoutStrategy.cs</Link>
     </Compile>
+    <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\MultiLineFishboneLayoutStrategy.cs">
+      <Link>Layout\MultiLineFishboneLayoutStrategy.cs</Link>
+    </Compile>
     <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\MultiLineHangerLayoutStrategy.cs">
       <Link>Layout\MultiLineHangerLayoutStrategy.cs</Link>
     </Compile>

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Staffer.OrgChart.Annotations;
 using Staffer.OrgChart.Misc;
@@ -160,7 +161,7 @@ namespace Staffer.OrgChart.Layout
             var level = state.PushLayoutLevel(branchRoot);
             try
             {
-                if (branchRoot.State.SiblingsCount > 0 && !branchRoot.Element.IsCollapsed)
+                if (branchRoot.State.NumberOfSiblings > 0 && !branchRoot.Element.IsCollapsed)
                 {
                     branchRoot.State.RequireLayoutStrategy().ApplyHorizontalLayout(state, level);
                 }
@@ -184,7 +185,7 @@ namespace Staffer.OrgChart.Layout
             var level = state.PushLayoutLevel(branchRoot);
             try
             {
-                if (branchRoot.State.SiblingsCount > 0 && !branchRoot.Element.IsCollapsed)
+                if (branchRoot.State.NumberOfSiblings > 0 && !branchRoot.Element.IsCollapsed)
                 {
                     branchRoot.State.RequireLayoutStrategy().ApplyVerticalLayout(state, level);
                 }
@@ -204,7 +205,7 @@ namespace Staffer.OrgChart.Layout
 
             state.VisualTree.IterateParentFirst(node =>
             {
-                if (node.Element.IsCollapsed || node.State.SiblingsCount == 0)
+                if (node.Element.IsCollapsed || node.State.NumberOfSiblings == 0)
                 {
                     return false;
                 }
@@ -285,6 +286,48 @@ namespace Staffer.OrgChart.Layout
             MoveOneChild(state, layoutLevel.BranchRoot, offset);
             layoutLevel.Boundary.ReloadFromBranch(layoutLevel.BranchRoot);
             layoutLevel.BranchRoot.Element.Frame.BranchExterior = layoutLevel.Boundary.BoundingRect;
+        }
+
+        /// <summary>
+        /// Vertically aligns a subset of child nodes, presumably located one above another.
+        /// All children must belong to the current layout level's root.
+        /// Returns leftmost and rightmost boundaries of all branches in the <paramref name="subset"/>, after alignment.
+        /// </summary>
+        public static Dimensions AlignHorizontalCenters(
+            [NotNull]LayoutState state, LayoutState.LayoutLevel level,
+            [NotNull]IEnumerable<Tree<int, Box, NodeLayoutInfo>.TreeNode> subset)
+        {
+            // compute the rightmost center in the column
+            var center = double.MinValue;
+            foreach (var child in subset)
+            {
+                var c = child.Element.Frame.Exterior.CenterH;
+                if (c > center)
+                {
+                    center = c;
+                }
+            }
+
+            // move those boxes in the column that are not aligned with the rightmost center
+            var leftmost = double.MaxValue;
+            var rightmost = double.MinValue;
+            foreach (var child in subset)
+            {
+                var frame = child.Element.Frame;
+                var c = frame.Exterior.CenterH;
+                if (c != center)
+                {
+                    var diff = center - c;
+                    MoveOneChild(state, child, diff);
+                }
+                leftmost = Math.Min(leftmost, child.Element.Frame.BranchExterior.Left);
+                rightmost = Math.Max(rightmost, child.Element.Frame.BranchExterior.Right);
+            }
+
+            // update branch boundary
+            level.Boundary.ReloadFromBranch(level.BranchRoot);
+
+            return new Dimensions(leftmost, rightmost);
         }
     }
 }

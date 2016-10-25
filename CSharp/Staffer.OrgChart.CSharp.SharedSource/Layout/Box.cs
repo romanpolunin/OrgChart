@@ -35,8 +35,15 @@ namespace Staffer.OrgChart.Layout
         /// <summary>
         /// This box has been auto-generated for layout purposes,
         /// so it can be deleted and re-created as needed.
+        /// Special boxes are usually not stored in the <see cref="BoxContainer"/> (except <see cref="BoxContainer.SystemRoot"/>).
         /// </summary>
         public readonly bool IsSpecial;
+
+        /// <summary>
+        /// <c>False</c> (default) to enable collision detection for this box,
+        /// e.g. whether it can make impact on <see cref="Boundary"/>.
+        /// </summary>
+        public readonly bool DisableCollisionDetection;
 
         /// <summary>
         /// Layout strategy that should be used to apply layout on this Box and its children.
@@ -70,7 +77,7 @@ namespace Staffer.OrgChart.Layout
         /// <summary>
         /// Ctr. for normal and data-bound boxes.
         /// </summary>
-        public Box([CanBeNull]string dataId, int id, int visualParentId) : this(dataId, id, visualParentId, false)
+        public Box([CanBeNull]string dataId, int id, int visualParentId) : this(dataId, id, visualParentId, false, false)
         {
         }
 
@@ -78,12 +85,12 @@ namespace Staffer.OrgChart.Layout
         /// Ctr. for auto-generated boxes.
         /// </summary>
         [NotNull]
-        public static Box Special(int id, int visualParentId)
+        public static Box Special(int id, int visualParentId, bool disableCollisionDetection)
         {
-            return new Box(null, id, visualParentId, true) {AffectsLayout = true};
+            return new Box(null, id, visualParentId, true, disableCollisionDetection);
         }
 
-        private Box([CanBeNull] string dataId, int id, int visualParentId, bool isSpecial)
+        private Box([CanBeNull] string dataId, int id, int visualParentId, bool isSpecial, bool disableCollisionDetection)
         {
             if (id == 0)
             {
@@ -95,7 +102,8 @@ namespace Staffer.OrgChart.Layout
             DataId = dataId;
             Frame = new Frame();
             IsSpecial = isSpecial;
-            AffectsLayout = isSpecial;
+            AffectsLayout = true;
+            DisableCollisionDetection = disableCollisionDetection;
         }
     }
 }

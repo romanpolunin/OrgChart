@@ -18,8 +18,6 @@ namespace Staffer.OrgChart.Misc
         /// </summary>
         public class TreeNode
         {
-            private List<TreeNode> m_children;
-
             /// <summary>
             /// Hierarchy level.
             /// </summary>
@@ -46,12 +44,12 @@ namespace Staffer.OrgChart.Misc
             /// References to child node wrappers.
             /// </summary>
             [CanBeNull]
-            public IList<TreeNode> Children => m_children;
+            public IList<TreeNode> Children { get; protected set; }
 
             /// <summary>
             /// Number of children nodes.
             /// </summary>
-            public int ChildCount => m_children == null ? 0 : m_children.Count;
+            public int ChildCount => Children == null ? 0 : Children.Count;
 
             /// <summary>
             /// Adds a new child to the list. Returns reference to self.
@@ -82,12 +80,12 @@ namespace Staffer.OrgChart.Misc
             /// </summary>
             public TreeNode InsertChild(int index, [NotNull] TreeNode child)
             {
-                if (m_children == null)
+                if (Children == null)
                 {
-                    m_children = new List<TreeNode>();
+                    Children = new List<TreeNode>();
                 }
 
-                m_children.Insert(index, child);
+                Children.Insert(index, child);
                 child.ParentNode = this;
                 child.Level = Level + 1;
 

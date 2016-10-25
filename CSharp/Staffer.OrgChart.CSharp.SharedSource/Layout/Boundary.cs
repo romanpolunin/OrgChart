@@ -132,6 +132,11 @@ namespace Staffer.OrgChart.Layout
         {
             Prepare(box);
 
+            if (box.DisableCollisionDetection)
+            {
+                return;
+            }
+
             var rect = box.Frame.Exterior;
 
             var margin = box.IsSpecial ? VerticalMargin : 0;
@@ -402,6 +407,11 @@ namespace Staffer.OrgChart.Layout
         /// </summary>
         public void MergeFrom([NotNull]Box box)
         {
+            if (box.DisableCollisionDetection)
+            {
+                return;
+            }
+
             var rect = box.Frame.Exterior;
 
             if (rect.Size.Height == 0)
@@ -483,6 +493,9 @@ namespace Staffer.OrgChart.Layout
                 Right[i] = right.ChangeBox(right.Box, rect.Right);
                 rightmost = Math.Max(rightmost, rect.Right);
             }
+
+            leftmost = Math.Min(branchRoot.Element.Frame.Exterior.Left, leftmost);
+            rightmost = Math.Max(branchRoot.Element.Frame.Exterior.Right, rightmost);
 
             BoundingRect = new Rect(new Point(leftmost, BoundingRect.Top),
                 new Size(rightmost - leftmost, BoundingRect.Size.Height));
