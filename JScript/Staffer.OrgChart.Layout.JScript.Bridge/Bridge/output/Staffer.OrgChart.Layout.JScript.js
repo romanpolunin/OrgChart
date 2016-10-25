@@ -276,6 +276,10 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
         prepareForHorizontalLayout: function (box) {
             this.prepare(box);
 
+            if (box.disableCollisionDetection) {
+                return;
+            }
+
             var rect = box.frame.exterior;
 
             var margin = box.isSpecial ? this.verticalMargin : 0;
@@ -504,6 +508,10 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
          * @return  {void}
          */
         mergeFrom$1: function (box) {
+            if (box.disableCollisionDetection) {
+                return;
+            }
+
             var rect = box.frame.exterior;
 
             if (rect.size.height === 0) {
@@ -594,6 +602,9 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
                 this.right.setItem(i1, right.changeBox(right.box, rect1.getRight()));
                 rightmost = Math.max(rightmost, rect1.getRight());
             }
+
+            leftmost = Math.min(branchRoot.getElement().frame.exterior.getLeft(), leftmost);
+            rightmost = Math.max(branchRoot.getElement().frame.exterior.getRight(), rightmost);
 
             this.setBoundingRect(new Staffer.OrgChart.Layout.Rect.$ctor1(new Staffer.OrgChart.Layout.Point.$ctor1(leftmost, this.getBoundingRect().getTop()), new Staffer.OrgChart.Layout.Size.$ctor1(rightmost - leftmost, this.getBoundingRect().size.height)));
         }
@@ -807,14 +818,13 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
              * @public
              * @this Staffer.OrgChart.Layout.Box
              * @memberof Staffer.OrgChart.Layout.Box
-             * @param   {number}                         id                
-             * @param   {number}                         visualParentId
+             * @param   {number}                         id                           
+             * @param   {number}                         visualParentId               
+             * @param   {boolean}                        disableCollisionDetection
              * @return  {Staffer.OrgChart.Layout.Box}
              */
-            special: function (id, visualParentId) {
-                return Bridge.merge(new Staffer.OrgChart.Layout.Box.$ctor1(null, id, visualParentId, true), {
-                    affectsLayout: true
-                } );
+            special: function (id, visualParentId, disableCollisionDetection) {
+                return new Staffer.OrgChart.Layout.Box.$ctor1(null, id, visualParentId, true, disableCollisionDetection);
             }
         },
         /**
@@ -852,6 +862,7 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
         /**
          * This box has been auto-generated for layout purposes,
          so it can be deleted and re-created as needed.
+         Special boxes are usually not stored in the {@link } (except {@link }).
          *
          * @instance
          * @public
@@ -860,6 +871,17 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
          * @type boolean
          */
         isSpecial: false,
+        /**
+         * <pre><code>False</code></pre> (default) to enable collision detection for this box,
+         e.g. whether it can make impact on {@link }.
+         *
+         * @instance
+         * @public
+         * @readonly
+         * @memberof Staffer.OrgChart.Layout.Box
+         * @type boolean
+         */
+        disableCollisionDetection: false,
         /**
          * Layout strategy that should be used to apply layout on this Box and its children.
          References an element in {@link }.
@@ -914,9 +936,9 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
          * @return  {void}
          */
         ctor: function (dataId, id, visualParentId) {
-            Staffer.OrgChart.Layout.Box.$ctor1.call(this, dataId, id, visualParentId, false);
+            Staffer.OrgChart.Layout.Box.$ctor1.call(this, dataId, id, visualParentId, false, false);
         },
-        $ctor1: function (dataId, id, visualParentId, isSpecial) {
+        $ctor1: function (dataId, id, visualParentId, isSpecial, disableCollisionDetection) {
             this.$initialize();
             if (id === 0) {
                 throw new System.ArgumentOutOfRangeException("id");
@@ -927,7 +949,8 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
             this.dataId = dataId;
             this.frame = new Staffer.OrgChart.Layout.Frame();
             this.isSpecial = isSpecial;
-            this.affectsLayout = isSpecial;
+            this.affectsLayout = true;
+            this.disableCollisionDetection = disableCollisionDetection;
         },
         /**
          * <pre><code>true</code></pre> is this box is bound to some data item.
@@ -1073,7 +1096,7 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
 
             // generate system root box, 
             // but don't add it to the list of boxes yet
-            this.setSystemRoot(Staffer.OrgChart.Layout.Box.special(((this.m_lastBoxId = (this.m_lastBoxId + 1) | 0)), Staffer.OrgChart.Layout.Box.None));
+            this.setSystemRoot(Staffer.OrgChart.Layout.Box.special(((this.m_lastBoxId = (this.m_lastBoxId + 1) | 0)), Staffer.OrgChart.Layout.Box.None, false));
 
             var map = new (System.Collections.Generic.Dictionary$2(String,System.Int32))();
 
@@ -1105,17 +1128,11 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
          * @this Staffer.OrgChart.Layout.BoxContainer
          * @memberof Staffer.OrgChart.Layout.BoxContainer
          * @param   {string}                         dataId            Optional identifier of the external data item
-         * @param   {number}                         visualParentId
+         * @param   {number}                         visualParentId    Optional identifier of the box that should be parent of this one in the chart
          * @return  {Staffer.OrgChart.Layout.Box}                      Newly created Box object
          */
         addBox: function (dataId, visualParentId) {
-            var box = new Staffer.OrgChart.Layout.Box.ctor(dataId, this.nextBoxId(), visualParentId);
-            this.m_boxesById.add(box.id, box);
-            if (!System.String.isNullOrEmpty(dataId)) {
-                this.m_boxesByDataId.add(box.dataId, box);
-            }
-
-            return box;
+            return this.addBox$1(dataId, this.nextBoxId(), visualParentId);
         },
         addBox$1: function (dataId, id, visualParentId) {
             var box = new Staffer.OrgChart.Layout.Box.ctor(dataId, id, visualParentId);
@@ -1732,6 +1749,7 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
         config: {
             init: function () {
                 this.exterior = new Staffer.OrgChart.Layout.Rect();
+                this.branchExterior = new Staffer.OrgChart.Layout.Rect();
                 this.siblingsRowV = new Staffer.OrgChart.Layout.Dimensions();
             }
         },
@@ -1747,6 +1765,7 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
          */
         resetLayout: function () {
             this.exterior = new Staffer.OrgChart.Layout.Rect.$ctor1(new Staffer.OrgChart.Layout.Point.ctor(), this.exterior.size);
+            this.branchExterior = this.exterior;
             this.connector = null;
             this.siblingsRowV = Staffer.OrgChart.Layout.Dimensions.minMax();
         }
@@ -1884,28 +1903,25 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
             },
             preprocessVisualTree: function (state, visualTree) {
                 visualTree.iterateParentFirst(function (node) {
-                    if (node.getElement().isSpecial && node.getLevel() > 0 || node.getChildCount() === 0) {
+                    if (node.getElement().isSpecial && node.getLevel() > 0) {
                         return false;
                     }
-
-                    var nodeState = new Staffer.OrgChart.Layout.NodeLayoutInfo();
-                    node.setState(nodeState);
 
                     // first, find and associate layout strategy in effect for this node
                     if (node.getElement().layoutStrategyId != null) {
                         // is it explicitly specified?
-                        nodeState.setEffectiveLayoutStrategy(state.getDiagram().getLayoutSettings().getLayoutStrategies().get(node.getElement().layoutStrategyId));
+                        node.getState().setEffectiveLayoutStrategy(state.getDiagram().getLayoutSettings().getLayoutStrategies().get(node.getElement().layoutStrategyId));
                     } else if (node.getParentNode() != null) {
                         // can we inherit it from previous level?
-                        nodeState.setEffectiveLayoutStrategy(node.getParentNode().requireState().requireLayoutStrategy());
+                        node.getState().setEffectiveLayoutStrategy(node.getParentNode().getState().requireLayoutStrategy());
                     } else {
-                        nodeState.setEffectiveLayoutStrategy(state.getDiagram().getLayoutSettings().requireDefaultLayoutStrategy());
+                        node.getState().setEffectiveLayoutStrategy(state.getDiagram().getLayoutSettings().requireDefaultLayoutStrategy());
                     }
 
                     // now let it pre-allocate special boxes etc
-                    nodeState.requireLayoutStrategy().preProcessThisNode(state, node);
+                    node.getState().requireLayoutStrategy().preProcessThisNode(state, node);
 
-                    return !node.getElement().isCollapsed;
+                    return !node.getElement().isCollapsed && node.getChildCount() > 0;
                 });
             },
             /**
@@ -1926,8 +1942,8 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
 
                 var level = state.pushLayoutLevel(branchRoot);
                 try {
-                    if (branchRoot.getHaveState()) {
-                        branchRoot.requireState().requireLayoutStrategy().applyHorizontalLayout(state, level);
+                    if (branchRoot.getState().numberOfSiblings > 0 && !branchRoot.getElement().isCollapsed) {
+                        branchRoot.getState().requireLayoutStrategy().applyHorizontalLayout(state, level);
                     }
                 }
                 finally {
@@ -1952,8 +1968,8 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
 
                 var level = state.pushLayoutLevel(branchRoot);
                 try {
-                    if (branchRoot.getHaveState()) {
-                        branchRoot.requireState().requireLayoutStrategy().applyVerticalLayout(state, level);
+                    if (branchRoot.getState().numberOfSiblings > 0 && !branchRoot.getElement().isCollapsed) {
+                        branchRoot.getState().requireLayoutStrategy().applyVerticalLayout(state, level);
                     }
                 }
                 finally {
@@ -1966,12 +1982,16 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
                 }
 
                 state.getVisualTree().iterateParentFirst(function (node) {
-                    if (node.getElement().isCollapsed || !node.getHaveState()) {
+                    if (node.getElement().isCollapsed || node.getState().numberOfSiblings === 0) {
                         return false;
                     }
 
-                    if (!node.getElement().isSpecial || node.getLevel() === 0) {
-                        node.requireState().requireLayoutStrategy().routeConnectors(state, node);
+                    if (node.getLevel() === 0) {
+                        return true;
+                    }
+
+                    if (!node.getElement().isSpecial) {
+                        node.getState().requireLayoutStrategy().routeConnectors(state, node);
                         return true;
                     }
 
@@ -1980,6 +2000,8 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
             },
             /**
              * Moves a given branch horizontally, except its root box.
+             Also updates branch exterior rects.
+             Also updates branch boundary for the current <b />.
              *
              * @static
              * @public
@@ -2002,18 +2024,22 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
                     (function () {
                         var child = $t.getCurrent();
                         Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo).iterateChildFirst(child, function (node) {
-                            var rect = node.getElement().frame.exterior;
-                            node.getElement().frame.exterior = new Staffer.OrgChart.Layout.Rect.$ctor1(new Staffer.OrgChart.Layout.Point.$ctor1(rect.getLeft() + offset, rect.getTop()), rect.size);
+                            if (node.getElement().affectsLayout) {
+                                node.getElement().frame.exterior = node.getElement().frame.exterior.moveH(offset);
+                                node.getElement().frame.branchExterior = node.getElement().frame.branchExterior.moveH(offset);
+                            }
                             return true;
                         });
                     }).call(this);
                 }
 
                 layoutLevel.boundary.reloadFromBranch(layoutLevel.branchRoot);
+                layoutLevel.branchRoot.getElement().frame.branchExterior = layoutLevel.boundary.getBoundingRect();
             },
             /**
              * Moves a given branch horizontally, except its root box.
-             DOES NOT update branch boundaries.
+             Also updates branch exterior rects.
+             Unlike {@link } and {@link }, does NOT update the boundary.
              *
              * @static
              * @public
@@ -2026,13 +2052,17 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
              */
             moveOneChild: function (state, root, offset) {
                 Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo).iterateChildFirst(root, function (node) {
-                    var rect = node.getElement().frame.exterior;
-                    node.getElement().frame.exterior = new Staffer.OrgChart.Layout.Rect.$ctor1(new Staffer.OrgChart.Layout.Point.$ctor1(rect.getLeft() + offset, rect.getTop()), rect.size);
+                    if (node.getElement().affectsLayout) {
+                        node.getElement().frame.exterior = node.getElement().frame.exterior.moveH(offset);
+                        node.getElement().frame.branchExterior = node.getElement().frame.branchExterior.moveH(offset);
+                    }
                     return true;
                 });
             },
             /**
              * Moves a given branch horizontally, including its root box.
+             Also updates branch exterior rects.
+             Also updates branch boundary for the current <b />.
              *
              * @static
              * @public
@@ -2044,13 +2074,57 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
              * @return  {void}
              */
             moveBranch: function (state, layoutLevel, offset) {
-                Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo).iterateChildFirst(layoutLevel.branchRoot, function (node) {
-                    var rect = node.getElement().frame.exterior;
-                    node.getElement().frame.exterior = new Staffer.OrgChart.Layout.Rect.$ctor1(new Staffer.OrgChart.Layout.Point.$ctor1(rect.getLeft() + offset, rect.getTop()), rect.size);
-                    return true;
-                });
-
+                Staffer.OrgChart.Layout.LayoutAlgorithm.moveOneChild(state, layoutLevel.branchRoot, offset);
                 layoutLevel.boundary.reloadFromBranch(layoutLevel.branchRoot);
+                layoutLevel.branchRoot.getElement().frame.branchExterior = layoutLevel.boundary.getBoundingRect();
+            },
+            /**
+             * Vertically aligns a subset of child nodes, presumably located one above another.
+             All children must belong to the current layout level's root.
+             Returns leftmost and rightmost boundaries of all branches in the <b />, after alignment.
+             *
+             * @static
+             * @public
+             * @this Staffer.OrgChart.Layout.LayoutAlgorithm
+             * @memberof Staffer.OrgChart.Layout.LayoutAlgorithm
+             * @param   {Staffer.OrgChart.Layout.LayoutState}                state     
+             * @param   {Staffer.OrgChart.Layout.LayoutState.LayoutLevel}    level     
+             * @param   {System.Collections.Generic.IEnumerable$1}           subset
+             * @return  {Staffer.OrgChart.Layout.Dimensions}
+             */
+            alignHorizontalCenters: function (state, level, subset) {
+                var $t, $t1;
+                // compute the rightmost center in the column
+                var center = System.Double.min;
+                $t = Bridge.getEnumerator(subset, null, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo));
+                while ($t.moveNext()) {
+                    var child = $t.getCurrent();
+                    var c = child.getElement().frame.exterior.getCenterH();
+                    if (c > center) {
+                        center = c;
+                    }
+                }
+
+                // move those boxes in the column that are not aligned with the rightmost center
+                var leftmost = System.Double.max;
+                var rightmost = System.Double.min;
+                $t1 = Bridge.getEnumerator(subset, null, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo));
+                while ($t1.moveNext()) {
+                    var child1 = $t1.getCurrent();
+                    var frame = child1.getElement().frame;
+                    var c1 = frame.exterior.getCenterH();
+                    if (c1 !== center) {
+                        var diff = center - c1;
+                        Staffer.OrgChart.Layout.LayoutAlgorithm.moveOneChild(state, child1, diff);
+                    }
+                    leftmost = Math.min(leftmost, child1.getElement().frame.branchExterior.getLeft());
+                    rightmost = Math.max(rightmost, child1.getElement().frame.branchExterior.getRight());
+                }
+
+                // update branch boundary
+                level.boundary.reloadFromBranch(level.branchRoot);
+
+                return new Staffer.OrgChart.Layout.Dimensions.$ctor1(leftmost, rightmost);
             }
         }
     });
@@ -2303,7 +2377,8 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
          */
         pushLayoutLevel: function (node) {
             if (this.m_pooledBoundaries.getCount() === 0) {
-                throw new System.InvalidOperationException("Hierarchy is deeper than expected");
+                //throw new InvalidOperationException("Hierarchy is deeper than expected");
+                this.m_pooledBoundaries.add(new Staffer.OrgChart.Layout.Boundary.$ctor1(this.getDiagram().getLayoutSettings().getBoxVerticalMargin()));
             }
 
             var boundary = this.m_pooledBoundaries.getItem(((this.m_pooledBoundaries.getCount() - 1) | 0));
@@ -2370,10 +2445,11 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
                 switch (this.getCurrentOperation()) {
                     case Staffer.OrgChart.Layout.LayoutState.Operation.VerticalLayout: 
                         higherLevel.boundary.verticalMergeFrom(innerLevel.boundary);
+                        higherLevel.branchRoot.getElement().frame.branchExterior = higherLevel.boundary.getBoundingRect();
                         break;
                     case Staffer.OrgChart.Layout.LayoutState.Operation.HorizontalLayout: 
                         {
-                            var strategy = higherLevel.branchRoot.requireState().requireLayoutStrategy();
+                            var strategy = higherLevel.branchRoot.getState().requireLayoutStrategy();
 
                             var overlap = higherLevel.boundary.computeOverlap(innerLevel.boundary, strategy.siblingSpacing, this.getDiagram().getLayoutSettings().getBranchSpacing());
 
@@ -2383,15 +2459,13 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
                             }
 
                             higherLevel.boundary.mergeFrom(innerLevel.boundary);
+                            higherLevel.branchRoot.getElement().frame.branchExterior = higherLevel.boundary.getBoundingRect();
                         }
                         break;
                     default: 
                         throw new System.InvalidOperationException("This operation can only be invoked when performing vertical or horizontal layouts");
                 }
                 !Bridge.staticEquals(this.BoundaryChanged, null) ? this.BoundaryChanged(this, new Staffer.OrgChart.Layout.BoundaryChangedEventArgs(higherLevel.boundary, higherLevel, this)) : null;
-
-                var rootNodeState = higherLevel.branchRoot.requireState();
-                rootNodeState.branchExterior = higherLevel.boundary.getBoundingRect();
             }
 
             // return boundary to the pool
@@ -2400,7 +2474,7 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
     });
 
     /**
-     * State of the layout operation for a particular level of hierarchy.
+     * State of the layout operation for a particular sub-branch.
      *
      * @public
      * @class Staffer.OrgChart.Layout.LayoutState.LayoutLevel
@@ -2643,6 +2717,52 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
         childConnectorHookLength: 5
     });
 
+    Bridge.define("Staffer.OrgChart.Layout.MultiLineFishboneLayoutStrategy.SingleFishboneLayoutAdapter.GroupIterator", {
+        m_numberOfSiblings: 0,
+        m_numberOfGroups: 0,
+        group: 0,
+        fromIndex: 0,
+        count: 0,
+        maxOnLeft: 0,
+        ctor: function (numberOfSiblings, numberOfGroups) {
+            this.$initialize();
+            this.m_numberOfSiblings = numberOfSiblings;
+            this.m_numberOfGroups = numberOfGroups;
+        },
+        countInGroup: function () {
+            var countInRow = (this.m_numberOfGroups * 2) | 0;
+
+            var result = 0;
+            var countToThisGroup = (((this.group * 2) | 0) + 2) | 0;
+            var firstInRow = 0;
+            while (true) {
+                var countInThisRow = firstInRow >= ((this.m_numberOfSiblings - countInRow) | 0) ? ((this.m_numberOfSiblings - firstInRow) | 0) : countInRow;
+                if (countInThisRow >= countToThisGroup) {
+                    result = (result + 2) | 0;
+                } else {
+                    countToThisGroup = (countToThisGroup - 1) | 0;
+                    if (countInThisRow >= countToThisGroup) {
+                        result = (result + 1) | 0;
+                    }
+                    break;
+                }
+                firstInRow = (firstInRow + countInRow) | 0;
+            }
+
+            return result;
+        },
+        nextGroup: function () {
+            this.fromIndex = (this.fromIndex + this.count) | 0;
+
+            if (this.fromIndex > 0) {
+                this.group = (this.group + 1) | 0;
+            }
+            this.count = this.countInGroup();
+            this.maxOnLeft = (((Bridge.Int.div(this.count, 2)) | 0) + this.count % 2) | 0;
+            return this.count !== 0;
+        }
+    });
+
     /**
      * Additional information attached to every box in the nodes of visual tree.
      *
@@ -2661,9 +2781,10 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
          * @memberof Staffer.OrgChart.Layout.NodeLayoutInfo
          * @type number
          */
-        siblingsCount: 0,
+        numberOfSiblings: 0,
         /**
-         * Number of sibling rows. Used by strategies that arrange box's immediate children in more than one line.
+         * Number of sibling rows. Used by strategies that arrange box's immediate children into more than one line.
+         Meaning of "row" may differ.
          *
          * @instance
          * @public
@@ -2672,7 +2793,8 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
          */
         numberOfSiblingRows: 0,
         /**
-         * Number of sibling columns. Used by strategies that arrange box's immediate children in more than one column.
+         * Number of sibling columns. Used by strategies that arrange box's immediate children into more than one column.
+         Meaning of "column" may differ, e.g. it may include one or more boxes per each logical row.
          *
          * @instance
          * @public
@@ -2681,11 +2803,6 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
          */
         numberOfSiblingColumns: 0,
         m_effectiveLayoutStrategy: null,
-        config: {
-            init: function () {
-                this.branchExterior = new Staffer.OrgChart.Layout.Rect();
-            }
-        },
         /**
          * Effective layout strategy, derived from settings or inherited from parent.
          *
@@ -2723,6 +2840,284 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
             return this.m_effectiveLayoutStrategy;
         }
     });
+
+    /** @namespace Staffer.OrgChart.Misc */
+
+    /**
+     * Node wrapper.
+     *
+     * @public
+     * @class Staffer.OrgChart.Misc.Tree$3.TreeNode
+     */
+    Bridge.define("Staffer.OrgChart.Misc.Tree$3.TreeNode", function (TKey, TValue, TValueState) { return {
+        statics: {
+            /**
+             * Goes through all elements depth-first. Applies <b /> to all children recursively, then to the parent.
+             If <b /> returns <pre><code>false</code></pre>, it will stop entire processing.
+             *
+             * @static
+             * @public
+             * @this Staffer.OrgChart.Misc.Tree$3.TreeNode
+             * @memberof Staffer.OrgChart.Misc.Tree$3.TreeNode
+             * @param   {Staffer.OrgChart.Misc.Tree$3.TreeNode}    root    Current node
+             * @param   {System.Func}                              func    A func to evaluate on <b>func</b> and its children. Whenever it returns false, iteration stops
+             * @return  {boolean}                                          True if <b /> never returned <pre><code>false</code></pre>
+             */
+            iterateChildFirst: function (root, func) {
+                var $t;
+                if (root.getChildren() != null) {
+                    $t = Bridge.getEnumerator(root.getChildren(), "\"System$Collections$Generic$IEnumerable$1$Staffer$OrgChart$Misc$Tree$3$TreeNode$\" + Bridge.getTypeAlias(TKey) + \"$\" + Bridge.getTypeAlias(TValue) + \"$\" + Bridge.getTypeAlias(TValueState) + \"$getEnumerator\"");
+                    while ($t.moveNext()) {
+                        var child = $t.getCurrent();
+                        if (!Staffer.OrgChart.Misc.Tree$3.TreeNode(TKey,TValue,TValueState).iterateChildFirst(child, func)) {
+                            return false;
+                        }
+                    }
+                }
+
+                return func(root);
+            },
+            /**
+             * Goes through all elements depth-first. Applies <b /> to the parent first, then to all children recursively.
+             In this mode, children at each level decide for themselves whether they want to iterate further down, e.g. <b /> can cut-off a branch.
+             *
+             * @static
+             * @public
+             * @this Staffer.OrgChart.Misc.Tree$3.TreeNode
+             * @memberof Staffer.OrgChart.Misc.Tree$3.TreeNode
+             * @param   {Staffer.OrgChart.Misc.Tree$3.TreeNode}    root    Current node
+             * @param   {System.Func}                              func    A func to evaluate on <b>func</b> and its children. Whenever it returns false, iteration stops
+             * @return  {boolean}                                          True if <b /> never returned <pre><code>false</code></pre>
+             */
+            iterateParentFirst: function (root, func) {
+                var $t;
+                if (!func(root)) {
+                    return false;
+                }
+
+                if (root.getChildren() != null) {
+                    $t = Bridge.getEnumerator(root.getChildren(), "\"System$Collections$Generic$IEnumerable$1$Staffer$OrgChart$Misc$Tree$3$TreeNode$\" + Bridge.getTypeAlias(TKey) + \"$\" + Bridge.getTypeAlias(TValue) + \"$\" + Bridge.getTypeAlias(TValueState) + \"$getEnumerator\"");
+                    while ($t.moveNext()) {
+                        var child = $t.getCurrent();
+                        // Ignore returned value, in this mode children at each level 
+                        // decide for themselves whether they want to iterate further down.
+                        Staffer.OrgChart.Misc.Tree$3.TreeNode(TKey,TValue,TValueState).iterateParentFirst(child, func);
+                    }
+                }
+
+                return true;
+            }
+        },
+        config: {
+            properties: {
+                /**
+                 * Hierarchy level.
+                 *
+                 * @instance
+                 * @public
+                 * @this Staffer.OrgChart.Misc.Tree$3.TreeNode
+                 * @memberof Staffer.OrgChart.Misc.Tree$3.TreeNode
+                 * @function getLevel
+                 * @return  {number}
+                 */
+                /**
+                 * Hierarchy level.
+                 *
+                 * @instance
+                 * @this Staffer.OrgChart.Misc.Tree$3.TreeNode
+                 * @memberof Staffer.OrgChart.Misc.Tree$3.TreeNode
+                 * @function setLevel
+                 * @param   {number}    value
+                 * @return  {void}
+                 */
+                Level: 0,
+                /**
+                 * Reference to value element.
+                 *
+                 * @instance
+                 * @public
+                 * @this Staffer.OrgChart.Misc.Tree$3.TreeNode
+                 * @memberof Staffer.OrgChart.Misc.Tree$3.TreeNode
+                 * @function getElement
+                 * @return  {TValue}
+                 */
+                /**
+                 * Reference to value element.
+                 *
+                 * @instance
+                 * @private
+                 * @this Staffer.OrgChart.Misc.Tree$3.TreeNode
+                 * @memberof Staffer.OrgChart.Misc.Tree$3.TreeNode
+                 * @function setElement
+                 * @param   {TValue}    value
+                 * @return  {void}
+                 */
+                Element: Bridge.getDefaultValue(TValue),
+                /**
+                 * Additional information associated with the {@link } in this node.
+                 *
+                 * @instance
+                 * @public
+                 * @this Staffer.OrgChart.Misc.Tree$3.TreeNode
+                 * @memberof Staffer.OrgChart.Misc.Tree$3.TreeNode
+                 * @function getState
+                 * @return  {TValueState}
+                 */
+                /**
+                 * Additional information associated with the {@link } in this node.
+                 *
+                 * @instance
+                 * @private
+                 * @this Staffer.OrgChart.Misc.Tree$3.TreeNode
+                 * @memberof Staffer.OrgChart.Misc.Tree$3.TreeNode
+                 * @function setState
+                 * @param   {TValueState}    value
+                 * @return  {void}
+                 */
+                State: Bridge.getDefaultValue(TValueState),
+                /**
+                 * Reference to parent node wrapper.
+                 *
+                 * @instance
+                 * @public
+                 * @this Staffer.OrgChart.Misc.Tree$3.TreeNode
+                 * @memberof Staffer.OrgChart.Misc.Tree$3.TreeNode
+                 * @function getParentNode
+                 * @return  {Staffer.OrgChart.Misc.Tree$3.TreeNode}
+                 */
+                /**
+                 * Reference to parent node wrapper.
+                 *
+                 * @instance
+                 * @public
+                 * @this Staffer.OrgChart.Misc.Tree$3.TreeNode
+                 * @memberof Staffer.OrgChart.Misc.Tree$3.TreeNode
+                 * @function setParentNode
+                 * @param   {Staffer.OrgChart.Misc.Tree$3.TreeNode}    value
+                 * @return  {void}
+                 */
+                ParentNode: null,
+                /**
+                 * References to child node wrappers.
+                 *
+                 * @instance
+                 * @public
+                 * @this Staffer.OrgChart.Misc.Tree$3.TreeNode
+                 * @memberof Staffer.OrgChart.Misc.Tree$3.TreeNode
+                 * @function getChildren
+                 * @return  {System.Collections.Generic.IList$1}
+                 */
+                /**
+                 * References to child node wrappers.
+                 *
+                 * @instance
+                 * @protected
+                 * @this Staffer.OrgChart.Misc.Tree$3.TreeNode
+                 * @memberof Staffer.OrgChart.Misc.Tree$3.TreeNode
+                 * @function setChildren
+                 * @param   {System.Collections.Generic.IList$1}    value
+                 * @return  {void}
+                 */
+                Children: null
+            }
+        },
+        /**
+         * Ctr.
+         *
+         * @instance
+         * @public
+         * @this Staffer.OrgChart.Misc.Tree$3.TreeNode
+         * @memberof Staffer.OrgChart.Misc.Tree$3.TreeNode
+         * @param   {TValue}    element
+         * @return  {void}
+         */
+        ctor: function (element) {
+            this.$initialize();
+            this.setElement(element);
+            this.setState(Bridge.createInstance(TValueState));
+        },
+        /**
+         * Number of children nodes.
+         *
+         * @instance
+         * @public
+         * @this Staffer.OrgChart.Misc.Tree$3.TreeNode
+         * @memberof Staffer.OrgChart.Misc.Tree$3.TreeNode
+         * @function getChildCount
+         * @return  {number}
+         */
+        /**
+         * Number of children nodes.
+         *
+         * @instance
+         * @function setChildCount
+         */
+        getChildCount: function () {
+            return this.getChildren() == null ? 0 : System.Array.getCount(this.getChildren(), Staffer.OrgChart.Misc.Tree$3.TreeNode(TKey,TValue,TValueState));
+        },
+        /**
+         * Adds a new child to the list. Returns reference to self.
+         *
+         * @instance
+         * @public
+         * @this Staffer.OrgChart.Misc.Tree$3.TreeNode
+         * @memberof Staffer.OrgChart.Misc.Tree$3.TreeNode
+         * @param   {Staffer.OrgChart.Misc.Tree$3.TreeNode}    child
+         * @return  {Staffer.OrgChart.Misc.Tree$3.TreeNode}
+         */
+        addChild$1: function (child) {
+            return this.insertChild$1(this.getChildCount(), child);
+        },
+        /**
+         * Adds a new child to the list. Returns reference to self.
+         *
+         * @instance
+         * @public
+         * @this Staffer.OrgChart.Misc.Tree$3.TreeNode
+         * @memberof Staffer.OrgChart.Misc.Tree$3.TreeNode
+         * @param   {TValue}                                   child
+         * @return  {Staffer.OrgChart.Misc.Tree$3.TreeNode}
+         */
+        addChild: function (child) {
+            return this.insertChild(this.getChildCount(), child);
+        },
+        /**
+         * Adds a new child to the list. Returns reference to self.
+         *
+         * @instance
+         * @public
+         * @this Staffer.OrgChart.Misc.Tree$3.TreeNode
+         * @memberof Staffer.OrgChart.Misc.Tree$3.TreeNode
+         * @param   {number}                                   index    
+         * @param   {TValue}                                   child
+         * @return  {Staffer.OrgChart.Misc.Tree$3.TreeNode}
+         */
+        insertChild: function (index, child) {
+            return this.insertChild$1(index, new (Staffer.OrgChart.Misc.Tree$3.TreeNode(TKey,TValue,TValueState))(child));
+        },
+        /**
+         * Adds a new child to the list. Returns reference to self.
+         *
+         * @instance
+         * @public
+         * @this Staffer.OrgChart.Misc.Tree$3.TreeNode
+         * @memberof Staffer.OrgChart.Misc.Tree$3.TreeNode
+         * @param   {number}                                   index    
+         * @param   {Staffer.OrgChart.Misc.Tree$3.TreeNode}    child
+         * @return  {Staffer.OrgChart.Misc.Tree$3.TreeNode}
+         */
+        insertChild$1: function (index, child) {
+            if (this.getChildren() == null) {
+                this.setChildren(new (System.Collections.Generic.List$1(Staffer.OrgChart.Misc.Tree$3.TreeNode(TKey,TValue,TValueState)))());
+            }
+
+            System.Array.insert(this.getChildren(), index, child, Staffer.OrgChart.Misc.Tree$3.TreeNode(TKey,TValue,TValueState));
+            child.setParentNode(this);
+            child.setLevel((this.getLevel() + 1) | 0);
+
+            return this;
+        }
+    }; });
 
     /**
      * A point in the diagram logical coordinate space.
@@ -2837,6 +3232,14 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
          */
         $ctor3: function (x, y, w, h) {
             this.$initialize();
+            if (w < 0) {
+                throw new System.ArgumentOutOfRangeException("w");
+            }
+
+            if (h < 0) {
+                throw new System.ArgumentOutOfRangeException("h");
+            }
+
             this.topLeft = new Staffer.OrgChart.Layout.Point.$ctor1(x, y);
             this.size = new Staffer.OrgChart.Layout.Size.$ctor1(w, h);
         },
@@ -3007,6 +3410,19 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
         getBottom: function () {
             return this.topLeft.y + this.size.height;
         },
+        /**
+         * Returns a rectangle moved by <b /> horizontally.
+         *
+         * @instance
+         * @public
+         * @this Staffer.OrgChart.Layout.Rect
+         * @memberof Staffer.OrgChart.Layout.Rect
+         * @param   {number}                          offsetX
+         * @return  {Staffer.OrgChart.Layout.Rect}
+         */
+        moveH: function (offsetX) {
+            return new Staffer.OrgChart.Layout.Rect.$ctor1(new Staffer.OrgChart.Layout.Point.$ctor1(this.getLeft() + offsetX, this.getTop()), this.size);
+        },
         getHashCode: function () {
             var h = Bridge.addHash([1952671058, this.topLeft, this.size]);
             return h;
@@ -3082,8 +3498,6 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
         },
         $clone: function (to) { return this; }
     });
-
-    /** @namespace Staffer.OrgChart.Misc */
 
     /**
      * General-purpose tree builder.
@@ -3360,313 +3774,6 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
         }
     });
 
-    /**
-     * Node wrapper.
-     *
-     * @public
-     * @class Staffer.OrgChart.Misc.Tree$3.TreeNode
-     */
-    Bridge.define("Staffer.OrgChart.Misc.Tree$3.TreeNode", function (TKey, TValue, TValueState) { return {
-        statics: {
-            valueIsByRef: true,
-            /**
-             * Goes through all elements depth-first. Applies <b /> to all children recursively, then to the parent.
-             If <b /> returns <pre><code>false</code></pre>, it will stop entire processing.
-             *
-             * @static
-             * @public
-             * @this Staffer.OrgChart.Misc.Tree$3.TreeNode
-             * @memberof Staffer.OrgChart.Misc.Tree$3.TreeNode
-             * @param   {Staffer.OrgChart.Misc.Tree$3.TreeNode}    root    Current node
-             * @param   {System.Func}                              func    A func to evaluate on <b>func</b> and its children. Whenever it returns false, iteration stops
-             * @return  {boolean}                                          True if <b /> never returned <pre><code>false</code></pre>
-             */
-            iterateChildFirst: function (root, func) {
-                var $t;
-                if (root.getChildren() != null) {
-                    $t = Bridge.getEnumerator(root.getChildren(), "\"System$Collections$Generic$IEnumerable$1$Staffer$OrgChart$Misc$Tree$3$TreeNode$\" + Bridge.getTypeAlias(TKey) + \"$\" + Bridge.getTypeAlias(TValue) + \"$\" + Bridge.getTypeAlias(TValueState) + \"$getEnumerator\"");
-                    while ($t.moveNext()) {
-                        var child = $t.getCurrent();
-                        if (!Staffer.OrgChart.Misc.Tree$3.TreeNode(TKey,TValue,TValueState).iterateChildFirst(child, func)) {
-                            return false;
-                        }
-                    }
-                }
-
-                return func(root);
-            },
-            /**
-             * Goes through all elements depth-first. Applies <b /> to the parent first, then to all children recursively.
-             In this mode, children at each level decide for themselves whether they want to iterate further down, e.g. <b /> can cut-off a branch.
-             *
-             * @static
-             * @public
-             * @this Staffer.OrgChart.Misc.Tree$3.TreeNode
-             * @memberof Staffer.OrgChart.Misc.Tree$3.TreeNode
-             * @param   {Staffer.OrgChart.Misc.Tree$3.TreeNode}    root    Current node
-             * @param   {System.Func}                              func    A func to evaluate on <b>func</b> and its children. Whenever it returns false, iteration stops
-             * @return  {boolean}                                          True if <b /> never returned <pre><code>false</code></pre>
-             */
-            iterateParentFirst: function (root, func) {
-                var $t;
-                if (!func(root)) {
-                    return false;
-                }
-
-                if (root.getChildren() != null) {
-                    $t = Bridge.getEnumerator(root.getChildren(), "\"System$Collections$Generic$IEnumerable$1$Staffer$OrgChart$Misc$Tree$3$TreeNode$\" + Bridge.getTypeAlias(TKey) + \"$\" + Bridge.getTypeAlias(TValue) + \"$\" + Bridge.getTypeAlias(TValueState) + \"$getEnumerator\"");
-                    while ($t.moveNext()) {
-                        var child = $t.getCurrent();
-                        // Ignore returned value, in this mode children at each level 
-                        // decide for themselves whether they want to iterate further down.
-                        Staffer.OrgChart.Misc.Tree$3.TreeNode(TKey,TValue,TValueState).iterateParentFirst(child, func);
-                    }
-                }
-
-                return true;
-            }
-        },
-        m_children: null,
-        m_state: Bridge.getDefaultValue(TValueState),
-        config: {
-            properties: {
-                /**
-                 * Hierarchy level.
-                 *
-                 * @instance
-                 * @public
-                 * @this Staffer.OrgChart.Misc.Tree$3.TreeNode
-                 * @memberof Staffer.OrgChart.Misc.Tree$3.TreeNode
-                 * @function getLevel
-                 * @return  {number}
-                 */
-                /**
-                 * Hierarchy level.
-                 *
-                 * @instance
-                 * @this Staffer.OrgChart.Misc.Tree$3.TreeNode
-                 * @memberof Staffer.OrgChart.Misc.Tree$3.TreeNode
-                 * @function setLevel
-                 * @param   {number}    value
-                 * @return  {void}
-                 */
-                Level: 0,
-                /**
-                 * Reference to value element.
-                 *
-                 * @instance
-                 * @public
-                 * @this Staffer.OrgChart.Misc.Tree$3.TreeNode
-                 * @memberof Staffer.OrgChart.Misc.Tree$3.TreeNode
-                 * @function getElement
-                 * @return  {TValue}
-                 */
-                /**
-                 * Reference to value element.
-                 *
-                 * @instance
-                 * @private
-                 * @this Staffer.OrgChart.Misc.Tree$3.TreeNode
-                 * @memberof Staffer.OrgChart.Misc.Tree$3.TreeNode
-                 * @function setElement
-                 * @param   {TValue}    value
-                 * @return  {void}
-                 */
-                Element: Bridge.getDefaultValue(TValue),
-                /**
-                 * Reference to parent node wrapper.
-                 *
-                 * @instance
-                 * @public
-                 * @this Staffer.OrgChart.Misc.Tree$3.TreeNode
-                 * @memberof Staffer.OrgChart.Misc.Tree$3.TreeNode
-                 * @function getParentNode
-                 * @return  {Staffer.OrgChart.Misc.Tree$3.TreeNode}
-                 */
-                /**
-                 * Reference to parent node wrapper.
-                 *
-                 * @instance
-                 * @public
-                 * @this Staffer.OrgChart.Misc.Tree$3.TreeNode
-                 * @memberof Staffer.OrgChart.Misc.Tree$3.TreeNode
-                 * @function setParentNode
-                 * @param   {Staffer.OrgChart.Misc.Tree$3.TreeNode}    value
-                 * @return  {void}
-                 */
-                ParentNode: null
-            }
-        },
-        /**
-         * Ctr.
-         *
-         * @instance
-         * @public
-         * @this Staffer.OrgChart.Misc.Tree$3.TreeNode
-         * @memberof Staffer.OrgChart.Misc.Tree$3.TreeNode
-         * @param   {TValue}    element
-         * @return  {void}
-         */
-        ctor: function (element) {
-            this.$initialize();
-            this.setElement(element);
-        },
-        /**
-         * Optional additional information associated with the {@link } in this node.
-         *
-         * @instance
-         * @function getState
-         */
-        /**
-         * Optional additional information associated with the {@link } in this node.
-         *
-         * @instance
-         * @public
-         * @this Staffer.OrgChart.Misc.Tree$3.TreeNode
-         * @memberof Staffer.OrgChart.Misc.Tree$3.TreeNode
-         * @function setState
-         * @param   {TValueState}    value
-         * @return  {void}
-         */
-        setState: function (value) {
-            this.m_state = value;
-        },
-        /**
-         * Returns <pre><code>true</code></pre> if {@link } is set to a non-null value.
-         *
-         * @instance
-         * @public
-         * @this Staffer.OrgChart.Misc.Tree$3.TreeNode
-         * @memberof Staffer.OrgChart.Misc.Tree$3.TreeNode
-         * @function getHaveState
-         * @return  {boolean}
-         */
-        /**
-         * Returns <pre><code>true</code></pre> if {@link } is set to a non-null value.
-         *
-         * @instance
-         * @function setHaveState
-         */
-        getHaveState: function () {
-            return this.m_state != null;
-        },
-        /**
-         * References to child node wrappers.
-         *
-         * @instance
-         * @public
-         * @this Staffer.OrgChart.Misc.Tree$3.TreeNode
-         * @memberof Staffer.OrgChart.Misc.Tree$3.TreeNode
-         * @function getChildren
-         * @return  {System.Collections.Generic.IList$1}
-         */
-        /**
-         * References to child node wrappers.
-         *
-         * @instance
-         * @function setChildren
-         */
-        getChildren: function () {
-            return this.m_children;
-        },
-        /**
-         * Number of children nodes.
-         *
-         * @instance
-         * @public
-         * @this Staffer.OrgChart.Misc.Tree$3.TreeNode
-         * @memberof Staffer.OrgChart.Misc.Tree$3.TreeNode
-         * @function getChildCount
-         * @return  {number}
-         */
-        /**
-         * Number of children nodes.
-         *
-         * @instance
-         * @function setChildCount
-         */
-        getChildCount: function () {
-            return this.m_children == null ? 0 : this.m_children.getCount();
-        },
-        /**
-         * Returns value of {@link }, throws if it is default or <pre><code>null</code></pre>.
-         *
-         * @instance
-         * @public
-         * @this Staffer.OrgChart.Misc.Tree$3.TreeNode
-         * @memberof Staffer.OrgChart.Misc.Tree$3.TreeNode
-         * @return  {TValueState}
-         */
-        requireState: function () {
-            if (Staffer.OrgChart.Misc.Tree$3.TreeNode(TKey,TValue,TValueState).valueIsByRef && Bridge.referenceEquals(this.m_state, null)) {
-                throw new System.InvalidOperationException("State is not set");
-            }
-            return this.m_state;
-        },
-        /**
-         * Adds a new child to the list. Returns reference to self.
-         *
-         * @instance
-         * @public
-         * @this Staffer.OrgChart.Misc.Tree$3.TreeNode
-         * @memberof Staffer.OrgChart.Misc.Tree$3.TreeNode
-         * @param   {Staffer.OrgChart.Misc.Tree$3.TreeNode}    child
-         * @return  {Staffer.OrgChart.Misc.Tree$3.TreeNode}
-         */
-        addChild$1: function (child) {
-            return this.insertChild$1(this.getChildCount(), child);
-        },
-        /**
-         * Adds a new child to the list. Returns reference to self.
-         *
-         * @instance
-         * @public
-         * @this Staffer.OrgChart.Misc.Tree$3.TreeNode
-         * @memberof Staffer.OrgChart.Misc.Tree$3.TreeNode
-         * @param   {TValue}                                   child
-         * @return  {Staffer.OrgChart.Misc.Tree$3.TreeNode}
-         */
-        addChild: function (child) {
-            return this.insertChild(this.getChildCount(), child);
-        },
-        /**
-         * Adds a new child to the list. Returns reference to self.
-         *
-         * @instance
-         * @public
-         * @this Staffer.OrgChart.Misc.Tree$3.TreeNode
-         * @memberof Staffer.OrgChart.Misc.Tree$3.TreeNode
-         * @param   {number}                                   index    
-         * @param   {TValue}                                   child
-         * @return  {Staffer.OrgChart.Misc.Tree$3.TreeNode}
-         */
-        insertChild: function (index, child) {
-            return this.insertChild$1(index, new (Staffer.OrgChart.Misc.Tree$3.TreeNode(TKey,TValue,TValueState))(child));
-        },
-        /**
-         * Adds a new child to the list. Returns reference to self.
-         *
-         * @instance
-         * @public
-         * @this Staffer.OrgChart.Misc.Tree$3.TreeNode
-         * @memberof Staffer.OrgChart.Misc.Tree$3.TreeNode
-         * @param   {number}                                   index    
-         * @param   {Staffer.OrgChart.Misc.Tree$3.TreeNode}    child
-         * @return  {Staffer.OrgChart.Misc.Tree$3.TreeNode}
-         */
-        insertChild$1: function (index, child) {
-            if (this.m_children == null) {
-                this.m_children = new (System.Collections.Generic.List$1(Staffer.OrgChart.Misc.Tree$3.TreeNode(TKey,TValue,TValueState)))();
-            }
-
-            this.m_children.insert(index, child);
-            child.setParentNode(this);
-            child.setLevel((this.getLevel() + 1) | 0);
-
-            return this;
-        }
-    }; });
-
     /** @namespace Staffer.OrgChart.Test */
 
     /**
@@ -3740,7 +3847,7 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
             var firstInLayer = 1;
             var prevLayerSize = 1;
             while (firstInLayer < itemCount) {
-                var layerSize = (((4 + prevLayerSize) | 0) + random.next$1(((prevLayerSize * 2) | 0))) | 0;
+                var layerSize = (((20 + prevLayerSize) | 0) + random.next$1(((prevLayerSize * 2) | 0))) | 0;
                 for (var i1 = firstInLayer; i1 < ((firstInLayer + layerSize) | 0) && i1 < itemCount; i1 = (i1 + 1) | 0) {
                     var parentIndex = (((firstInLayer - 1) | 0) - random.next$1(prevLayerSize)) | 0;
                     items.getItem(i1).parentId = items.getItem(parentIndex).id;
@@ -3751,19 +3858,14 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
             }
 
             // now shuffle the items a bit, to prevent clients from assuming that data always comes in hierarchical order
-            for (var i2 = 0; i2 < ((Bridge.Int.div(items.getCount(), 2)) | 0); i2 = (i2 + 1) | 0) {
-                var from = random.next$1(items.getCount());
-                var to = random.next$1(items.getCount());
-                var temp = items.getItem(from);
-                items.setItem(from, items.getItem(to));
-                items.setItem(to, temp);
-            }
-
-            // introduce more than root
-            for (var i3 = 0; i3 < 4; i3 = (i3 + 1) | 0) {
-                var ix = random.next$1(items.getCount());
-                items.getItem(ix).parentId = null;
-            }
+            //for (var i = 0; i < items.Count/2; i++)
+            //{
+            //    var from = random.Next(items.Count);
+            //    var to = random.Next(items.Count);
+            //    var temp = items[from];
+            //    items[from] = items[to];
+            //    items[to] = temp;
+            //}
 
             $t = Bridge.getEnumerator(items);
             while ($t.moveNext()) {
@@ -3855,17 +3957,20 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
          * @return  {void}
          */
         preProcessThisNode: function (state, node) {
+            if (this.parentAlignment !== Staffer.OrgChart.Layout.BranchParentAlignment.Center) {
+                throw new System.InvalidOperationException("Unsupported value for ParentAlignment");
+            }
+
             var normalChildCount = node.getChildCount();
             if (normalChildCount > 0) {
-                var nodeState = node.requireState();
-                nodeState.siblingsCount = node.getElement().isCollapsed ? 0 : normalChildCount;
+                node.getState().numberOfSiblings = node.getElement().isCollapsed ? 0 : normalChildCount;
 
                 // only add spacers for non-collapsed boxes
                 if (!node.getElement().isCollapsed) {
-                    var verticalSpacer = Staffer.OrgChart.Layout.Box.special(Staffer.OrgChart.Layout.Box.None, node.getElement().id);
+                    var verticalSpacer = Staffer.OrgChart.Layout.Box.special(Staffer.OrgChart.Layout.Box.None, node.getElement().id, false);
                     node.addChild(verticalSpacer);
 
-                    var horizontalSpacer = Staffer.OrgChart.Layout.Box.special(Staffer.OrgChart.Layout.Box.None, node.getElement().id);
+                    var horizontalSpacer = Staffer.OrgChart.Layout.Box.special(Staffer.OrgChart.Layout.Box.None, node.getElement().id, false);
                     node.addChild(horizontalSpacer);
                 }
             }
@@ -3889,29 +3994,25 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
                 node.getElement().frame.siblingsRowV = new Staffer.OrgChart.Layout.Dimensions.$ctor1(node.getElement().frame.exterior.getTop(), node.getElement().frame.exterior.getBottom());
             }
 
-            if (!node.getHaveState()) {
-                return;
-            }
-
             var siblingsRowExterior = Staffer.OrgChart.Layout.Dimensions.minMax();
-            var nodeState = node.requireState();
-            if (nodeState.siblingsCount === 0) {
+            if (node.getState().numberOfSiblings === 0) {
                 return;
             }
 
-            for (var i = 0; i < nodeState.siblingsCount; i = (i + 1) | 0) {
+            for (var i = 0; i < node.getState().numberOfSiblings; i = (i + 1) | 0) {
                 var child = System.Array.getItem(node.getChildren(), i, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo));
                 var rect = child.getElement().frame.exterior;
 
                 var top = node.getElement().frame.siblingsRowV.to + this.parentChildSpacing;
                 child.getElement().frame.exterior = new Staffer.OrgChart.Layout.Rect.$ctor3(rect.getLeft(), top, rect.size.width, rect.size.height);
+                child.getElement().frame.branchExterior = child.getElement().frame.exterior;
 
                 siblingsRowExterior = Staffer.OrgChart.Layout.Dimensions.op_Addition(siblingsRowExterior, new Staffer.OrgChart.Layout.Dimensions.$ctor1(top, top + rect.size.height));
             }
 
             siblingsRowExterior = new Staffer.OrgChart.Layout.Dimensions.$ctor1(siblingsRowExterior.from, siblingsRowExterior.to);
 
-            for (var i1 = 0; i1 < nodeState.siblingsCount; i1 = (i1 + 1) | 0) {
+            for (var i1 = 0; i1 < node.getState().numberOfSiblings; i1 = (i1 + 1) | 0) {
                 var child1 = System.Array.getItem(node.getChildren(), i1, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo));
                 child1.getElement().frame.siblingsRowV = siblingsRowExterior;
 
@@ -3934,43 +4035,35 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
         applyHorizontalLayout: function (state, level) {
             var node = level.branchRoot;
 
-            if (!node.getHaveState()) {
-                return;
-            }
-
-            var nodeState = node.requireState();
-
-            if (nodeState.siblingsCount === 0) {
-                return;
-            }
-
-            for (var i = 0; i < nodeState.siblingsCount; i = (i + 1) | 0) {
+            for (var i = 0; i < node.getState().numberOfSiblings; i = (i + 1) | 0) {
                 var child = System.Array.getItem(node.getChildren(), i, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo));
                 // re-enter layout algorithm for child branch
                 Staffer.OrgChart.Layout.LayoutAlgorithm.horizontalLayout(state, child);
             }
 
             if (this.parentAlignment === Staffer.OrgChart.Layout.BranchParentAlignment.Center) {
-                var rect = node.getElement().frame.exterior;
-                var leftmost = System.Array.getItem(node.getChildren(), 0, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement().frame.exterior.getCenterH();
-                var rightmost = System.Array.getItem(node.getChildren(), ((nodeState.siblingsCount - 1) | 0), Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement().frame.exterior.getCenterH();
-                var desiredCenter = leftmost + (rightmost - leftmost) / 2;
-                var center = rect.getCenterH();
-                var diff = center - desiredCenter;
-                Staffer.OrgChart.Layout.LayoutAlgorithm.moveChildrenOnly(state, level, diff);
-
                 if (node.getLevel() > 0) {
+                    var rect = node.getElement().frame.exterior;
+                    var leftmost = System.Array.getItem(node.getChildren(), 0, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement().frame.exterior.getCenterH();
+                    var rightmost = System.Array.getItem(node.getChildren(), ((node.getState().numberOfSiblings - 1) | 0), Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement().frame.exterior.getCenterH();
+                    var desiredCenter = leftmost + (rightmost - leftmost) / 2;
+                    var center = rect.getCenterH();
+                    var diff = center - desiredCenter;
+                    Staffer.OrgChart.Layout.LayoutAlgorithm.moveChildrenOnly(state, level, diff);
+
                     // vertical connector from parent 
-                    var verticalSpacerBox = System.Array.getItem(node.getChildren(), nodeState.siblingsCount, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement();
+                    var verticalSpacerBox = System.Array.getItem(node.getChildren(), node.getState().numberOfSiblings, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement();
                     verticalSpacerBox.frame.exterior = new Staffer.OrgChart.Layout.Rect.$ctor3(center - this.parentConnectorShield / 2, rect.getBottom(), this.parentConnectorShield, System.Array.getItem(node.getChildren(), 0, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement().frame.siblingsRowV.from - rect.getBottom());
+                    verticalSpacerBox.frame.branchExterior = verticalSpacerBox.frame.exterior;
 
                     state.mergeSpacer(verticalSpacerBox);
 
                     // horizontal protector
                     var firstInRow = System.Array.getItem(node.getChildren(), 0, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement().frame;
 
-                    var horizontalSpacerBox = System.Array.getItem(node.getChildren(), ((nodeState.siblingsCount + 1) | 0), Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement();
-                    horizontalSpacerBox.frame.exterior = new Staffer.OrgChart.Layout.Rect.$ctor3(firstInRow.exterior.getLeft(), firstInRow.siblingsRowV.from - this.parentChildSpacing, System.Array.getItem(node.getChildren(), ((nodeState.siblingsCount - 1) | 0), Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement().frame.exterior.getRight() - firstInRow.exterior.getLeft(), this.parentChildSpacing);
+                    var horizontalSpacerBox = System.Array.getItem(node.getChildren(), ((node.getState().numberOfSiblings + 1) | 0), Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement();
+                    horizontalSpacerBox.frame.exterior = new Staffer.OrgChart.Layout.Rect.$ctor3(firstInRow.exterior.getLeft(), firstInRow.siblingsRowV.from - this.parentChildSpacing, System.Array.getItem(node.getChildren(), ((node.getState().numberOfSiblings - 1) | 0), Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement().frame.exterior.getRight() - firstInRow.exterior.getLeft(), this.parentChildSpacing);
+                    horizontalSpacerBox.frame.branchExterior = horizontalSpacerBox.frame.exterior;
 
                     state.mergeSpacer(horizontalSpacerBox);
                 }
@@ -3991,11 +4084,7 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
          * @return  {void}
          */
         routeConnectors: function (state, node) {
-            if (!node.getHaveState()) {
-                return;
-            }
-
-            var normalChildCount = node.requireState().siblingsCount;
+            var normalChildCount = node.getState().numberOfSiblings;
 
             var count = normalChildCount === 0 ? 0 : normalChildCount === 1 ? 1 : ((2 + normalChildCount) | 0); // one upward edge for each child
 
@@ -4029,6 +4118,368 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
                 }
 
                 segments[((count - 1) | 0)] = new Staffer.OrgChart.Layout.Edge.$ctor1(new Staffer.OrgChart.Layout.Point.$ctor1(segments[1].to.x, segments[1].to.y), new Staffer.OrgChart.Layout.Point.$ctor1(segments[((count - 2) | 0)].to.x, segments[1].to.y));
+            }
+
+            node.getElement().frame.connector = new Staffer.OrgChart.Layout.Connector(segments);
+        }
+    });
+
+    /**
+     * Implements layout for a single vertically stretched fishbone.
+     Re-used by {@link } to layout multiple groups of siblings.
+     *
+     * @private
+     * @class Staffer.OrgChart.Layout.MultiLineFishboneLayoutStrategy.SingleFishboneLayoutAdapter
+     * @augments Staffer.OrgChart.Layout.LayoutStrategyBase
+     */
+    Bridge.define("Staffer.OrgChart.Layout.MultiLineFishboneLayoutStrategy.SingleFishboneLayoutAdapter", {
+        inherits: [Staffer.OrgChart.Layout.LayoutStrategyBase],
+        realRoot: null,
+        specialRoot: null,
+        iterator: null,
+        ctor: function (realRoot) {
+            this.$initialize();
+            Staffer.OrgChart.Layout.LayoutStrategyBase.ctor.call(this);
+            this.iterator = new Staffer.OrgChart.Layout.MultiLineFishboneLayoutStrategy.SingleFishboneLayoutAdapter.GroupIterator(realRoot.getState().numberOfSiblings, realRoot.getState().numberOfSiblingColumns);
+
+            this.realRoot = realRoot;
+            this.specialRoot = Bridge.merge(new Staffer.OrgChart.Layout.MultiLineFishboneLayoutStrategy.SingleFishboneLayoutAdapter.TreeNodeView(Staffer.OrgChart.Layout.Box.special(Staffer.OrgChart.Layout.Box.None, realRoot.getElement().id, true)), {
+                setLevel: this.realRoot.getLevel(),
+                setParentNode: this.realRoot
+            } );
+
+            this.specialRoot.getState().setEffectiveLayoutStrategy(this);
+
+            var parentStrategy = Bridge.cast(realRoot.getState().requireLayoutStrategy(), Staffer.OrgChart.Layout.MultiLineFishboneLayoutStrategy);
+            this.siblingSpacing = parentStrategy.siblingSpacing;
+            this.parentConnectorShield = parentStrategy.parentConnectorShield;
+            this.parentChildSpacing = parentStrategy.parentChildSpacing;
+            this.parentAlignment = parentStrategy.parentAlignment;
+            this.childConnectorHookLength = parentStrategy.childConnectorHookLength;
+        },
+        nextGroup: function () {
+            if (!this.iterator.nextGroup()) {
+                return false;
+            }
+
+            this.specialRoot.getState().numberOfSiblings = this.iterator.count;
+            this.specialRoot.prepare(((this.realRoot.getState().numberOfSiblingRows * 2) | 0));
+
+            for (var i = 0; i < this.iterator.count; i = (i + 1) | 0) {
+                this.specialRoot.addChildView(System.Array.getItem(this.realRoot.getChildren(), ((this.iterator.fromIndex + i) | 0), Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)));
+            }
+            var spacer = System.Array.getItem(this.realRoot.getChildren(), ((((this.realRoot.getState().numberOfSiblings + 1) | 0) + this.iterator.group) | 0), Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo));
+            this.specialRoot.addChildView(spacer);
+
+            this.specialRoot.getElement().frame.exterior = this.realRoot.getElement().frame.exterior;
+            this.specialRoot.getElement().frame.branchExterior = this.realRoot.getElement().frame.exterior;
+            this.specialRoot.getElement().frame.siblingsRowV = this.realRoot.getElement().frame.siblingsRowV;
+
+            return true;
+        },
+        preProcessThisNode: function (state, node) {
+            throw new System.NotSupportedException();
+        },
+        applyVerticalLayout: function (state, level) {
+            var prevRowBottom = this.specialRoot.getElement().frame.siblingsRowV.to;
+
+            for (var i = 0; i < this.iterator.maxOnLeft; i = (i + 1) | 0) {
+                var child = System.Array.getItem(this.specialRoot.getChildren(), i, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo));
+                var frame = child.getElement().frame;
+                var rect = frame.exterior;
+                frame.exterior = new Staffer.OrgChart.Layout.Rect.$ctor3(rect.getLeft(), prevRowBottom + this.parentChildSpacing, rect.size.width, rect.size.height);
+
+                var rowExterior = new Staffer.OrgChart.Layout.Dimensions.$ctor1(frame.exterior.getTop(), frame.exterior.getBottom());
+
+                var i2 = (i + this.iterator.maxOnLeft) | 0;
+                if (i2 < this.iterator.count) {
+                    var child2 = System.Array.getItem(this.specialRoot.getChildren(), i2, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo));
+                    var frame2 = child2.getElement().frame;
+                    var rect2 = child2.getElement().frame.exterior;
+                    frame2.exterior = new Staffer.OrgChart.Layout.Rect.$ctor3(rect2.getLeft(), prevRowBottom + this.parentChildSpacing, rect2.size.width, rect2.size.height);
+
+                    if (frame2.exterior.getBottom() > frame.exterior.getBottom()) {
+                        frame.exterior = new Staffer.OrgChart.Layout.Rect.$ctor3(rect.getLeft(), frame2.exterior.getCenterV() - rect.size.height / 2, rect.size.width, rect.size.height);
+                    } else if (frame2.exterior.getBottom() < frame.exterior.getBottom()) {
+                        frame2.exterior = new Staffer.OrgChart.Layout.Rect.$ctor3(rect2.getLeft(), frame.exterior.getCenterV() - rect2.size.height / 2, rect2.size.width, rect2.size.height);
+                    }
+
+                    frame2.branchExterior = frame2.exterior;
+                    rowExterior = Staffer.OrgChart.Layout.Dimensions.op_Addition(rowExterior, new Staffer.OrgChart.Layout.Dimensions.$ctor1(frame2.exterior.getTop(), frame2.exterior.getBottom()));
+
+                    frame2.siblingsRowV = rowExterior;
+                    Staffer.OrgChart.Layout.LayoutAlgorithm.verticalLayout(state, child2);
+                    prevRowBottom = frame2.branchExterior.getBottom();
+                }
+
+                frame.branchExterior = frame.exterior;
+                frame.siblingsRowV = rowExterior;
+                Staffer.OrgChart.Layout.LayoutAlgorithm.verticalLayout(state, child);
+                prevRowBottom = Math.max(prevRowBottom, frame.branchExterior.getBottom());
+            }
+        },
+        applyHorizontalLayout: function (state, level) {
+            if (!Bridge.referenceEquals(level.branchRoot, this.specialRoot)) {
+                throw new System.InvalidOperationException("Wrong root node received");
+            }
+
+            var left = true;
+            var countOnThisSide = 0;
+            for (var i = 0; i < this.iterator.count; i = (i + 1) | 0) {
+                var child = System.Array.getItem(this.specialRoot.getChildren(), i, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo));
+                Staffer.OrgChart.Layout.LayoutAlgorithm.horizontalLayout(state, child);
+
+                // we go top-bottom to layout left side of the group,
+                // then add a carrier protector
+                // then top-bottom to fill right side of the group
+                if (((countOnThisSide = (countOnThisSide + 1) | 0)) === this.iterator.maxOnLeft) {
+                    if (left) {
+                        // horizontally align children in left pillar
+                        Staffer.OrgChart.Layout.LayoutAlgorithm.alignHorizontalCenters(state, level, this.enumerateSiblings(0, this.iterator.maxOnLeft));
+
+                        left = false;
+                        countOnThisSide = 0;
+
+                        var rightmost = System.Double.min;
+                        for (var k = 0; k < i; k = (k + 1) | 0) {
+                            rightmost = Math.max(rightmost, System.Array.getItem(this.specialRoot.getChildren(), k, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement().frame.branchExterior.getRight());
+                        }
+
+                        // vertical spacer does not have to be extended to the bottom of the lowest branch,
+                        // unless the lowest branch on the right side has some children and is expanded
+                        if (this.iterator.count % 2 !== 0) {
+                            rightmost = Math.max(rightmost, child.getElement().frame.exterior.getRight());
+                        } else {
+                            var opposite = System.Array.getItem(this.specialRoot.getChildren(), ((this.specialRoot.getState().numberOfSiblings - 1) | 0), Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo));
+                            if (opposite.getElement().isCollapsed || opposite.getChildCount() === 0) {
+                                rightmost = Math.max(rightmost, child.getElement().frame.exterior.getRight());
+                            } else {
+                                rightmost = Math.max(rightmost, child.getElement().frame.branchExterior.getRight());
+                            }
+                        }
+
+                        // integrate protector for group's vertical carrier 
+                        var spacer = System.Array.getItem(this.specialRoot.getChildren(), this.specialRoot.getState().numberOfSiblings, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement();
+                        spacer.frame.exterior = new Staffer.OrgChart.Layout.Rect.$ctor3(rightmost, System.Array.getItem(this.specialRoot.getChildren(), 0, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement().frame.siblingsRowV.from, this.siblingSpacing, child.getElement().frame.siblingsRowV.to - System.Array.getItem(this.specialRoot.getChildren(), 0, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement().frame.siblingsRowV.from);
+                        spacer.frame.branchExterior = spacer.frame.exterior;
+                        level.boundary.mergeFrom$1(spacer);
+                    } else {
+                        // horizontally align children in right pillar
+                        Staffer.OrgChart.Layout.LayoutAlgorithm.alignHorizontalCenters(state, level, this.enumerateSiblings(this.iterator.maxOnLeft, this.iterator.count));
+                    }
+                }
+            }
+        },
+        enumerateSiblings: function (from, to) {
+            var $yield = [];
+            for (var i = from; i < to; i = (i + 1) | 0) {
+                $yield.push(System.Array.getItem(this.specialRoot.getChildren(), i, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)));
+            }
+            return System.Array.toEnumerable($yield);
+        },
+        routeConnectors: function (state, node) {
+            throw new System.NotSupportedException();
+        }
+    });
+
+    Bridge.define("Staffer.OrgChart.Layout.MultiLineFishboneLayoutStrategy.SingleFishboneLayoutAdapter.TreeNodeView", {
+        inherits: [Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)],
+        ctor: function (element) {
+            this.$initialize();
+            Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo).ctor.call(this, element);
+        },
+        prepare: function (capacity) {
+            if (this.getChildren() == null) {
+                this.setChildren(new (System.Collections.Generic.List$1(Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)))(capacity));
+            } else {
+                System.Array.clear(this.getChildren(), Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo));
+            }
+        },
+        addChildView: function (node) {
+            System.Array.add(this.getChildren(), node, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo));
+        }
+    });
+
+    /**
+     * Arranges child boxes in a single vertical column under the parent, 
+     somewhat offset to the left or to the right, depending on {@link }.
+     Cannot be configured to position parent in the middle of children.
+     Children are attached to a central vertical carrier going from parent's bottom.
+     *
+     * @public
+     * @class Staffer.OrgChart.Layout.SingleColumnLayoutStrategy
+     * @augments Staffer.OrgChart.Layout.LayoutStrategyBase
+     */
+    Bridge.define("Staffer.OrgChart.Layout.SingleColumnLayoutStrategy", {
+        inherits: [Staffer.OrgChart.Layout.LayoutStrategyBase],
+        /**
+         * A chance for layout strategy to append special auto-generated boxes into the visual tree.
+         *
+         * @instance
+         * @public
+         * @override
+         * @this Staffer.OrgChart.Layout.SingleColumnLayoutStrategy
+         * @memberof Staffer.OrgChart.Layout.SingleColumnLayoutStrategy
+         * @param   {Staffer.OrgChart.Layout.LayoutState}      state    
+         * @param   {Staffer.OrgChart.Misc.Tree$3.TreeNode}    node
+         * @return  {void}
+         */
+        preProcessThisNode: function (state, node) {
+            if (this.parentAlignment !== Staffer.OrgChart.Layout.BranchParentAlignment.Left && this.parentAlignment !== Staffer.OrgChart.Layout.BranchParentAlignment.Right) {
+                throw new System.InvalidOperationException("Unsupported value for ParentAlignment");
+            }
+
+            node.getState().numberOfSiblings = node.getElement().isCollapsed ? 0 : node.getChildCount();
+
+            // only add spacers for non-collapsed boxes
+            if (node.getState().numberOfSiblings > 0 && node.getLevel() > 0) {
+                // add one (for vertical spacer) into the count of layout columns
+                node.getState().numberOfSiblingColumns = 1;
+                node.getState().numberOfSiblingRows = node.getChildCount();
+
+                // add parent's vertical carrier to the end
+                var verticalSpacer = Staffer.OrgChart.Layout.Box.special(Staffer.OrgChart.Layout.Box.None, node.getElement().id, false);
+                node.addChild(verticalSpacer);
+            }
+        },
+        /**
+         * Applies layout changes to a given box and its children.
+         *
+         * @instance
+         * @public
+         * @override
+         * @this Staffer.OrgChart.Layout.SingleColumnLayoutStrategy
+         * @memberof Staffer.OrgChart.Layout.SingleColumnLayoutStrategy
+         * @param   {Staffer.OrgChart.Layout.LayoutState}                state    
+         * @param   {Staffer.OrgChart.Layout.LayoutState.LayoutLevel}    level
+         * @return  {void}
+         */
+        applyVerticalLayout: function (state, level) {
+            var node = level.branchRoot;
+
+            if (node.getLevel() === 0) {
+                node.getElement().frame.siblingsRowV = new Staffer.OrgChart.Layout.Dimensions.$ctor1(node.getElement().frame.exterior.getTop(), node.getElement().frame.exterior.getBottom());
+            }
+
+            var prevRowExterior = node.getElement().frame.siblingsRowV;
+
+            for (var row = 0; row < node.getState().numberOfSiblings; row = (row + 1) | 0) {
+                // first, compute
+                var child = System.Array.getItem(node.getChildren(), row, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo));
+                var rect = child.getElement().frame.exterior;
+
+                var top = prevRowExterior.to + this.parentChildSpacing;
+                child.getElement().frame.exterior = new Staffer.OrgChart.Layout.Rect.$ctor3(rect.getLeft(), top, rect.size.width, rect.size.height);
+                child.getElement().frame.branchExterior = child.getElement().frame.exterior;
+
+                var rowExterior = new Staffer.OrgChart.Layout.Dimensions.$ctor1(top, top + rect.size.height);
+
+                child = System.Array.getItem(node.getChildren(), row, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo));
+                child.getElement().frame.siblingsRowV = rowExterior;
+
+                // re-enter layout algorithm for child branch
+                Staffer.OrgChart.Layout.LayoutAlgorithm.verticalLayout(state, child);
+
+                var childBranchBottom = child.getElement().frame.branchExterior.getBottom();
+
+                prevRowExterior = new Staffer.OrgChart.Layout.Dimensions.$ctor1(rowExterior.from, Math.max(childBranchBottom, rowExterior.to));
+            }
+        },
+        /**
+         * Applies layout changes to a given box and its children.
+         *
+         * @instance
+         * @public
+         * @override
+         * @this Staffer.OrgChart.Layout.SingleColumnLayoutStrategy
+         * @memberof Staffer.OrgChart.Layout.SingleColumnLayoutStrategy
+         * @param   {Staffer.OrgChart.Layout.LayoutState}                state    
+         * @param   {Staffer.OrgChart.Layout.LayoutState.LayoutLevel}    level
+         * @return  {void}
+         */
+        applyHorizontalLayout: function (state, level) {
+            var node = level.branchRoot;
+
+            var nodeState = node.getState();
+
+            // first, perform horizontal layout for every node in this column
+            for (var row = 0; row < nodeState.numberOfSiblings; row = (row + 1) | 0) {
+                var child = System.Array.getItem(node.getChildren(), row, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo));
+
+                // re-enter layout algorithm for child branch
+                // siblings are guaranteed not to offend each other
+                Staffer.OrgChart.Layout.LayoutAlgorithm.horizontalLayout(state, child);
+            }
+
+            // now align the column
+            var edges = Staffer.OrgChart.Layout.LayoutAlgorithm.alignHorizontalCenters(state, level, this.enumerateColumn(node));
+
+            if (node.getLevel() > 0) {
+                var rect = node.getElement().frame.exterior;
+                var diff;
+                if (this.parentAlignment === Staffer.OrgChart.Layout.BranchParentAlignment.Left) {
+                    var desiredLeft = rect.getCenterH() + this.parentConnectorShield / 2;
+                    diff = desiredLeft - edges.from;
+                } else if (this.parentAlignment === Staffer.OrgChart.Layout.BranchParentAlignment.Right) {
+                    var desiredRight = rect.getCenterH() - this.parentConnectorShield / 2;
+                    diff = desiredRight - edges.to;
+                } else {
+                    throw new System.InvalidOperationException("Invalid ParentAlignment setting");
+                }
+
+                // vertical connector from parent
+                Staffer.OrgChart.Layout.LayoutAlgorithm.moveChildrenOnly(state, level, diff);
+
+                // spacer for the vertical carrier 
+                var verticalSpacerBox = node.getLevel() > 0 ? System.Array.getItem(node.getChildren(), ((node.getChildCount() - 1) | 0), Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement() : null;
+                if (verticalSpacerBox != null) {
+                    var spacerTop = node.getElement().frame.exterior.getBottom();
+                    var spacerBottom = System.Array.getItem(node.getChildren(), ((node.getChildCount() - 2) | 0), Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement().frame.exterior.getBottom();
+                    verticalSpacerBox.frame.exterior = new Staffer.OrgChart.Layout.Rect.$ctor3(rect.getCenterH() - this.parentConnectorShield / 2, spacerTop, this.parentConnectorShield, spacerBottom - spacerTop);
+                    verticalSpacerBox.frame.branchExterior = verticalSpacerBox.frame.exterior;
+                    state.mergeSpacer(verticalSpacerBox);
+                }
+            }
+        },
+        enumerateColumn: function (branchRoot) {
+            var $yield = [];
+            for (var i = 0; i < branchRoot.getState().numberOfSiblings; i = (i + 1) | 0) {
+                $yield.push(System.Array.getItem(branchRoot.getChildren(), i, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)));
+            }
+            return System.Array.toEnumerable($yield);
+        },
+        /**
+         * Allocates and routes connectors.
+         *
+         * @instance
+         * @public
+         * @override
+         * @this Staffer.OrgChart.Layout.SingleColumnLayoutStrategy
+         * @memberof Staffer.OrgChart.Layout.SingleColumnLayoutStrategy
+         * @param   {Staffer.OrgChart.Layout.LayoutState}      state    
+         * @param   {Staffer.OrgChart.Misc.Tree$3.TreeNode}    node
+         * @return  {void}
+         */
+        routeConnectors: function (state, node) {
+            // one parent connector (also serves as mid-sibling carrier) and horizontal carriers
+            var count = (1 + node.getState().numberOfSiblings) | 0;
+
+            var segments = System.Array.init(count, function (){
+                return new Staffer.OrgChart.Layout.Edge();
+            });
+
+            var rootRect = node.getElement().frame.exterior;
+            var center = rootRect.getCenterH();
+
+            var verticalCarrierHeight = System.Array.getItem(node.getChildren(), ((node.getState().numberOfSiblings - 1) | 0), Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement().frame.exterior.getCenterV() - node.getElement().frame.exterior.getBottom();
+
+            // big vertical connector, from parent to last row
+            segments[0] = new Staffer.OrgChart.Layout.Edge.$ctor1(new Staffer.OrgChart.Layout.Point.$ctor1(center, rootRect.getBottom()), new Staffer.OrgChart.Layout.Point.$ctor1(center, rootRect.getBottom() + verticalCarrierHeight));
+
+            for (var ix = 0; ix < node.getState().numberOfSiblings; ix = (ix + 1) | 0) {
+                var rect = System.Array.getItem(node.getChildren(), ix, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement().frame.exterior;
+                var destination = this.parentAlignment === Staffer.OrgChart.Layout.BranchParentAlignment.Left ? rect.getLeft() : rect.getRight();
+                segments[((1 + ix) | 0)] = new Staffer.OrgChart.Layout.Edge.$ctor1(new Staffer.OrgChart.Layout.Point.$ctor1(center, rect.getCenterV()), new Staffer.OrgChart.Layout.Point.$ctor1(destination, rect.getCenterV()));
             }
 
             node.getElement().frame.connector = new Staffer.OrgChart.Layout.Connector(segments);
@@ -4123,8 +4574,258 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
     });
 
     /**
-     * Arranges child boxes in a single line under the parent.
-     Can be configured to position parent in the middle, on the left or right from children.
+     * Arranges child boxes in multiple vertically stretched groups, stuffed onto "fish bones" on left and right sides of vertical carriers,
+     with only one main horizontal carrier going under parent's bottom, connecting all vertical carriers.
+     Can only be configured to position parent in the middle of children.
+     *
+     * @public
+     * @class Staffer.OrgChart.Layout.MultiLineFishboneLayoutStrategy
+     * @augments Staffer.OrgChart.Layout.LinearLayoutStrategy
+     */
+    Bridge.define("Staffer.OrgChart.Layout.MultiLineFishboneLayoutStrategy", {
+        inherits: [Staffer.OrgChart.Layout.LinearLayoutStrategy],
+        /**
+         * Maximum number of boxes staffed onto a single vertical carrier.
+         *
+         * @instance
+         * @public
+         * @memberof Staffer.OrgChart.Layout.MultiLineFishboneLayoutStrategy
+         * @default 4
+         * @type number
+         */
+        maxGroups: 4,
+        /**
+         * A chance for layout strategy to append special auto-generated boxes into the visual tree.
+         *
+         * @instance
+         * @public
+         * @override
+         * @this Staffer.OrgChart.Layout.MultiLineFishboneLayoutStrategy
+         * @memberof Staffer.OrgChart.Layout.MultiLineFishboneLayoutStrategy
+         * @param   {Staffer.OrgChart.Layout.LayoutState}      state    
+         * @param   {Staffer.OrgChart.Misc.Tree$3.TreeNode}    node
+         * @return  {void}
+         */
+        preProcessThisNode: function (state, node) {
+            if (this.parentAlignment !== Staffer.OrgChart.Layout.BranchParentAlignment.Center) {
+                throw new System.InvalidOperationException("Unsupported value for ParentAlignment");
+            }
+
+            if (this.maxGroups <= 0) {
+                throw new System.InvalidOperationException("MaxGroups must be a positive value");
+            }
+
+            if (node.getChildCount() <= ((this.maxGroups * 2) | 0)) {
+                Staffer.OrgChart.Layout.LinearLayoutStrategy.prototype.preProcessThisNode.call(this, state, node);
+                return;
+            }
+
+            node.getState().numberOfSiblings = node.getChildCount();
+
+            // only add spacers for non-collapsed boxes
+            if (node.getState().numberOfSiblings > 0) {
+                // using column == group here, 
+                // and each group consists of two vertical stretches of boxes with a vertical carrier in between
+                node.getState().numberOfSiblingColumns = this.maxGroups;
+                node.getState().numberOfSiblingRows = (Bridge.Int.div(node.getState().numberOfSiblings, (((this.maxGroups * 2) | 0)))) | 0;
+                if (node.getState().numberOfSiblings % (((this.maxGroups * 2) | 0)) !== 0) {
+                    node.getState().numberOfSiblingRows = (node.getState().numberOfSiblingRows + 1) | 0;
+                }
+
+                // a connector from parent to horizontal carrier
+                var parentSpacer = Staffer.OrgChart.Layout.Box.special(Staffer.OrgChart.Layout.Box.None, node.getElement().id, false);
+                node.addChild(parentSpacer);
+
+                // spacers for vertical carriers 
+                for (var i = 0; i < node.getState().numberOfSiblingColumns; i = (i + 1) | 0) {
+                    var verticalSpacer = Staffer.OrgChart.Layout.Box.special(Staffer.OrgChart.Layout.Box.None, node.getElement().id, false);
+                    node.addChild(verticalSpacer);
+                }
+
+                // if needed, horizontal carrier 
+                if (node.getState().numberOfSiblingColumns > 1) {
+                    var horizontalSpacer = Staffer.OrgChart.Layout.Box.special(Staffer.OrgChart.Layout.Box.None, node.getElement().id, false);
+                    node.addChild(horizontalSpacer);
+                }
+            }
+        },
+        /**
+         * Applies layout changes to a given box and its children.
+         *
+         * @instance
+         * @public
+         * @override
+         * @this Staffer.OrgChart.Layout.MultiLineFishboneLayoutStrategy
+         * @memberof Staffer.OrgChart.Layout.MultiLineFishboneLayoutStrategy
+         * @param   {Staffer.OrgChart.Layout.LayoutState}                state    
+         * @param   {Staffer.OrgChart.Layout.LayoutState.LayoutLevel}    level
+         * @return  {void}
+         */
+        applyVerticalLayout: function (state, level) {
+            if (level.branchRoot.getState().numberOfSiblings <= ((this.maxGroups * 2) | 0)) {
+                Staffer.OrgChart.Layout.LinearLayoutStrategy.prototype.applyVerticalLayout.call(this, state, level);
+                return;
+            }
+
+            var node = level.branchRoot;
+            if (node.getLevel() === 0) {
+                node.getElement().frame.siblingsRowV = new Staffer.OrgChart.Layout.Dimensions.$ctor1(node.getElement().frame.exterior.getTop(), node.getElement().frame.exterior.getBottom());
+            }
+
+            var adapter = new Staffer.OrgChart.Layout.MultiLineFishboneLayoutStrategy.SingleFishboneLayoutAdapter(node);
+            while (adapter.nextGroup()) {
+                Staffer.OrgChart.Layout.LayoutAlgorithm.verticalLayout(state, adapter.specialRoot);
+            }
+        },
+        /**
+         * Applies layout changes to a given box and its children.
+         *
+         * @instance
+         * @public
+         * @override
+         * @this Staffer.OrgChart.Layout.MultiLineFishboneLayoutStrategy
+         * @memberof Staffer.OrgChart.Layout.MultiLineFishboneLayoutStrategy
+         * @param   {Staffer.OrgChart.Layout.LayoutState}                state    
+         * @param   {Staffer.OrgChart.Layout.LayoutState.LayoutLevel}    level
+         * @return  {void}
+         */
+        applyHorizontalLayout: function (state, level) {
+            if (level.branchRoot.getState().numberOfSiblings <= ((this.maxGroups * 2) | 0)) {
+                Staffer.OrgChart.Layout.LinearLayoutStrategy.prototype.applyHorizontalLayout.call(this, state, level);
+                return;
+            }
+
+            var node = level.branchRoot;
+            if (node.getLevel() === 0) {
+                node.getElement().frame.siblingsRowV = new Staffer.OrgChart.Layout.Dimensions.$ctor1(node.getElement().frame.exterior.getTop(), node.getElement().frame.exterior.getBottom());
+            }
+
+            var adapter = new Staffer.OrgChart.Layout.MultiLineFishboneLayoutStrategy.SingleFishboneLayoutAdapter(node);
+            while (adapter.nextGroup()) {
+                Staffer.OrgChart.Layout.LayoutAlgorithm.horizontalLayout(state, adapter.specialRoot);
+            }
+
+            var rect = node.getElement().frame.exterior;
+
+            if (this.parentAlignment === Staffer.OrgChart.Layout.BranchParentAlignment.Center) {
+                if (node.getLevel() > 0) {
+                    var desiredCenter = rect.getCenterH();
+                    if (node.getState().numberOfSiblingColumns > 1) {
+                        var diff = desiredCenter - node.getElement().frame.branchExterior.getCenterH();
+                        Staffer.OrgChart.Layout.LayoutAlgorithm.moveChildrenOnly(state, level, diff);
+                    } else {
+                        var diff1 = desiredCenter - System.Array.getItem(node.getChildren(), ((1 + node.getState().numberOfSiblings) | 0), Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement().frame.exterior.getCenterH();
+                        Staffer.OrgChart.Layout.LayoutAlgorithm.moveChildrenOnly(state, level, diff1);
+                    }
+                }
+            } else {
+                throw new System.InvalidOperationException("Invalid ParentAlignment setting");
+            }
+
+            if (node.getLevel() > 0) {
+                // vertical connector from parent
+                var ix = node.getState().numberOfSiblings;
+                var verticalSpacerBox = System.Array.getItem(node.getChildren(), ix, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement();
+                verticalSpacerBox.frame.exterior = new Staffer.OrgChart.Layout.Rect.$ctor3(rect.getCenterH() - this.parentConnectorShield / 2, rect.getBottom(), this.parentConnectorShield, System.Array.getItem(node.getChildren(), 0, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement().frame.siblingsRowV.from - rect.getBottom());
+                verticalSpacerBox.frame.branchExterior = verticalSpacerBox.frame.exterior;
+                state.mergeSpacer(verticalSpacerBox);
+                ix = (ix + 1) | 0;
+
+                // vertical carriers already merged in
+                ix = (ix + node.getState().numberOfSiblingColumns) | 0;
+
+                if (node.getState().numberOfSiblingColumns > 1) {
+                    // have a horizontal carrier
+                    var horizontalSpacerBox = System.Array.getItem(node.getChildren(), ix, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement();
+                    var leftmost = System.Array.getItem(node.getChildren(), ((node.getState().numberOfSiblings + 1) | 0), Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement().frame.exterior.getLeft();
+                    var rightmost = System.Array.getItem(node.getChildren(), ((ix - 1) | 0), Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement().frame.exterior.getRight();
+                    horizontalSpacerBox.frame.exterior = new Staffer.OrgChart.Layout.Rect.$ctor3(leftmost, node.getElement().frame.exterior.getBottom(), rightmost - leftmost, this.parentChildSpacing);
+                    horizontalSpacerBox.frame.branchExterior = horizontalSpacerBox.frame.exterior;
+                    state.mergeSpacer(horizontalSpacerBox);
+                }
+            }
+        },
+        /**
+         * Allocates and routes connectors.
+         *
+         * @instance
+         * @public
+         * @override
+         * @this Staffer.OrgChart.Layout.MultiLineFishboneLayoutStrategy
+         * @memberof Staffer.OrgChart.Layout.MultiLineFishboneLayoutStrategy
+         * @param   {Staffer.OrgChart.Layout.LayoutState}      state    
+         * @param   {Staffer.OrgChart.Misc.Tree$3.TreeNode}    node
+         * @return  {void}
+         */
+        routeConnectors: function (state, node) {
+            if (node.getState().numberOfSiblings <= ((this.maxGroups * 2) | 0)) {
+                Staffer.OrgChart.Layout.LinearLayoutStrategy.prototype.routeConnectors.call(this, state, node);
+                return;
+            }
+
+            var count = (((1 + node.getState().numberOfSiblings) | 0) + node.getState().numberOfSiblingColumns) | 0; // one for each vertical carrier
+            if (node.getState().numberOfSiblingColumns > 1) {
+                // also have a horizontal carrier
+                count = (count + 1) | 0;
+            }
+
+            var segments = System.Array.init(count, function (){
+                return new Staffer.OrgChart.Layout.Edge();
+            });
+
+            var rootRect = node.getElement().frame.exterior;
+            var center = rootRect.getCenterH();
+
+            var ix = 0;
+
+            // parent connector
+            var space = System.Array.getItem(node.getChildren(), 0, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement().frame.siblingsRowV.from - rootRect.getBottom();
+            segments[Bridge.identity(ix, (ix = (ix + 1) | 0))] = new Staffer.OrgChart.Layout.Edge.$ctor1(new Staffer.OrgChart.Layout.Point.$ctor1(center, rootRect.getBottom()), new Staffer.OrgChart.Layout.Point.$ctor1(center, rootRect.getBottom() + space - this.childConnectorHookLength));
+
+            // one hook for each child
+            var iterator = new Staffer.OrgChart.Layout.MultiLineFishboneLayoutStrategy.SingleFishboneLayoutAdapter.GroupIterator(node.getState().numberOfSiblings, node.getState().numberOfSiblingColumns);
+            while (iterator.nextGroup()) {
+                var carrier = System.Array.getItem(node.getChildren(), ((((1 + node.getState().numberOfSiblings) | 0) + iterator.group) | 0), Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement().frame.exterior;
+                var from = carrier.getCenterH();
+
+                var isLeft = true;
+                var countOnThisSide = 0;
+                for (var i = iterator.fromIndex; i < ((iterator.fromIndex + iterator.count) | 0); i = (i + 1) | 0) {
+                    var to = isLeft ? System.Array.getItem(node.getChildren(), i, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement().frame.exterior.getRight() : System.Array.getItem(node.getChildren(), i, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement().frame.exterior.getLeft();
+                    var y = System.Array.getItem(node.getChildren(), i, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement().frame.exterior.getCenterV();
+                    segments[Bridge.identity(ix, (ix = (ix + 1) | 0))] = new Staffer.OrgChart.Layout.Edge.$ctor1(new Staffer.OrgChart.Layout.Point.$ctor1(from, y), new Staffer.OrgChart.Layout.Point.$ctor1(to, y));
+
+                    if (((countOnThisSide = (countOnThisSide + 1) | 0)) === iterator.maxOnLeft) {
+                        countOnThisSide = 0;
+                        if (isLeft) {
+                            // one for each vertical carrier
+                            segments[((((1 + node.getState().numberOfSiblings) | 0) + iterator.group) | 0)] = new Staffer.OrgChart.Layout.Edge.$ctor1(new Staffer.OrgChart.Layout.Point.$ctor1(carrier.getCenterH(), carrier.getTop() - this.childConnectorHookLength), new Staffer.OrgChart.Layout.Point.$ctor1(carrier.getCenterH(), System.Array.getItem(node.getChildren(), i, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement().frame.exterior.getCenterV()));
+                        }
+                        isLeft = !isLeft;
+                    }
+                }
+            }
+
+            // vertical carriers already created
+            ix = (ix + node.getState().numberOfSiblingColumns) | 0;
+
+            if (node.getState().numberOfSiblingColumns > 1) {
+                var leftGroup = System.Array.getItem(node.getChildren(), ((1 + node.getState().numberOfSiblings) | 0), Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement().frame.exterior;
+                var rightGroup = System.Array.getItem(node.getChildren(), ((((((1 + node.getState().numberOfSiblings) | 0) + node.getState().numberOfSiblingColumns) | 0) - 1) | 0), Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement().frame.exterior;
+
+                // one horizontal carrier
+                segments[ix] = new Staffer.OrgChart.Layout.Edge.$ctor1(new Staffer.OrgChart.Layout.Point.$ctor1(leftGroup.getCenterH(), leftGroup.getTop() - this.childConnectorHookLength), new Staffer.OrgChart.Layout.Point.$ctor1(rightGroup.getCenterH(), rightGroup.getTop() - this.childConnectorHookLength));
+            }
+
+            node.getElement().frame.connector = new Staffer.OrgChart.Layout.Connector(segments);
+        }
+    });
+
+    /**
+     * Arranges child boxes in multiple lines under the parent.
+     Can only be configured to position parent in the middle of children.
+     Children are attached to long horizontal carriers,
+     with a central vertical carrier going through them from parent's bottom.
      *
      * @public
      * @class Staffer.OrgChart.Layout.MultiLineHangerLayoutStrategy
@@ -4155,6 +4856,10 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
          * @return  {void}
          */
         preProcessThisNode: function (state, node) {
+            if (this.parentAlignment !== Staffer.OrgChart.Layout.BranchParentAlignment.Center) {
+                throw new System.InvalidOperationException("Unsupported value for ParentAlignment");
+            }
+
             if (this.maxSiblingsPerRow <= 0 || this.maxSiblingsPerRow % 2 !== 0) {
                 throw new System.InvalidOperationException("MaxSiblingsPerRow must be a positive even value");
             }
@@ -4165,43 +4870,42 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
                 return;
             }
 
-            var nodeState = node.requireState();
-            nodeState.siblingsCount = node.getElement().isCollapsed ? 0 : node.getChildCount();
+            node.getState().numberOfSiblings = node.getChildCount();
 
             // only add spacers for non-collapsed boxes
-            if (!node.getElement().isCollapsed) {
+            if (node.getState().numberOfSiblings > 0) {
                 var lastRowBoxCount = node.getChildCount() % this.maxSiblingsPerRow;
 
                 // add one (for vertical spacer) into the count of layout columns
-                nodeState.numberOfSiblingColumns = (1 + this.maxSiblingsPerRow) | 0;
+                node.getState().numberOfSiblingColumns = (1 + this.maxSiblingsPerRow) | 0;
 
-                nodeState.numberOfSiblingRows = (Bridge.Int.div(node.getChildCount(), this.maxSiblingsPerRow)) | 0;
+                node.getState().numberOfSiblingRows = (Bridge.Int.div(node.getChildCount(), this.maxSiblingsPerRow)) | 0;
                 if (lastRowBoxCount !== 0) {
-                    nodeState.numberOfSiblingRows = (nodeState.numberOfSiblingRows + 1) | 0;
+                    node.getState().numberOfSiblingRows = (node.getState().numberOfSiblingRows + 1) | 0;
                 }
 
                 // include vertical spacers into the count of layout siblings
-                nodeState.siblingsCount = (node.getChildCount() + nodeState.numberOfSiblingRows) | 0;
+                node.getState().numberOfSiblings = (node.getChildCount() + node.getState().numberOfSiblingRows) | 0;
                 if (lastRowBoxCount > 0 && lastRowBoxCount <= ((Bridge.Int.div(this.maxSiblingsPerRow, 2)) | 0)) {
                     // don't need the last spacer, last row is half-full or even less
-                    nodeState.siblingsCount = (nodeState.siblingsCount - 1) | 0;
+                    node.getState().numberOfSiblings = (node.getState().numberOfSiblings - 1) | 0;
                 }
 
                 // sibling middle-spacers have to be inserted between siblings
                 var ix = (Bridge.Int.div(this.maxSiblingsPerRow, 2)) | 0;
-                while (ix < nodeState.siblingsCount) {
-                    var siblingSpacer = Staffer.OrgChart.Layout.Box.special(Staffer.OrgChart.Layout.Box.None, node.getElement().id);
+                while (ix < node.getState().numberOfSiblings) {
+                    var siblingSpacer = Staffer.OrgChart.Layout.Box.special(Staffer.OrgChart.Layout.Box.None, node.getElement().id, false);
                     node.insertChild(ix, siblingSpacer);
-                    ix = (ix + nodeState.numberOfSiblingColumns) | 0;
+                    ix = (ix + node.getState().numberOfSiblingColumns) | 0;
                 }
 
                 // add parent vertical spacer to the end
-                var verticalSpacer = Staffer.OrgChart.Layout.Box.special(Staffer.OrgChart.Layout.Box.None, node.getElement().id);
+                var verticalSpacer = Staffer.OrgChart.Layout.Box.special(Staffer.OrgChart.Layout.Box.None, node.getElement().id, false);
                 node.addChild(verticalSpacer);
 
                 // add horizontal spacers to the end
-                for (var i = 0; i < nodeState.numberOfSiblingRows; i = (i + 1) | 0) {
-                    var horizontalSpacer = Staffer.OrgChart.Layout.Box.special(Staffer.OrgChart.Layout.Box.None, node.getElement().id);
+                for (var i = 0; i < node.getState().numberOfSiblingRows; i = (i + 1) | 0) {
+                    var horizontalSpacer = Staffer.OrgChart.Layout.Box.special(Staffer.OrgChart.Layout.Box.None, node.getElement().id, false);
                     node.addChild(horizontalSpacer);
                 }
             }
@@ -4220,12 +4924,7 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
          */
         applyVerticalLayout: function (state, level) {
             var node = level.branchRoot;
-            if (!node.getHaveState()) {
-                return;
-            }
-
-            var nodeState = node.requireState();
-            if (nodeState.siblingsCount <= this.maxSiblingsPerRow) {
+            if (node.getState().numberOfSiblings <= this.maxSiblingsPerRow) {
                 // fall back to linear layout, only have one row of boxes
                 Staffer.OrgChart.Layout.LinearLayoutStrategy.prototype.applyVerticalLayout.call(this, state, level);
                 return;
@@ -4237,12 +4936,12 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
 
             var prevRowExterior = node.getElement().frame.siblingsRowV;
 
-            for (var row = 0; row < nodeState.numberOfSiblingRows; row = (row + 1) | 0) {
+            for (var row = 0; row < node.getState().numberOfSiblingRows; row = (row + 1) | 0) {
                 var siblingsRowExterior = Staffer.OrgChart.Layout.Dimensions.minMax();
 
                 // first, compute
-                var from = (row * nodeState.numberOfSiblingColumns) | 0;
-                var to = Math.min(((from + nodeState.numberOfSiblingColumns) | 0), nodeState.siblingsCount);
+                var from = (row * node.getState().numberOfSiblingColumns) | 0;
+                var to = Math.min(((from + node.getState().numberOfSiblingColumns) | 0), node.getState().numberOfSiblings);
                 for (var i = from; i < to; i = (i + 1) | 0) {
                     var child = System.Array.getItem(node.getChildren(), i, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo));
                     if (child.getElement().isSpecial) {
@@ -4254,6 +4953,7 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
 
                     var top = prevRowExterior.to + this.parentChildSpacing;
                     child.getElement().frame.exterior = new Staffer.OrgChart.Layout.Rect.$ctor3(rect.getLeft(), top, rect.size.width, rect.size.height);
+                    child.getElement().frame.branchExterior = child.getElement().frame.exterior;
 
                     siblingsRowExterior = Staffer.OrgChart.Layout.Dimensions.op_Addition(siblingsRowExterior, new Staffer.OrgChart.Layout.Dimensions.$ctor1(top, top + rect.size.height));
                 }
@@ -4268,17 +4968,17 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
                     // re-enter layout algorithm for child branch
                     Staffer.OrgChart.Layout.LayoutAlgorithm.verticalLayout(state, child1);
 
-                    if (child1.getHaveState()) {
-                        siblingsBottom = Math.max(siblingsBottom, child1.requireState().branchExterior.getBottom());
-                    }
+                    siblingsBottom = Math.max(siblingsBottom, child1.getElement().frame.branchExterior.getBottom());
                 }
 
                 prevRowExterior = new Staffer.OrgChart.Layout.Dimensions.$ctor1(siblingsRowExterior.from, Math.max(siblingsBottom, siblingsRowExterior.to));
 
                 // now assign size to the vertical spacer, if any
-                var spacerIndex = (from + ((Bridge.Int.div(nodeState.numberOfSiblingColumns, 2)) | 0)) | 0;
-                if (spacerIndex < nodeState.siblingsCount) {
-                    System.Array.getItem(node.getChildren(), spacerIndex, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement().frame.exterior = new Staffer.OrgChart.Layout.Rect.$ctor3(0, prevRowExterior.from, this.parentConnectorShield, prevRowExterior.to - prevRowExterior.from);
+                var spacerIndex = (from + ((Bridge.Int.div(node.getState().numberOfSiblingColumns, 2)) | 0)) | 0;
+                if (spacerIndex < node.getState().numberOfSiblings) {
+                    var frame = System.Array.getItem(node.getChildren(), spacerIndex, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement().frame;
+                    frame.exterior = new Staffer.OrgChart.Layout.Rect.$ctor3(0, prevRowExterior.from, this.parentConnectorShield, prevRowExterior.to - prevRowExterior.from);
+                    frame.branchExterior = frame.exterior;
                 }
             }
         },
@@ -4297,22 +4997,17 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
         applyHorizontalLayout: function (state, level) {
             var node = level.branchRoot;
 
-            if (!node.getHaveState()) {
-                return;
-            }
-
-            var nodeState = node.requireState();
-            if (nodeState.siblingsCount <= this.maxSiblingsPerRow) {
+            if (node.getState().numberOfSiblings <= this.maxSiblingsPerRow) {
                 // fall back to linear layout, only have one row of boxes
                 Staffer.OrgChart.Layout.LinearLayoutStrategy.prototype.applyHorizontalLayout.call(this, state, level);
                 return;
             }
 
-            for (var col = 0; col < nodeState.numberOfSiblingColumns; col = (col + 1) | 0) {
+            for (var col = 0; col < node.getState().numberOfSiblingColumns; col = (col + 1) | 0) {
                 // first, perform horizontal layout for every node in this column
-                for (var row = 0; row < nodeState.numberOfSiblingRows; row = (row + 1) | 0) {
-                    var ix = (((row * nodeState.numberOfSiblingColumns) | 0) + col) | 0;
-                    if (ix >= nodeState.siblingsCount) {
+                for (var row = 0; row < node.getState().numberOfSiblingRows; row = (row + 1) | 0) {
+                    var ix = (((row * node.getState().numberOfSiblingColumns) | 0) + col) | 0;
+                    if (ix >= node.getState().numberOfSiblings) {
                         break;
                     }
 
@@ -4321,58 +5016,29 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
                     Staffer.OrgChart.Layout.LayoutAlgorithm.horizontalLayout(state, child);
                 }
 
-                // compute the rightmost center in the column
-                var center = System.Double.min;
-                for (var row1 = 0; row1 < nodeState.numberOfSiblingRows; row1 = (row1 + 1) | 0) {
-                    var ix1 = (((row1 * nodeState.numberOfSiblingColumns) | 0) + col) | 0;
-                    if (ix1 >= nodeState.siblingsCount) {
-                        break;
-                    }
-
-                    var c = System.Array.getItem(node.getChildren(), ix1, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement().frame.exterior.getCenterH();
-                    if (c > center) {
-                        center = c;
-                    }
-                }
-
-                // move those boxes in the column that are not aligned with the rightmost center
-                for (var row2 = 0; row2 < nodeState.numberOfSiblingRows; row2 = (row2 + 1) | 0) {
-                    var ix2 = (((row2 * nodeState.numberOfSiblingColumns) | 0) + col) | 0;
-                    if (ix2 >= nodeState.siblingsCount) {
-                        break;
-                    }
-
-                    var frame = System.Array.getItem(node.getChildren(), ix2, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement().frame;
-                    var c1 = frame.exterior.getCenterH();
-                    if (c1 !== center) {
-                        var diff = center - c1;
-                        Staffer.OrgChart.Layout.LayoutAlgorithm.moveOneChild(state, System.Array.getItem(node.getChildren(), ix2, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)), diff);
-                    }
-                }
-
-                // update branch boundary
-                level.boundary.reloadFromBranch(node);
+                Staffer.OrgChart.Layout.LayoutAlgorithm.alignHorizontalCenters(state, level, this.enumerateColumn(node, col));
             }
 
             if (this.parentAlignment === Staffer.OrgChart.Layout.BranchParentAlignment.Center) {
                 var rect = node.getElement().frame.exterior;
-                var spacer = System.Array.getItem(node.getChildren(), ((Bridge.Int.div(nodeState.numberOfSiblingColumns, 2)) | 0), Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo));
+                var spacer = System.Array.getItem(node.getChildren(), ((Bridge.Int.div(node.getState().numberOfSiblingColumns, 2)) | 0), Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo));
                 var desiredCenter = spacer.getElement().frame.exterior.getCenterH();
-                var diff1 = rect.getCenterH() - desiredCenter;
-                Staffer.OrgChart.Layout.LayoutAlgorithm.moveChildrenOnly(state, level, diff1);
+                var diff = rect.getCenterH() - desiredCenter;
+                Staffer.OrgChart.Layout.LayoutAlgorithm.moveChildrenOnly(state, level, diff);
 
                 // vertical connector from parent
-                var verticalSpacerBox = System.Array.getItem(node.getChildren(), nodeState.siblingsCount, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement();
+                var verticalSpacerBox = System.Array.getItem(node.getChildren(), node.getState().numberOfSiblings, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement();
                 verticalSpacerBox.frame.exterior = new Staffer.OrgChart.Layout.Rect.$ctor3(rect.getCenterH() - this.parentConnectorShield / 2, rect.getBottom(), this.parentConnectorShield, System.Array.getItem(node.getChildren(), 0, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement().frame.siblingsRowV.from - rect.getBottom());
+                verticalSpacerBox.frame.branchExterior = verticalSpacerBox.frame.exterior;
 
                 state.mergeSpacer(verticalSpacerBox);
 
                 // horizontal row carrier protectors
-                for (var firstInRowIndex = 0; firstInRowIndex < nodeState.siblingsCount; firstInRowIndex = (firstInRowIndex + nodeState.numberOfSiblingColumns) | 0) {
+                for (var firstInRowIndex = 0; firstInRowIndex < node.getState().numberOfSiblings; firstInRowIndex = (firstInRowIndex + node.getState().numberOfSiblingColumns) | 0) {
                     var firstInRow = System.Array.getItem(node.getChildren(), firstInRowIndex, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement().frame;
-                    var lastInRow = System.Array.getItem(node.getChildren(), Math.min(((((firstInRowIndex + nodeState.numberOfSiblingColumns) | 0) - 1) | 0), ((nodeState.siblingsCount - 1) | 0)), Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement().frame;
+                    var lastInRow = System.Array.getItem(node.getChildren(), Math.min(((((firstInRowIndex + node.getState().numberOfSiblingColumns) | 0) - 1) | 0), ((node.getState().numberOfSiblings - 1) | 0)), Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement().frame;
 
-                    var horizontalSpacerBox = System.Array.getItem(node.getChildren(), ((((1 + nodeState.siblingsCount) | 0) + ((Bridge.Int.div(firstInRowIndex, nodeState.numberOfSiblingColumns)) | 0)) | 0), Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement();
+                    var horizontalSpacerBox = System.Array.getItem(node.getChildren(), ((((1 + node.getState().numberOfSiblings) | 0) + ((Bridge.Int.div(firstInRowIndex, node.getState().numberOfSiblingColumns)) | 0)) | 0), Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement();
                     var r = new Staffer.OrgChart.Layout.Rect.$ctor3(firstInRow.exterior.getLeft(), firstInRow.siblingsRowV.from - this.parentChildSpacing, lastInRow.exterior.getRight() - firstInRow.exterior.getLeft(), this.parentChildSpacing);
                     horizontalSpacerBox.frame.exterior = r;
 
@@ -4381,11 +5047,25 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
                         horizontalSpacerBox.frame.exterior = new Staffer.OrgChart.Layout.Rect.$ctor1(r.topLeft, new Staffer.OrgChart.Layout.Size.$ctor1(verticalSpacerBox.frame.exterior.getRight() - r.getLeft(), r.size.height));
                     }
 
+                    horizontalSpacerBox.frame.branchExterior = horizontalSpacerBox.frame.exterior;
+
                     state.mergeSpacer(horizontalSpacerBox);
                 }
             } else {
                 throw new System.InvalidOperationException("Invalid ParentAlignment setting");
             }
+        },
+        enumerateColumn: function (branchRoot, col) {
+            var $yield = [];
+            for (var row = 0; row < branchRoot.getState().numberOfSiblingRows; row = (row + 1) | 0) {
+                var ix = (((row * branchRoot.getState().numberOfSiblingColumns) | 0) + col) | 0;
+                if (ix >= branchRoot.getState().numberOfSiblings) {
+                    break;
+                }
+
+                $yield.push(System.Array.getItem(branchRoot.getChildren(), ix, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)));
+            }
+            return System.Array.toEnumerable($yield);
         },
         /**
          * Allocates and routes connectors.
@@ -4401,19 +5081,14 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
          */
         routeConnectors: function (state, node) {
             var $t;
-            if (!node.getHaveState()) {
-                return;
-            }
-
-            var nodeState = node.requireState();
-            if (nodeState.siblingsCount <= this.maxSiblingsPerRow) {
+            if (node.getState().numberOfSiblings <= this.maxSiblingsPerRow) {
                 // fall back to linear layout, only have one row of boxes
                 Staffer.OrgChart.Layout.LinearLayoutStrategy.prototype.routeConnectors.call(this, state, node);
                 return;
             }
 
             // one parent connector (also serves as mid-sibling carrier) and horizontal carriers
-            var count = (1 + nodeState.numberOfSiblingRows) | 0;
+            var count = (1 + node.getState().numberOfSiblingRows) | 0;
 
             $t = Bridge.getEnumerator(node.getChildren(), "System$Collections$Generic$IEnumerable$1$Staffer$OrgChart$Misc$Tree$3$TreeNode$System$Int32$Staffer$OrgChart$Layout$Box$Staffer$OrgChart$Layout$NodeLayoutInfo$getEnumerator");
             while ($t.moveNext()) {
@@ -4431,14 +5106,14 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
             var rootRect = node.getElement().frame.exterior;
             var center = rootRect.getCenterH();
 
-            var verticalCarrierHeight = System.Array.getItem(node.getChildren(), ((nodeState.siblingsCount - 1) | 0), Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement().frame.siblingsRowV.from - this.childConnectorHookLength - rootRect.getBottom();
+            var verticalCarrierHeight = System.Array.getItem(node.getChildren(), ((node.getState().numberOfSiblings - 1) | 0), Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement().frame.siblingsRowV.from - this.childConnectorHookLength - rootRect.getBottom();
 
             // central mid-sibling vertical connector, from parent to last row
             segments[0] = new Staffer.OrgChart.Layout.Edge.$ctor1(new Staffer.OrgChart.Layout.Point.$ctor1(center, rootRect.getBottom()), new Staffer.OrgChart.Layout.Point.$ctor1(center, rootRect.getBottom() + verticalCarrierHeight));
 
             // short hook for each child
             var ix = 1;
-            for (var i = 0; i < nodeState.siblingsCount; i = (i + 1) | 0) {
+            for (var i = 0; i < node.getState().numberOfSiblings; i = (i + 1) | 0) {
                 var child1 = System.Array.getItem(node.getChildren(), i, Staffer.OrgChart.Misc.Tree$3.TreeNode(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)).getElement();
                 if (!child1.isSpecial) {
                     var childRect = child1.frame.exterior;
@@ -4449,8 +5124,8 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
 
             // horizontal carriers go from leftmost child hook to righmost child hook
             // for the last row which is just half or less full, it will only go to the central vertical carrier
-            var lastChildHookIndex = (((count - nodeState.numberOfSiblingRows) | 0) - 1) | 0;
-            for (var firstInRowIndex = 1; firstInRowIndex < ((count - nodeState.numberOfSiblingRows) | 0); firstInRowIndex = (firstInRowIndex + this.maxSiblingsPerRow) | 0) {
+            var lastChildHookIndex = (((count - node.getState().numberOfSiblingRows) | 0) - 1) | 0;
+            for (var firstInRowIndex = 1; firstInRowIndex < ((count - node.getState().numberOfSiblingRows) | 0); firstInRowIndex = (firstInRowIndex + this.maxSiblingsPerRow) | 0) {
                 var firstInRow = segments[firstInRowIndex];
 
                 var lastInRow = segments[Math.min(((((firstInRowIndex + this.maxSiblingsPerRow) | 0) - 1) | 0), lastChildHookIndex)];
@@ -4468,7 +5143,7 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
 
     Bridge.setMetadata(Staffer.OrgChart.Annotations.ContractAnnotationAttribute, function () { return {"members":[{"attr":[new Staffer.OrgChart.Annotations.NotNullAttribute()],"accessibility":2,"name":"Contract","type":16,"returnType":String,"getter":{"accessibility":2,"name":"get_Contract","type":8,"sname":"getContract","returnType":String},"setter":{"accessibility":1,"name":"set_Contract","type":8,"paramsInfo":[{"name":"value","parameterType":String,"position":0}],"sname":"setContract","returnType":Object,"params":[String]}}],"attrAllowMultiple":true}; });
     Bridge.setMetadata(Staffer.OrgChart.Layout.Boundary.Step, function () { return {"attr":[new System.DebuggerDisplayAttribute("{X}, {Top} - {Bottom}, {Box.Id}")],"members":[{"attr":[new Staffer.OrgChart.Annotations.NotNullAttribute()],"accessibility":2,"name":"Box","type":4,"returnType":Staffer.OrgChart.Layout.Box,"sname":"box","isReadOnly":true}]}; });
-    Bridge.setMetadata(Staffer.OrgChart.Layout.Box, function () { return {"attr":[new System.DebuggerDisplayAttribute("{Id}, {Frame.Exterior.Left}:{Frame.Exterior.Top}, {Frame.Exterior.Size.Width}x{Frame.Exterior.Size.Height}")],"members":[{"attr":[new Staffer.OrgChart.Annotations.NotNullAttribute()],"accessibility":2,"name":"Special","isStatic":true,"type":8,"paramsInfo":[{"name":"id","parameterType":System.Int32,"position":0},{"name":"visualParentId","parameterType":System.Int32,"position":1}],"sname":"special","returnType":Staffer.OrgChart.Layout.Box,"params":[System.Int32,System.Int32]},{"attr":[new Staffer.OrgChart.Annotations.CanBeNullAttribute()],"accessibility":2,"name":"DataId","type":4,"returnType":String,"sname":"dataId","isReadOnly":true},{"attr":[new Staffer.OrgChart.Annotations.NotNullAttribute()],"accessibility":2,"name":"Frame","type":4,"returnType":Staffer.OrgChart.Layout.Frame,"sname":"frame","isReadOnly":true},{"attr":[new Staffer.OrgChart.Annotations.CanBeNullAttribute()],"accessibility":2,"name":"LayoutStrategyId","type":4,"returnType":String,"sname":"layoutStrategyId","isReadOnly":false}]}; });
+    Bridge.setMetadata(Staffer.OrgChart.Layout.Box, function () { return {"attr":[new System.DebuggerDisplayAttribute("{Id}, {Frame.Exterior.Left}:{Frame.Exterior.Top}, {Frame.Exterior.Size.Width}x{Frame.Exterior.Size.Height}")],"members":[{"attr":[new Staffer.OrgChart.Annotations.NotNullAttribute()],"accessibility":2,"name":"Special","isStatic":true,"type":8,"paramsInfo":[{"name":"id","parameterType":System.Int32,"position":0},{"name":"visualParentId","parameterType":System.Int32,"position":1},{"name":"disableCollisionDetection","parameterType":Boolean,"position":2}],"sname":"special","returnType":Staffer.OrgChart.Layout.Box,"params":[System.Int32,System.Int32,Boolean]},{"attr":[new Staffer.OrgChart.Annotations.CanBeNullAttribute()],"accessibility":2,"name":"DataId","type":4,"returnType":String,"sname":"dataId","isReadOnly":true},{"attr":[new Staffer.OrgChart.Annotations.NotNullAttribute()],"accessibility":2,"name":"Frame","type":4,"returnType":Staffer.OrgChart.Layout.Frame,"sname":"frame","isReadOnly":true},{"attr":[new Staffer.OrgChart.Annotations.CanBeNullAttribute()],"accessibility":2,"name":"LayoutStrategyId","type":4,"returnType":String,"sname":"layoutStrategyId","isReadOnly":false}]}; });
     Bridge.setMetadata(Staffer.OrgChart.Layout.BoxContainer, function () { return {"members":[{"attr":[new Staffer.OrgChart.Annotations.CanBeNullAttribute()],"accessibility":2,"name":"SystemRoot","type":16,"returnType":Staffer.OrgChart.Layout.Box,"getter":{"accessibility":2,"name":"get_SystemRoot","type":8,"sname":"getSystemRoot","returnType":Staffer.OrgChart.Layout.Box},"setter":{"accessibility":2,"name":"set_SystemRoot","type":8,"paramsInfo":[{"name":"value","parameterType":Staffer.OrgChart.Layout.Box,"position":0}],"sname":"setSystemRoot","returnType":Object,"params":[Staffer.OrgChart.Layout.Box]}}]}; });
     Bridge.setMetadata(Staffer.OrgChart.Layout.Connector, function () { return {"members":[{"attr":[new Staffer.OrgChart.Annotations.NotNullAttribute()],"accessibility":2,"name":"Segments","type":16,"returnType":Array,"getter":{"accessibility":2,"name":"get_Segments","type":8,"sname":"getSegments","returnType":Array},"setter":{"accessibility":1,"name":"set_Segments","type":8,"paramsInfo":[{"name":"value","parameterType":Array,"position":0}],"sname":"setSegments","returnType":Object,"params":[Array]}}]}; });
     Bridge.setMetadata(Staffer.OrgChart.Layout.Diagram, function () { return {"members":[{"attr":[new Staffer.OrgChart.Annotations.CanBeNullAttribute()],"accessibility":2,"name":"VisualTree","type":16,"returnType":Staffer.OrgChart.Misc.Tree$3(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo),"getter":{"accessibility":2,"name":"get_VisualTree","type":8,"sname":"getVisualTree","returnType":Staffer.OrgChart.Misc.Tree$3(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)},"setter":{"accessibility":2,"name":"set_VisualTree","type":8,"paramsInfo":[{"name":"value","parameterType":Staffer.OrgChart.Misc.Tree$3(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo),"position":0}],"sname":"setVisualTree","returnType":Object,"params":[Staffer.OrgChart.Misc.Tree$3(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)]}}]}; });
@@ -4478,7 +5153,7 @@ Bridge.assembly("Staffer.OrgChart.Layout.JScript.Bridge", function ($asm, global
     Bridge.setMetadata(Staffer.OrgChart.Layout.LayoutState, function () { return {"members":[{"attr":[new Staffer.OrgChart.Annotations.CanBeNullAttribute()],"accessibility":2,"name":"BoxSizeFunc","type":16,"returnType":Function,"getter":{"accessibility":2,"name":"get_BoxSizeFunc","type":8,"sname":"getBoxSizeFunc","returnType":Function},"setter":{"accessibility":2,"name":"set_BoxSizeFunc","type":8,"paramsInfo":[{"name":"value","parameterType":Function,"position":0}],"sname":"setBoxSizeFunc","returnType":Object,"params":[Function]}},{"attr":[new Staffer.OrgChart.Annotations.NotNullAttribute()],"accessibility":2,"name":"Diagram","type":16,"returnType":Staffer.OrgChart.Layout.Diagram,"getter":{"accessibility":2,"name":"get_Diagram","type":8,"sname":"getDiagram","returnType":Staffer.OrgChart.Layout.Diagram},"setter":{"accessibility":1,"name":"set_Diagram","type":8,"paramsInfo":[{"name":"value","parameterType":Staffer.OrgChart.Layout.Diagram,"position":0}],"sname":"setDiagram","returnType":Object,"params":[Staffer.OrgChart.Layout.Diagram]}},{"attr":[new Staffer.OrgChart.Annotations.CanBeNullAttribute()],"accessibility":2,"name":"VisualTree","type":16,"returnType":Staffer.OrgChart.Misc.Tree$3(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo),"getter":{"accessibility":2,"name":"get_VisualTree","type":8,"sname":"getVisualTree","returnType":Staffer.OrgChart.Misc.Tree$3(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)},"setter":{"accessibility":1,"name":"set_VisualTree","type":8,"paramsInfo":[{"name":"value","parameterType":Staffer.OrgChart.Misc.Tree$3(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo),"position":0}],"sname":"setVisualTree","returnType":Object,"params":[Staffer.OrgChart.Misc.Tree$3(System.Int32,Staffer.OrgChart.Layout.Box,Staffer.OrgChart.Layout.NodeLayoutInfo)]}},{"attr":[new Staffer.OrgChart.Annotations.NotNullAttribute()],"accessibility":1,"name":"m_layoutStack","type":4,"returnType":System.Collections.Generic.Stack$1(Staffer.OrgChart.Layout.LayoutState.LayoutLevel),"sname":"m_layoutStack","isReadOnly":true},{"attr":[new Staffer.OrgChart.Annotations.NotNullAttribute()],"accessibility":1,"name":"m_pooledBoundaries","type":4,"returnType":System.Collections.Generic.List$1(Staffer.OrgChart.Layout.Boundary),"sname":"m_pooledBoundaries","isReadOnly":true},{"attr":[new Staffer.OrgChart.Annotations.CanBeNullAttribute()],"accessibility":2,"name":"BoundaryChanged","type":2,"adder":{"accessibility":2,"name":"add_BoundaryChanged","type":8,"paramsInfo":[{"name":"value","parameterType":Function,"position":0}],"sname":"addBoundaryChanged","returnType":Object,"params":[Function]},"remover":{"accessibility":2,"name":"remove_BoundaryChanged","type":8,"paramsInfo":[{"name":"value","parameterType":Function,"position":0}],"sname":"removeBoundaryChanged","returnType":Object,"params":[Function]}},{"attr":[new Staffer.OrgChart.Annotations.CanBeNullAttribute()],"accessibility":2,"name":"OperationChanged","type":2,"adder":{"accessibility":2,"name":"add_OperationChanged","type":8,"paramsInfo":[{"name":"value","parameterType":Function,"position":0}],"sname":"addOperationChanged","returnType":Object,"params":[Function]},"remover":{"accessibility":2,"name":"remove_OperationChanged","type":8,"paramsInfo":[{"name":"value","parameterType":Function,"position":0}],"sname":"removeOperationChanged","returnType":Object,"params":[Function]}}]}; });
     Bridge.setMetadata(Staffer.OrgChart.Layout.LayoutState.LayoutLevel, function () { return {"attr":[new System.DebuggerDisplayAttribute("{BranchRoot.Element.Id}, {Boundary.BoundingRect.Top}..{Boundary.BoundingRect.Bottom}")]}; });
     Bridge.setMetadata(Staffer.OrgChart.Layout.NodeLayoutInfo, function () { return {"members":[{"attr":[new Staffer.OrgChart.Annotations.NotNullAttribute()],"accessibility":2,"name":"RequireLayoutStrategy","type":8,"sname":"requireLayoutStrategy","returnType":Staffer.OrgChart.Layout.LayoutStrategyBase}]}; });
+    Bridge.setMetadata(Staffer.OrgChart.Misc.Tree$3.TreeNode, function (TKey, TValue, TValueState) { return {"members":[{"attr":[new Staffer.OrgChart.Annotations.CanBeNullAttribute()],"accessibility":2,"name":"Children","type":16,"returnType":System.Collections.Generic.IList$1(Staffer.OrgChart.Misc.Tree$3.TreeNode(TKey,TValue,TValueState)),"getter":{"accessibility":2,"name":"get_Children","type":8,"sname":"getChildren","returnType":System.Collections.Generic.IList$1(Staffer.OrgChart.Misc.Tree$3.TreeNode(TKey,TValue,TValueState))},"setter":{"accessibility":3,"name":"set_Children","type":8,"paramsInfo":[{"name":"value","parameterType":System.Collections.Generic.IList$1(Staffer.OrgChart.Misc.Tree$3.TreeNode(TKey,TValue,TValueState)),"position":0}],"sname":"setChildren","returnType":Object,"params":[System.Collections.Generic.IList$1(Staffer.OrgChart.Misc.Tree$3.TreeNode(TKey,TValue,TValueState))]}},{"attr":[new Staffer.OrgChart.Annotations.CanBeNullAttribute()],"accessibility":2,"name":"ParentNode","type":16,"returnType":Staffer.OrgChart.Misc.Tree$3.TreeNode(TKey,TValue,TValueState),"getter":{"accessibility":2,"name":"get_ParentNode","type":8,"sname":"getParentNode","returnType":Staffer.OrgChart.Misc.Tree$3.TreeNode(TKey,TValue,TValueState)},"setter":{"accessibility":2,"name":"set_ParentNode","type":8,"paramsInfo":[{"name":"value","parameterType":Staffer.OrgChart.Misc.Tree$3.TreeNode(TKey,TValue,TValueState),"position":0}],"sname":"setParentNode","returnType":Object,"params":[Staffer.OrgChart.Misc.Tree$3.TreeNode(TKey,TValue,TValueState)]}},{"attr":[new Staffer.OrgChart.Annotations.NotNullAttribute()],"accessibility":2,"name":"State","type":16,"returnType":TValueState,"getter":{"accessibility":2,"name":"get_State","type":8,"sname":"getState","returnType":TValueState},"setter":{"accessibility":1,"name":"set_State","type":8,"paramsInfo":[{"name":"value","parameterType":TValueState,"position":0}],"sname":"setState","returnType":Object,"params":[TValueState]}}]}; });
     Bridge.setMetadata(Staffer.OrgChart.Layout.Rect, function () { return {"attr":[new System.DebuggerDisplayAttribute("{TopLeft.X}:{TopLeft.Y}, {Size.Width}x{Size.Height}")]}; });
-    Bridge.setMetadata(Staffer.OrgChart.Misc.Tree$3.TreeNode, function (TKey, TValue, TValueState) { return {"members":[{"attr":[new Staffer.OrgChart.Annotations.NotNullAttribute()],"accessibility":2,"name":"RequireState","type":8,"sname":"requireState","returnType":TValueState},{"attr":[new Staffer.OrgChart.Annotations.CanBeNullAttribute()],"accessibility":2,"name":"Children","type":16,"returnType":System.Collections.Generic.IList$1(Staffer.OrgChart.Misc.Tree$3.TreeNode(TKey,TValue,TValueState)),"getter":{"accessibility":2,"name":"get_Children","type":8,"sname":"getChildren","returnType":System.Collections.Generic.IList$1(Staffer.OrgChart.Misc.Tree$3.TreeNode(TKey,TValue,TValueState))}},{"attr":[new Staffer.OrgChart.Annotations.CanBeNullAttribute()],"accessibility":2,"name":"ParentNode","type":16,"returnType":Staffer.OrgChart.Misc.Tree$3.TreeNode(TKey,TValue,TValueState),"getter":{"accessibility":2,"name":"get_ParentNode","type":8,"sname":"getParentNode","returnType":Staffer.OrgChart.Misc.Tree$3.TreeNode(TKey,TValue,TValueState)},"setter":{"accessibility":2,"name":"set_ParentNode","type":8,"paramsInfo":[{"name":"value","parameterType":Staffer.OrgChart.Misc.Tree$3.TreeNode(TKey,TValue,TValueState),"position":0}],"sname":"setParentNode","returnType":Object,"params":[Staffer.OrgChart.Misc.Tree$3.TreeNode(TKey,TValue,TValueState)]}}]}; });
     Bridge.setMetadata(Staffer.OrgChart.Test.TestDataItem, function () { return {"members":[{"attr":[new Staffer.OrgChart.Annotations.CanBeNullAttribute()],"accessibility":2,"name":"Date1","type":4,"returnType":Date,"sname":"date1","isReadOnly":false},{"attr":[new Staffer.OrgChart.Annotations.NotNullAttribute()],"accessibility":2,"name":"Id","type":4,"returnType":String,"sname":"id","isReadOnly":false},{"attr":[new Staffer.OrgChart.Annotations.CanBeNullAttribute()],"accessibility":2,"name":"ParentId","type":4,"returnType":String,"sname":"parentId","isReadOnly":false},{"attr":[new Staffer.OrgChart.Annotations.CanBeNullAttribute()],"accessibility":2,"name":"String1","type":4,"returnType":String,"sname":"string1","isReadOnly":false},{"attr":[new Staffer.OrgChart.Annotations.CanBeNullAttribute()],"accessibility":2,"name":"String2","type":4,"returnType":String,"sname":"string2","isReadOnly":false}]}; });
 });

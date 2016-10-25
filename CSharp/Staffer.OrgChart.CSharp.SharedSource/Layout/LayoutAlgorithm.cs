@@ -120,7 +120,7 @@ namespace Staffer.OrgChart.Layout
         {
             visualTree.IterateParentFirst(node =>
             {
-                if (node.Element.IsSpecial && node.Level > 0 || node.ChildCount == 0)
+                if (node.Element.IsSpecial && node.Level > 0)
                 {
                     return false;
                 }
@@ -144,7 +144,7 @@ namespace Staffer.OrgChart.Layout
                 // now let it pre-allocate special boxes etc
                 node.State.RequireLayoutStrategy().PreProcessThisNode(state, node);
 
-                return !node.Element.IsCollapsed;
+                return !node.Element.IsCollapsed && node.ChildCount > 0;
             });
         }
 

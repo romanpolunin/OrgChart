@@ -31,7 +31,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
         }
 
         private AutoResetEvent m_progressWaitHandle = new AutoResetEvent(false);
-        private TestDataSource m_dataSource;
+        private IChartDataSource m_dataSource;
         private Diagram m_diagram;
         private ObservableCollection<NodeViewModel> m_nodesForTreeCollection;
 
@@ -50,7 +50,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
             StartLayout(false, true);
         }
 
-        private void StartLayout(bool resetBoxes, bool resetLayout)
+        private async void StartLayout(bool resetBoxes, bool resetLayout)
         {
             // release any existing progress on background layout
             m_progressWaitHandle?.Dispose();
@@ -60,7 +60,9 @@ namespace Staffer.OrgChart.CSharp.Test.App
             if (resetBoxes)
             {
                 m_dataSource = new TestDataSource();
-                new TestDataGen().GenerateDataItems(m_dataSource, 200);
+                new TestDataGen().GenerateDataItems((TestDataSource)m_dataSource, 166);
+                //m_dataSource = new DebugDataSource();
+                //await ((DebugDataSource)m_dataSource).Load();
 
                 var boxContainer = new BoxContainer(m_dataSource);
 
@@ -78,7 +80,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
                     new SingleColumnLayoutStrategy {ParentAlignment = BranchParentAlignment.Right});
 
                 m_diagram.LayoutSettings.LayoutStrategies.Add("fishbone",
-                    new MultiLineFishboneLayoutStrategy {ParentAlignment = BranchParentAlignment.Center, MaxGroups = 5});
+                    new MultiLineFishboneLayoutStrategy {ParentAlignment = BranchParentAlignment.Center, MaxGroups = 2});
 
                 m_diagram.LayoutSettings.DefaultLayoutStrategyId = "fishbone";
             }
@@ -273,7 +275,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
                         new TranslateTransform {X = frame.Exterior.Left + 5, Y = frame.Exterior.Top + 5},
                     Width = double.NaN,
                     Height = double.NaN,
-                    Text = box.IsSpecial ? "" : $"{box.Id} ({box.DataId})",
+                    Text = box.IsSpecial ? "" : TrimText($"{box.Id} ({box.DataId})"),
                     IsHitTestVisible = false
                 });
 
@@ -298,6 +300,15 @@ namespace Staffer.OrgChart.CSharp.Test.App
             };
 
             visualTree.IterateChildFirst(renderBox);
+        }
+
+        private string TrimText(string text)
+        {
+            if (text?.Length < 10)
+            {
+                return text;
+            }
+            return text.Substring(0, 7) + "...";
         }
 
         #endregion

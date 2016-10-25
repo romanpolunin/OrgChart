@@ -168,7 +168,7 @@ namespace Staffer.OrgChart.Layout
                     var rightmost = node.Children[ix - 1].Element.Frame.Exterior.Right;
                     horizontalSpacerBox.Frame.Exterior = new Rect(
                         leftmost, node.Element.Frame.Exterior.Bottom,
-                        Math.Abs(rightmost - leftmost), ParentChildSpacing);
+                        rightmost - leftmost, ParentChildSpacing);
                     horizontalSpacerBox.Frame.BranchExterior = horizontalSpacerBox.Frame.Exterior;
                     state.MergeSpacer(horizontalSpacerBox);
                 }
@@ -208,14 +208,14 @@ namespace Staffer.OrgChart.Layout
                 new Point(center, rootRect.Bottom + space - ChildConnectorHookLength));
 
             // one hook for each child
-            var isLeft = true;
-            var countOnThisSide = 0;
             var iterator = new SingleFishboneLayoutAdapter.GroupIterator(node.State.NumberOfSiblings, node.State.NumberOfSiblingColumns);
             while (iterator.NextGroup())
             {
                 var carrier = node.Children[1 + node.State.NumberOfSiblings + iterator.Group].Element.Frame.Exterior;
                 var from = carrier.CenterH;
 
+                var isLeft = true;
+                var countOnThisSide = 0;
                 for (var i = iterator.FromIndex; i < iterator.FromIndex + iterator.Count; i++)
                 {
                     var to = isLeft ? node.Children[i].Element.Frame.Exterior.Right : node.Children[i].Element.Frame.Exterior.Left;
@@ -314,12 +314,7 @@ namespace Staffer.OrgChart.Layout
                         Group++;
                     }
                     Count = CountInGroup();
-                    MaxOnLeft = Count / 2;
-                    if (MaxOnLeft == 0 && Count > 0)
-                    {
-                        MaxOnLeft++;
-                    }
-
+                    MaxOnLeft = Count / 2 + Count % 2;
                     return Count != 0;
                 }
             }

@@ -100,6 +100,9 @@
     <Compile Include="..\..\CSharp\Staffer.OrgChart.CSharp.SharedSource\Layout\LinearLayoutStrategy.cs">
       <Link>Layout\LinearLayoutStrategy.cs</Link>
     </Compile>
+    <Compile Include="..\..\CSharp\Staffer.OrgChart.CSharp.SharedSource\Layout\MultiLineFishboneLayoutStrategy.cs">
+      <Link>Layout\MultiLineFishboneLayoutStrategy.cs</Link>
+    </Compile>
     <Compile Include="..\..\CSharp\Staffer.OrgChart.CSharp.SharedSource\Layout\MultiLineHangerLayoutStrategy.cs">
       <Link>Layout\MultiLineHangerLayoutStrategy.cs</Link>
     </Compile>
@@ -114,6 +117,9 @@
     </Compile>
     <Compile Include="..\..\CSharp\Staffer.OrgChart.CSharp.SharedSource\Layout\Rect.cs">
       <Link>Layout\Rect.cs</Link>
+    </Compile>
+    <Compile Include="..\..\CSharp\Staffer.OrgChart.CSharp.SharedSource\Layout\SingleColumnLayoutStrategy.cs">
+      <Link>Layout\SingleColumnLayoutStrategy.cs</Link>
     </Compile>
     <Compile Include="..\..\CSharp\Staffer.OrgChart.CSharp.SharedSource\Misc\Tree.cs">
       <Link>Misc\Tree.cs</Link>
@@ -135,8 +141,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Bridge\output\readme.txt" />
     <Content Include="Bridge\www\demo.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Bridge\output\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\Bridge.Min.15.3.0\build\Bridge.Min.targets" Condition="Exists('..\packages\Bridge.Min.15.3.0\build\Bridge.Min.targets')" />
