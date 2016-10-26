@@ -56,42 +56,41 @@ namespace Staffer.OrgChart.Layout
             // generate system root box, 
             // but don't add it to the list of boxes yet
             SystemRoot = Box.Special(++m_lastBoxId, Box.None, false);
-            
+
+            // now add the root
+            m_boxesById.Add(SystemRoot.Id, SystemRoot);
+
             var map = new Dictionary<string, int>();
             
-            // generate identifiers mapping, need this first since data comes in random order
+            // generate identifiers mapping, need this because data comes in random order
             foreach (var dataId in source.AllDataItemIds)
             {
                 map.Add(dataId, NextBoxId());
             }
 
             // add data-bound boxes
+            var getDataItem = source.GetDataItemFunc;
             foreach (var dataId in source.AllDataItemIds)
             {
                 var parentDataId = string.IsNullOrEmpty(dataId) ? null : source.GetParentKeyFunc(dataId);
                 var visualParentId = string.IsNullOrEmpty(parentDataId) ? SystemRoot.Id : map[parentDataId];
 
-                AddBox(dataId, map[dataId], visualParentId);
+                AddBox(dataId, map[dataId], visualParentId, getDataItem(dataId).IsAssistant);
             }
-
-            // now add the root
-            m_boxesById.Add(SystemRoot.Id, SystemRoot);
         }
 
         /// <summary>
         /// Creates a new <see cref="Box"/> and adds it to collection.
         /// </summary>
-        /// <param name="dataId">Optional identifier of the external data item</param>
-        /// <param name="visualParentId">Optional identifier of the box that should be parent of this one in the chart</param>
         /// <returns>Newly created Box object</returns>
-        public Box AddBox(string dataId, int visualParentId)
+        public Box AddBox([CanBeNull]string dataId, int visualParentId, bool isAssistant)
         {
-            return AddBox(dataId, NextBoxId(), visualParentId);
+            return AddBox(dataId, NextBoxId(), visualParentId, isAssistant);
         }
         
-        private Box AddBox(string dataId, int id, int visualParentId)
+        private Box AddBox([CanBeNull]string dataId, int id, int visualParentId, bool isAssistant)
         {
-            var box = new Box(dataId, id, visualParentId);
+            var box = new Box(dataId, id, visualParentId, isAssistant);
             m_boxesById.Add(box.Id, box);
             if (!string.IsNullOrEmpty(dataId))
             {

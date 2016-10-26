@@ -24,7 +24,7 @@ namespace Staffer.OrgChart.Layout
         /// Identifier of the parent box, usually driven by corresponding relationship between underlying data items.
         /// This parent is for the visual connections and arrangement of children boxes with their parents.
         /// </summary>
-        public readonly int VisualParentId;
+        public readonly int ParentId;
 
         /// <summary>
         /// Identifier of some externally provided data item for which this box was created.
@@ -38,6 +38,13 @@ namespace Staffer.OrgChart.Layout
         /// Special boxes are usually not stored in the <see cref="BoxContainer"/> (except <see cref="BoxContainer.SystemRoot"/>).
         /// </summary>
         public readonly bool IsSpecial;
+
+        /// <summary>
+        /// If <c>true</c>, this box has to be rendered using a special layout strategy directly under the parent.
+        /// Assistants are always on top of other siblinbgs.
+        /// </summary>
+        /// <seealso cref="IChartDataItem.IsAssistant"/>
+        public readonly bool IsAssistant;
 
         /// <summary>
         /// <c>False</c> (default) to enable collision detection for this box,
@@ -77,7 +84,7 @@ namespace Staffer.OrgChart.Layout
         /// <summary>
         /// Ctr. for normal and data-bound boxes.
         /// </summary>
-        public Box([CanBeNull]string dataId, int id, int visualParentId) : this(dataId, id, visualParentId, false, false)
+        public Box([CanBeNull]string dataId, int id, int parentId, bool isAssistant) : this(dataId, id, parentId, false, false, isAssistant)
         {
         }
 
@@ -87,10 +94,10 @@ namespace Staffer.OrgChart.Layout
         [NotNull]
         public static Box Special(int id, int visualParentId, bool disableCollisionDetection)
         {
-            return new Box(null, id, visualParentId, true, disableCollisionDetection);
+            return new Box(null, id, visualParentId, true, disableCollisionDetection, false);
         }
 
-        private Box([CanBeNull] string dataId, int id, int visualParentId, bool isSpecial, bool disableCollisionDetection)
+        private Box([CanBeNull] string dataId, int id, int parentId, bool isSpecial, bool disableCollisionDetection, bool isAssistant)
         {
             if (id == 0)
             {
@@ -98,10 +105,11 @@ namespace Staffer.OrgChart.Layout
             }
 
             Id = id;
-            VisualParentId = visualParentId;
+            ParentId = parentId;
             DataId = dataId;
             Frame = new Frame();
             IsSpecial = isSpecial;
+            IsAssistant = isAssistant;
             AffectsLayout = true;
             DisableCollisionDetection = disableCollisionDetection;
         }

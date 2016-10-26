@@ -447,7 +447,7 @@ namespace Staffer.OrgChart.Layout
                 {
                     var desiredSpacing = my.Box.IsSpecial || th.Box.IsSpecial
                         ? 0 // when dealing with spacers, no need for additional cushion around them
-                        : my.Box.VisualParentId == th.Box.VisualParentId
+                        : my.Box.ParentId == th.Box.ParentId
                             ? siblingSpacing // two siblings kicking each other
                             : branchSpacing; // these are two different branches
 

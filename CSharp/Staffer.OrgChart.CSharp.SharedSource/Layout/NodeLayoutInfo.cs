@@ -51,6 +51,11 @@ namespace Staffer.OrgChart.Layout
         /// </summary>
         public int NumberOfSiblingColumns;
 
+        /// <summary>
+        /// Number of non-special child boxes with <see cref="Box.IsDataBound"/>
+        /// </summary>
+        public int NumberOfAssistants;
+
         private LayoutStrategyBase m_effectiveLayoutStrategy;
     }
 }

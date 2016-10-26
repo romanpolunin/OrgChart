@@ -18,7 +18,7 @@ namespace Staffer.OrgChart.CSharp.Test.Layout
 
             Assert.AreEqual(dataSource.Items.Count, boxContainer.BoxesById.Count);
             var rootCount1 = dataSource.Items.Values.Count(x => x.ParentId == null);
-            var rootCount2 = boxContainer.BoxesById.Values.Count(x => x.VisualParentId == 0);
+            var rootCount2 = boxContainer.BoxesById.Values.Count(x => x.ParentId == 0);
             Assert.AreEqual(1, rootCount1);
             Assert.AreEqual(1, rootCount2);
         }

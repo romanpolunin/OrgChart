@@ -68,7 +68,7 @@ namespace Staffer.OrgChart.Layout
 
             state.CurrentOperation = LayoutState.Operation.Preparing;
 
-            var tree = Tree<int, Box, NodeLayoutInfo>.Build(state.Diagram.Boxes.BoxesById.Values, x => x.Id, x => x.VisualParentId);
+            var tree = Tree<int, Box, NodeLayoutInfo>.Build(state.Diagram.Boxes.BoxesById.Values, x => x.Id, x => x.ParentId);
 
             state.Diagram.VisualTree = tree;
 

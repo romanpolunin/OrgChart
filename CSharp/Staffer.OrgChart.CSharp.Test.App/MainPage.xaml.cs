@@ -82,7 +82,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
                 m_diagram.LayoutSettings.LayoutStrategies.Add("fishbone",
                     new MultiLineFishboneLayoutStrategy {ParentAlignment = BranchParentAlignment.Center, MaxGroups = 3});
 
-                m_diagram.LayoutSettings.DefaultLayoutStrategyId = "linear";
+                m_diagram.LayoutSettings.DefaultLayoutStrategyId = "multiline";
             }
             else if (resetLayout)
             {
