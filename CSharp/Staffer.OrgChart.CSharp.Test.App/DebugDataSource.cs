@@ -36,5 +36,10 @@ namespace Staffer.OrgChart.CSharp.Test.App
         {
             get { return x => Parsed[x].ParentId; }
         }
+
+        public Func<string, IChartDataItem> GetDataItemFunc
+        {
+            get { return x => Parsed[x]; }
+        }
     }
 }

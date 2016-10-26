@@ -141,11 +141,17 @@
     <Compile Include="..\staffer.orgchart.csharp.sharedsource\layout\DiagramLayoutTemplates.cs">
       <Link>Layout\DiagramLayoutTemplates.cs</Link>
     </Compile>
+    <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\Dimensions.cs">
+      <Link>Layout\Dimensions.cs</Link>
+    </Compile>
     <Compile Include="..\staffer.orgchart.csharp.sharedsource\layout\Edge.cs">
       <Link>Layout\Edge.cs</Link>
     </Compile>
     <Compile Include="..\staffer.orgchart.csharp.sharedsource\layout\Frame.cs">
       <Link>Layout\Frame.cs</Link>
+    </Compile>
+    <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\IChartDataItem.cs">
+      <Link>Layout\IChartDataItem.cs</Link>
     </Compile>
     <Compile Include="..\staffer.orgchart.csharp.sharedsource\layout\IChartDataSource.cs">
       <Link>Layout\IChartDataSource.cs</Link>

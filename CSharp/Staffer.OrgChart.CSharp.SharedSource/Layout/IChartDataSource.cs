@@ -21,5 +21,12 @@ namespace Staffer.OrgChart.Layout
         /// This one should be implemented by the underlying data source.
         /// </summary>
         [NotNull] Func<string, string> GetParentKeyFunc { get; }
+
+        /// <summary>
+        /// Delegate that provides information about advanced properties of boxes.
+        /// First argument is the underlying data item id.
+        /// This one should be implemented by the underlying data source.
+        /// </summary>
+        [NotNull] Func<string, IChartDataItem> GetDataItemFunc { get; }
     }
 }

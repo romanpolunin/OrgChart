@@ -60,7 +60,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
             if (resetBoxes)
             {
                 m_dataSource = new TestDataSource();
-                new TestDataGen().GenerateDataItems((TestDataSource)m_dataSource, 166);
+                new TestDataGen().GenerateDataItems((TestDataSource)m_dataSource, 200);
                 //m_dataSource = new DebugDataSource();
                 //await ((DebugDataSource)m_dataSource).Load();
 
@@ -80,9 +80,9 @@ namespace Staffer.OrgChart.CSharp.Test.App
                     new SingleColumnLayoutStrategy {ParentAlignment = BranchParentAlignment.Right});
 
                 m_diagram.LayoutSettings.LayoutStrategies.Add("fishbone",
-                    new MultiLineFishboneLayoutStrategy {ParentAlignment = BranchParentAlignment.Center, MaxGroups = 2});
+                    new MultiLineFishboneLayoutStrategy {ParentAlignment = BranchParentAlignment.Center, MaxGroups = 3});
 
-                m_diagram.LayoutSettings.DefaultLayoutStrategyId = "fishbone";
+                m_diagram.LayoutSettings.DefaultLayoutStrategyId = "linear";
             }
             else if (resetLayout)
             {
@@ -98,18 +98,18 @@ namespace Staffer.OrgChart.CSharp.Test.App
 
             state.OperationChanged += StateOperationChanged;
 
-            Task.Factory.StartNew(() =>
-            {
-                try
-                {
-                    LayoutAlgorithm.Apply(state);
-                }
-                finally
-                {
-                    m_progressWaitHandle.Dispose();
-                    m_progressWaitHandle = null;
-                }
-            });
+            await Task.Factory.StartNew(() =>
+             {
+                 try
+                 {
+                     LayoutAlgorithm.Apply(state);
+                 }
+                 finally
+                 {
+                     m_progressWaitHandle.Dispose();
+                     m_progressWaitHandle = null;
+                 }
+             });
         }
 
         private void ProgressButton_Click(object sender, RoutedEventArgs e)
@@ -137,28 +137,28 @@ namespace Staffer.OrgChart.CSharp.Test.App
 
         #region Layout Event Handlers
 
-        private void StateOperationChanged(object sender, LayoutStateOperationChangedEventArgs args)
+        private async void StateOperationChanged(object sender, LayoutStateOperationChangedEventArgs args)
         {
             if (args.State.CurrentOperation > LayoutState.Operation.Preparing)
             {
-                Dispatcher.RunAsync(CoreDispatcherPriority.High, () => UpdateListView(args.State.VisualTree));
+                await Dispatcher.RunAsync(CoreDispatcherPriority.High, () => UpdateListView(m_diagram.VisualTree));
             }
 
             if (args.State.CurrentOperation == LayoutState.Operation.Completed)
             {
-                Dispatcher.RunAsync(CoreDispatcherPriority.High, () => RenderBoxes(args.State.VisualTree, DrawCanvas));
+                await Dispatcher.RunAsync(CoreDispatcherPriority.High, () => RenderBoxes(m_diagram.VisualTree, DrawCanvas));
             }
         }
 
-        private void StateBoundaryChanged(object sender, BoundaryChangedEventArgs args)
+        private async void StateBoundaryChanged(object sender, BoundaryChangedEventArgs args)
         {
             if (args.State.CurrentOperation > LayoutState.Operation.VerticalLayout && args.State.CurrentOperation < LayoutState.Operation.Completed)
             {
-                Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
-                {
-                    RenderBoxes(args.State.VisualTree, DrawCanvas);
-                    RenderCurrentBoundary(args, DrawCanvas);
-                });
+                await Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
+                 {
+                     RenderBoxes(m_diagram.VisualTree, DrawCanvas);
+                     RenderCurrentBoundary(args, DrawCanvas);
+                 });
 
                 // wait until user releases the wait handle
                 try

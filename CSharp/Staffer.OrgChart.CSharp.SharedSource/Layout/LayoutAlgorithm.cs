@@ -70,6 +70,8 @@ namespace Staffer.OrgChart.Layout
 
             var tree = Tree<int, Box, NodeLayoutInfo>.Build(state.Diagram.Boxes.BoxesById.Values, x => x.Id, x => x.VisualParentId);
 
+            state.Diagram.VisualTree = tree;
+
             // verify the root
             if (tree.Roots.Count != 1 || tree.Roots[0].Element.Id != state.Diagram.Boxes.SystemRoot.Id)
             {
@@ -109,9 +111,7 @@ namespace Staffer.OrgChart.Layout
             HorizontalLayout(state, tree.Roots[0]);
 
             state.CurrentOperation = LayoutState.Operation.ConnectorsLayout;
-            RouteConnectors(state);
-
-            state.Diagram.VisualTree = state.VisualTree;
+            RouteConnectors(state, tree);
 
             state.CurrentOperation = LayoutState.Operation.Completed;
         }
@@ -196,14 +196,9 @@ namespace Staffer.OrgChart.Layout
             }
         }
 
-        private static void RouteConnectors([NotNull]LayoutState state)
+        private static void RouteConnectors([NotNull]LayoutState state, [NotNull]Tree<int, Box, NodeLayoutInfo> visualTree)
         {
-            if (state.VisualTree == null)
-            {
-                throw new InvalidOperationException("Visual tree not attached");
-            }
-
-            state.VisualTree.IterateParentFirst(node =>
+            visualTree.IterateParentFirst(node =>
             {
                 if (node.Element.IsCollapsed || node.State.NumberOfSiblings == 0)
                 {

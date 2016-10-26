@@ -125,17 +125,21 @@ namespace Staffer.OrgChart.Layout
             {
                 if (node.Level > 0)
                 {
-                    var desiredCenter = rect.CenterH;
+                    double diff;
                     if (node.State.NumberOfSiblingColumns > 1)
                     {
-                        var diff = desiredCenter - node.Element.Frame.BranchExterior.CenterH;
-                        LayoutAlgorithm.MoveChildrenOnly(state, level, diff);
+                        var leftCarrier = node.Children[node.State.NumberOfSiblings + 1].Element.Frame.Exterior.CenterH;
+                        var rightCarrier = node.Children[node.State.NumberOfSiblings + node.State.NumberOfSiblingColumns].Element.Frame.Exterior.CenterH;
+                        var desiredCenter = (leftCarrier + rightCarrier) / 2.0;
+                        diff = rect.CenterH - desiredCenter;
                     }
                     else
                     {
-                        var diff = desiredCenter - node.Children[1 + node.State.NumberOfSiblings].Element.Frame.Exterior.CenterH;
-                        LayoutAlgorithm.MoveChildrenOnly(state, level, diff);
+                        var carrier = node.Children[1 + node.State.NumberOfSiblings].Element.Frame.Exterior.CenterH;
+                        var desiredCenter = rect.CenterH;
+                        diff = desiredCenter - carrier;
                     }
+                    LayoutAlgorithm.MoveChildrenOnly(state, level, diff);
                 }
             }
             else
@@ -164,11 +168,11 @@ namespace Staffer.OrgChart.Layout
                 {
                     // have a horizontal carrier
                     var horizontalSpacerBox = node.Children[ix].Element;
-                    var leftmost = node.Children[node.State.NumberOfSiblings + 1].Element.Frame.Exterior.Left;
+                    var leftmost = node.Children[node.State.NumberOfSiblings + 1].Element.Frame.Exterior.TopLeft;
                     var rightmost = node.Children[ix - 1].Element.Frame.Exterior.Right;
                     horizontalSpacerBox.Frame.Exterior = new Rect(
-                        leftmost, node.Element.Frame.Exterior.Bottom,
-                        rightmost - leftmost, ParentChildSpacing);
+                        leftmost.X, leftmost.Y - ParentChildSpacing,
+                        rightmost - leftmost.X, ParentChildSpacing);
                     horizontalSpacerBox.Frame.BranchExterior = horizontalSpacerBox.Frame.Exterior;
                     state.MergeSpacer(horizontalSpacerBox);
                 }
@@ -428,7 +432,7 @@ namespace Staffer.OrgChart.Layout
                         }
 
                         frame2.BranchExterior = frame2.Exterior;
-                        rowExterior += new Dimensions(frame2.Exterior.Top, frame2.Exterior.Bottom);
+                        rowExterior += new Dimensions(frame2.Exterior.Top, frame2.Exterior.Bottom + state.Diagram.LayoutSettings.BoxVerticalMargin);
 
                         frame2.SiblingsRowV = rowExterior;
                         LayoutAlgorithm.VerticalLayout(state, child2);

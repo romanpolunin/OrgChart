@@ -71,7 +71,7 @@ namespace Staffer.OrgChart.Layout
                 siblingsRowExterior += new Dimensions(top, top + rect.Size.Height);
             }
 
-            siblingsRowExterior = new Dimensions(siblingsRowExterior.From, siblingsRowExterior.To);
+            siblingsRowExterior = new Dimensions(siblingsRowExterior.From, siblingsRowExterior.To + state.Diagram.LayoutSettings.BoxVerticalMargin);
 
             for (var i = 0; i < node.State.NumberOfSiblings; i++)
             {

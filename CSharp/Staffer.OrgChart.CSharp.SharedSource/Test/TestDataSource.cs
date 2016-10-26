@@ -24,6 +24,14 @@ namespace Staffer.OrgChart.Test
         }
 
         /// <summary>
+        /// Implementation for <see cref="IChartDataSource.GetDataItemFunc"/>.
+        /// </summary>
+        public IChartDataItem GetDataItem([NotNull] string itemId)
+        {
+            return Items[itemId];
+        }
+
+        /// <summary>
         /// Access to all data items.
         /// </summary>
         public IEnumerable<string> AllDataItemIds => Items.Keys;
@@ -35,5 +43,12 @@ namespace Staffer.OrgChart.Test
         /// This one should be implemented by the underlying data source.
         /// </summary>
         public Func<string, string> GetParentKeyFunc => GetParentKey;
+
+        /// <summary>
+        /// Delegate that provides information about advanced properties of boxes.
+        /// First argument is the underlying data item id.
+        /// This one should be implemented by the underlying data source.
+        /// </summary>
+        public Func<string, IChartDataItem> GetDataItemFunc => GetDataItem;
     }
 }

@@ -139,7 +139,7 @@ namespace Staffer.OrgChart.Layout
 
             var rect = box.Frame.Exterior;
 
-            var margin = box.IsSpecial ? VerticalMargin : 0;
+            var margin = box.IsSpecial ? 0 : VerticalMargin;
             Left.Add(new Step(box, rect.Left, rect.Top - margin, rect.Bottom + margin));
             Right.Add(new Step(box, rect.Right, rect.Top - margin, rect.Bottom + margin));
         }

@@ -72,11 +72,17 @@
     <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\DiagramLayoutTemplates.cs">
       <Link>Layout\DiagramLayoutTemplates.cs</Link>
     </Compile>
+    <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\Dimensions.cs">
+      <Link>Layout\Dimensions.cs</Link>
+    </Compile>
     <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\Edge.cs">
       <Link>Layout\Edge.cs</Link>
     </Compile>
     <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\Frame.cs">
       <Link>Layout\Frame.cs</Link>
+    </Compile>
+    <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\IChartDataItem.cs">
+      <Link>Layout\IChartDataItem.cs</Link>
     </Compile>
     <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\IChartDataSource.cs">
       <Link>Layout\IChartDataSource.cs</Link>

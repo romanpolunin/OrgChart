@@ -115,12 +115,6 @@ namespace Staffer.OrgChart.Layout
         public Func<string, Size> BoxSizeFunc { get; set; }
 
         /// <summary>
-        /// Visual tree of boxes.
-        /// </summary>
-        [CanBeNull]
-        public Tree<int, Box, NodeLayoutInfo> VisualTree { get; private set; }
-
-        /// <summary>
         /// Gets fired when any <see cref="Boundary"/> is modified by methods of this object.
         /// </summary>
         [CanBeNull]
@@ -145,12 +139,6 @@ namespace Staffer.OrgChart.Layout
         /// </summary>
         public void AttachVisualTree(Tree<int, Box, NodeLayoutInfo> tree)
         {
-            if (VisualTree != null)
-            {
-                throw new InvalidOperationException("Already initialized");
-            }
-
-            VisualTree = tree;
             for (var i = 0; i < tree.Depth; i++)
             {
                 m_pooledBoundaries.Add(new Boundary(Diagram.LayoutSettings.BoxVerticalMargin));
