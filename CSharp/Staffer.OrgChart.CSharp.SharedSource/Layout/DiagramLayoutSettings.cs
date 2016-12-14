@@ -17,6 +17,11 @@ namespace Staffer.OrgChart.Layout
         [NotNull] public Dictionary<string, LayoutStrategyBase> LayoutStrategies { get; }
 
         /// <summary>
+        /// Assistants layout strategy.
+        /// </summary>
+        [NotNull] public LayoutStrategyBase AssistantLayoutStrategy { get; }
+
+        /// <summary>
         /// Optional explicitly specified default layout strategy to use for root boxes with <see cref="Box.LayoutStrategyId"/> set to <c>null</c>.
         /// If <c>null</c> or invalid, <see cref="RequireDefaultLayoutStrategy"/> will throw up.
         /// </summary>
@@ -53,6 +58,10 @@ namespace Staffer.OrgChart.Layout
             BranchSpacing = 50;
             BoxVerticalMargin = 5;
             LayoutStrategies = new Dictionary<string, LayoutStrategyBase>();
+            AssistantLayoutStrategy = new MultiLineFishboneLayoutStrategy
+            {
+                MaxGroups = 1, ParentAlignment = BranchParentAlignment.Center
+            };
         }
 
         /// <summary>

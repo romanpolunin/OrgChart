@@ -51,12 +51,13 @@ namespace Staffer.OrgChart.Layout
         /// State of the layout operation for a particular sub-branch.
         /// </summary>
         [DebuggerDisplay("{BranchRoot.Element.Id}, {Boundary.BoundingRect.Top}..{Boundary.BoundingRect.Bottom}")]
-        public struct LayoutLevel
+        public class LayoutLevel
         {
             /// <summary>
             /// Root parent for this subtree.
             /// </summary>
             public readonly Tree<int, Box, NodeLayoutInfo>.TreeNode BranchRoot;
+
             /// <summary>
             /// Boundaries of this entire subtree.
             /// </summary>

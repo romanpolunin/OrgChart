@@ -53,11 +53,8 @@ namespace Staffer.OrgChart.Layout
             m_boxesById.Clear();
             m_lastBoxId = 0;
 
-            // generate system root box, 
-            // but don't add it to the list of boxes yet
+            // generate system root box
             SystemRoot = Box.Special(++m_lastBoxId, Box.None, false);
-
-            // now add the root
             m_boxesById.Add(SystemRoot.Id, SystemRoot);
 
             var map = new Dictionary<string, int>();

@@ -57,10 +57,10 @@ namespace Staffer.OrgChart.CSharp.Test.App
             m_progressWaitHandle = new AutoResetEvent(true);
 
             // re-create source data, diagram and layout data structures
-            if (resetBoxes)
+            if (resetBoxes || m_diagram == null)
             {
                 m_dataSource = new TestDataSource();
-                new TestDataGen().GenerateDataItems((TestDataSource)m_dataSource, 200);
+                new TestDataGen().GenerateDataItems((TestDataSource)m_dataSource, 100);
                 //m_dataSource = new DebugDataSource();
                 //await ((DebugDataSource)m_dataSource).Load();
 
@@ -82,7 +82,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
                 m_diagram.LayoutSettings.LayoutStrategies.Add("fishbone",
                     new MultiLineFishboneLayoutStrategy {ParentAlignment = BranchParentAlignment.Center, MaxGroups = 3});
 
-                m_diagram.LayoutSettings.DefaultLayoutStrategyId = "multiline";
+                m_diagram.LayoutSettings.DefaultLayoutStrategyId = "linear";
             }
             else if (resetLayout)
             {
@@ -163,7 +163,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
                 // wait until user releases the wait handle
                 try
                 {
-                    m_progressWaitHandle.WaitOne();
+                    m_progressWaitHandle?.WaitOne();
                 }
                 catch (ObjectDisposedException)
                 {
