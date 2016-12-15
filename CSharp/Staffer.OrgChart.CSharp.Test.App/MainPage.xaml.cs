@@ -13,7 +13,6 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Shapes;
 using Staffer.OrgChart.Annotations;
 using Staffer.OrgChart.Layout;
-using Staffer.OrgChart.Misc;
 using Staffer.OrgChart.Test;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
@@ -60,7 +59,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
             if (resetBoxes || m_diagram == null)
             {
                 m_dataSource = new TestDataSource();
-                new TestDataGen().GenerateDataItems((TestDataSource)m_dataSource, 100);
+                new TestDataGen().GenerateDataItems((TestDataSource)m_dataSource, 20);
                 //m_dataSource = new DebugDataSource();
                 //await ((DebugDataSource)m_dataSource).Load();
 
@@ -82,7 +81,11 @@ namespace Staffer.OrgChart.CSharp.Test.App
                 m_diagram.LayoutSettings.LayoutStrategies.Add("fishbone",
                     new MultiLineFishboneLayoutStrategy {ParentAlignment = BranchParentAlignment.Center, MaxGroups = 3});
 
+                m_diagram.LayoutSettings.LayoutStrategies.Add("assistants",
+                    new MultiLineFishboneLayoutStrategy { MaxGroups = 1, ParentAlignment = BranchParentAlignment.Center });
+
                 m_diagram.LayoutSettings.DefaultLayoutStrategyId = "linear";
+                m_diagram.LayoutSettings.DefaultAssistantLayoutStrategyId = "assistants";
             }
             else if (resetLayout)
             {
@@ -178,7 +181,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
 
         #region Rendering
 
-        private void UpdateListView(Tree<int, Box, NodeLayoutInfo> visualTree)
+        private void UpdateListView(BoxTree visualTree)
         {
             m_nodesForTreeCollection = new ObservableCollection<NodeViewModel>(visualTree.Roots.Select(x => new NodeViewModel {Node = x}));
             LvBoxes.ItemsSource = m_nodesForTreeCollection;
@@ -213,7 +216,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
             render(boundary.Right);
         }
 
-        private void RenderBoxes(Tree<int, Box, NodeLayoutInfo> visualTree, Canvas drawCanvas)
+        private void RenderBoxes(BoxTree visualTree, Canvas drawCanvas)
         {
             drawCanvas.Children.Clear();
 
@@ -226,7 +229,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
                 Y = -boundingRect.Top
             };
 
-            Func<Tree<int, Box, NodeLayoutInfo>.TreeNode, bool> renderBox = node =>
+            Func<BoxTree.TreeNode, bool> renderBox = node =>
             {
                 if (node.Level == 0)
                 {
@@ -258,8 +261,15 @@ namespace Staffer.OrgChart.CSharp.Test.App
                         new TranslateTransform {X = frame.Exterior.Left, Y = frame.Exterior.Top},
                     Width = frame.Exterior.Size.Width,
                     Height = frame.Exterior.Size.Height,
-                    Fill = new SolidColorBrush(box.IsSpecial ? Colors.DarkGray : box.IsCollapsed ? Colors.BurlyWood : Colors.Beige) {Opacity = box.IsSpecial ? 0.1 : 1},
-                    Stroke = new SolidColorBrush(box.IsSpecial ? Colors.DarkGray : Colors.Black) { Opacity = box.IsSpecial ? 0.1 : 1 },
+                    Fill = new SolidColorBrush(GetBoxFillColor(box))
+                    {
+                        Opacity = box.IsSpecial ? 0.1 : 1
+                    },
+                    Stroke = new SolidColorBrush(GetBoxStroke(box))
+                    {
+                        Opacity = box.IsSpecial ? 0.1 : 1
+                    },
+                    IsHitTestVisible = !box.IsSpecial,
                     StrokeThickness = 1,
                     DataContext = box
                 };
@@ -300,6 +310,16 @@ namespace Staffer.OrgChart.CSharp.Test.App
             };
 
             visualTree.IterateChildFirst(renderBox);
+        }
+
+        private static Color GetBoxStroke(Box box)
+        {
+            return box.IsSpecial ? Colors.DarkGray : Colors.Black;
+        }
+
+        private static Color GetBoxFillColor(Box box)
+        {
+            return box.IsSpecial ? Colors.DarkGray : box.IsCollapsed ? Colors.BurlyWood : Colors.Beige;
         }
 
         private string TrimText(string text)

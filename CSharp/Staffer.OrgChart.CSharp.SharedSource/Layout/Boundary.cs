@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using Staffer.OrgChart.Annotations;
-using Staffer.OrgChart.Misc;
 
 namespace Staffer.OrgChart.Layout
 {
@@ -474,7 +473,7 @@ namespace Staffer.OrgChart.Layout
         /// <summary>
         /// Re-initializes left and right edges based on actual coordinates of boxes.
         /// </summary>
-        public void ReloadFromBranch(Tree<int, Box, NodeLayoutInfo>.TreeNode branchRoot)
+        public void ReloadFromBranch(BoxTree.TreeNode branchRoot)
         {
             var leftmost = double.MaxValue;
             var rightmost = double.MinValue;

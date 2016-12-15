@@ -55,9 +55,16 @@ namespace Staffer.OrgChart.Layout
         /// <summary>
         /// Layout strategy that should be used to apply layout on this Box and its children.
         /// References an element in <see cref="DiagramLayoutSettings.LayoutStrategies"/>.
-        /// If <c>null</c>, use settings.
+        /// If <c>null</c>, use <see cref="DiagramLayoutSettings.DefaultLayoutStrategyId"/>.
         /// </summary>
         [CanBeNull] public string LayoutStrategyId;
+
+        /// <summary>
+        /// Layout strategy that should be used to apply layout on assistant children of this Box.
+        /// References an element in <see cref="DiagramLayoutSettings.LayoutStrategies"/>.
+        /// If <c>null</c>, use <see cref="DiagramLayoutSettings.DefaultAssistantLayoutStrategyId"/>.
+        /// </summary>
+        [CanBeNull] public string AssistantLayoutStrategyId;
 
         /// <summary>
         /// Bounding box.

@@ -65,7 +65,7 @@ namespace Staffer.OrgChart.Test
             }
 
             // now mark up to one quarter of the boxes as assistants
-            for (var i = 0; i < items.Count/4; i++)
+            for (var i = 0; i < items.Count/10; i++)
             {
                 var k = random.Next(items.Count);
                 items[k].IsAssistant = true;

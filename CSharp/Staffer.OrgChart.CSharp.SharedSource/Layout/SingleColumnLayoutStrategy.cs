@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Staffer.OrgChart.Annotations;
-using Staffer.OrgChart.Misc;
 
 namespace Staffer.OrgChart.Layout
 {
@@ -16,7 +15,7 @@ namespace Staffer.OrgChart.Layout
         /// <summary>
         /// A chance for layout strategy to append special auto-generated boxes into the visual tree. 
         /// </summary>
-        public override void PreProcessThisNode([NotNull]LayoutState state, [NotNull] Tree<int, Box, NodeLayoutInfo>.TreeNode node)
+        public override void PreProcessThisNode([NotNull]LayoutState state, [NotNull] BoxTree.TreeNode node)
         {
             if (ParentAlignment != BranchParentAlignment.Left
                 && ParentAlignment != BranchParentAlignment.Right)
@@ -35,7 +34,7 @@ namespace Staffer.OrgChart.Layout
 
                 // add parent's vertical carrier to the end
                 var verticalSpacer = Box.Special(Box.None, node.Element.Id, false);
-                node.AddChild(verticalSpacer);
+                node.AddRegularChild(verticalSpacer);
             }
         }
 
@@ -142,7 +141,7 @@ namespace Staffer.OrgChart.Layout
             }
         }
 
-        private IEnumerable<Tree<int, Box, NodeLayoutInfo>.TreeNode> EnumerateColumn(Tree<int, Box, NodeLayoutInfo>.TreeNode branchRoot)
+        private IEnumerable<BoxTree.TreeNode> EnumerateColumn(BoxTree.TreeNode branchRoot)
         {
             for (var i = 0; i < branchRoot.State.NumberOfSiblings; i++)
             {
@@ -153,7 +152,7 @@ namespace Staffer.OrgChart.Layout
         /// <summary>
         /// Allocates and routes connectors.
         /// </summary>
-        public override void RouteConnectors([NotNull] LayoutState state, [NotNull] Tree<int, Box, NodeLayoutInfo>.TreeNode node)
+        public override void RouteConnectors([NotNull] LayoutState state, [NotNull] BoxTree.TreeNode node)
         {
             // one parent connector (also serves as mid-sibling carrier) and horizontal carriers
             var count = 1 + node.State.NumberOfSiblings;

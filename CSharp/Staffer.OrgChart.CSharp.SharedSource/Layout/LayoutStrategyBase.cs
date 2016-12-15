@@ -1,5 +1,4 @@
 ﻿using Staffer.OrgChart.Annotations;
-using Staffer.OrgChart.Misc;
 
 namespace Staffer.OrgChart.Layout
 {
@@ -36,7 +35,7 @@ namespace Staffer.OrgChart.Layout
         /// <summary>
         /// A chance for layout strategy to insert special auto-generated boxes into the visual tree. 
         /// </summary>
-        public abstract void PreProcessThisNode([NotNull] LayoutState state, [NotNull] Tree<int, Box, NodeLayoutInfo>.TreeNode node);
+        public abstract void PreProcessThisNode([NotNull] LayoutState state, [NotNull] BoxTree.TreeNode node);
 
         /// <summary>
         /// Applies layout changes to a given box and its children.
@@ -51,6 +50,6 @@ namespace Staffer.OrgChart.Layout
         /// <summary>
         /// Allocates and routes connectors.
         /// </summary>
-        public abstract void RouteConnectors([NotNull]LayoutState state, [NotNull]Tree<int, Box, NodeLayoutInfo>.TreeNode node);
+        public abstract void RouteConnectors([NotNull]LayoutState state, [NotNull]BoxTree.TreeNode node);
     }
 }

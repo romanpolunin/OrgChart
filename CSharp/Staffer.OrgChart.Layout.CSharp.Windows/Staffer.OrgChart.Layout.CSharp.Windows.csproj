@@ -54,6 +54,9 @@
     <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\BoxContainer.cs">
       <Link>Layout\BoxContainer.cs</Link>
     </Compile>
+    <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\BoxTree.cs">
+      <Link>Layout\BoxTree.cs</Link>
+    </Compile>
     <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\BranchParentAlignment.cs">
       <Link>Layout\BranchParentAlignment.cs</Link>
     </Compile>

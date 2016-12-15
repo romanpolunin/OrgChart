@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Staffer.OrgChart.Annotations;
-using Staffer.OrgChart.Misc;
 
 namespace Staffer.OrgChart.Layout
 {
@@ -21,7 +20,7 @@ namespace Staffer.OrgChart.Layout
         /// <summary>
         /// A chance for layout strategy to append special auto-generated boxes into the visual tree. 
         /// </summary>
-        public override void PreProcessThisNode([NotNull]LayoutState state, [NotNull] Tree<int, Box, NodeLayoutInfo>.TreeNode node)
+        public override void PreProcessThisNode([NotNull]LayoutState state, [NotNull] BoxTree.TreeNode node)
         {
             if (ParentAlignment != BranchParentAlignment.Center)
             {
@@ -69,19 +68,19 @@ namespace Staffer.OrgChart.Layout
                 while (ix < node.State.NumberOfSiblings)
                 {
                     var siblingSpacer = Box.Special(Box.None, node.Element.Id, false);
-                    node.InsertChild(ix, siblingSpacer);
+                    node.InsertRegularChild(ix, siblingSpacer);
                     ix += node.State.NumberOfSiblingColumns;
                 }
 
                 // add parent vertical spacer to the end
                 var verticalSpacer = Box.Special(Box.None, node.Element.Id, false);
-                node.AddChild(verticalSpacer);
+                node.AddRegularChild(verticalSpacer);
 
                 // add horizontal spacers to the end
                 for (var i = 0; i < node.State.NumberOfSiblingRows; i++)
                 {
                     var horizontalSpacer = Box.Special(Box.None, node.Element.Id, false);
-                    node.AddChild(horizontalSpacer);
+                    node.AddRegularChild(horizontalSpacer);
                 }
             }
         }
@@ -245,7 +244,7 @@ namespace Staffer.OrgChart.Layout
             }
         }
 
-        private IEnumerable<Tree<int, Box, NodeLayoutInfo>.TreeNode> EnumerateColumn(Tree<int, Box, NodeLayoutInfo>.TreeNode branchRoot, int col)
+        private IEnumerable<BoxTree.TreeNode> EnumerateColumn(BoxTree.TreeNode branchRoot, int col)
         {
             for (var row = 0; row < branchRoot.State.NumberOfSiblingRows; row++)
             {
@@ -262,7 +261,7 @@ namespace Staffer.OrgChart.Layout
         /// <summary>
         /// Allocates and routes connectors.
         /// </summary>
-        public override void RouteConnectors([NotNull] LayoutState state, [NotNull] Tree<int, Box, NodeLayoutInfo>.TreeNode node)
+        public override void RouteConnectors([NotNull] LayoutState state, [NotNull] BoxTree.TreeNode node)
         {
             if (node.State.NumberOfSiblings <= MaxSiblingsPerRow)
             {

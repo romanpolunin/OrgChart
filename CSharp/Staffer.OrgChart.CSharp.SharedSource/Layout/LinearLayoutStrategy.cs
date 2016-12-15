@@ -1,6 +1,5 @@
 ﻿using System;
 using Staffer.OrgChart.Annotations;
-using Staffer.OrgChart.Misc;
 
 namespace Staffer.OrgChart.Layout
 {
@@ -13,7 +12,7 @@ namespace Staffer.OrgChart.Layout
         /// <summary>
         /// A chance for layout strategy to append special auto-generated boxes into the visual tree. 
         /// </summary>
-        public override void PreProcessThisNode([NotNull]LayoutState state, [NotNull] Tree<int, Box, NodeLayoutInfo>.TreeNode node)
+        public override void PreProcessThisNode([NotNull]LayoutState state, [NotNull] BoxTree.TreeNode node)
         {
             if (ParentAlignment != BranchParentAlignment.Center)
             {
@@ -29,10 +28,10 @@ namespace Staffer.OrgChart.Layout
                 if (!node.Element.IsCollapsed)
                 {
                     var verticalSpacer = Box.Special(Box.None, node.Element.Id, false);
-                    node.AddChild(verticalSpacer);
+                    node.AddRegularChild(verticalSpacer);
 
                     var horizontalSpacer = Box.Special(Box.None, node.Element.Id, false);
-                    node.AddChild(horizontalSpacer);
+                    node.AddRegularChild(horizontalSpacer);
                 }
             }
         }
@@ -49,11 +48,12 @@ namespace Staffer.OrgChart.Layout
                 node.Element.Frame.SiblingsRowV = new Dimensions(node.Element.Frame.Exterior.Top, node.Element.Frame.Exterior.Bottom);
             }
 
-            var siblingsRowExterior = Dimensions.MinMax();
             if (node.State.NumberOfSiblings == 0)
             {
                 return;
             }
+
+            var siblingsRowExterior = Dimensions.MinMax();
 
             for (var i = 0; i < node.State.NumberOfSiblings; i++)
             {
@@ -143,7 +143,7 @@ namespace Staffer.OrgChart.Layout
         /// <summary>
         /// Allocates and routes connectors.
         /// </summary>
-        public override void RouteConnectors([NotNull] LayoutState state, [NotNull] Tree<int, Box, NodeLayoutInfo>.TreeNode node)
+        public override void RouteConnectors([NotNull] LayoutState state, [NotNull] BoxTree.TreeNode node)
         {
             var normalChildCount = node.State.NumberOfSiblings;
 

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using Staffer.OrgChart.Annotations;
-using Staffer.OrgChart.Misc;
 
 namespace Staffer.OrgChart.Layout
 {
@@ -56,7 +55,7 @@ namespace Staffer.OrgChart.Layout
             /// <summary>
             /// Root parent for this subtree.
             /// </summary>
-            public readonly Tree<int, Box, NodeLayoutInfo>.TreeNode BranchRoot;
+            public readonly BoxTree.TreeNode BranchRoot;
 
             /// <summary>
             /// Boundaries of this entire subtree.
@@ -66,7 +65,7 @@ namespace Staffer.OrgChart.Layout
             /// <summary>
             /// Ctr.
             /// </summary>
-            public LayoutLevel([NotNull] Tree<int, Box, NodeLayoutInfo>.TreeNode node, [NotNull] Boundary boundary)
+            public LayoutLevel([NotNull] BoxTree.TreeNode node, [NotNull] Boundary boundary)
             {
                 BranchRoot = node;
                 Boundary = boundary;
@@ -138,7 +137,7 @@ namespace Staffer.OrgChart.Layout
         /// <summary>
         /// Initializes the visual tree and pool of boundary objects.
         /// </summary>
-        public void AttachVisualTree(Tree<int, Box, NodeLayoutInfo> tree)
+        public void AttachVisualTree(BoxTree tree)
         {
             for (var i = 0; i < tree.Depth; i++)
             {
@@ -150,7 +149,7 @@ namespace Staffer.OrgChart.Layout
         /// Push a new box onto the layout stack, thus getting deeper into layout hierarchy.
         /// Automatically allocates a Bondary object from pool.
         /// </summary>
-        public LayoutLevel PushLayoutLevel([NotNull] Tree<int, Box, NodeLayoutInfo>.TreeNode node)
+        public LayoutLevel PushLayoutLevel([NotNull] BoxTree.TreeNode node)
         {
             if (m_pooledBoundaries.Count == 0)
             {
