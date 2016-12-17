@@ -444,16 +444,20 @@ namespace Staffer.OrgChart.Layout
                 }
                 else
                 {
-                    var desiredSpacing = my.Box.IsSpecial || th.Box.IsSpecial
-                        ? 0 // when dealing with spacers, no need for additional cushion around them
-                        : my.Box.ParentId == th.Box.ParentId
-                            ? siblingSpacing // two siblings kicking each other
-                            : branchSpacing; // these are two different branches
-
-                    var diff = my.X + desiredSpacing - th.X;
-                    if (diff > offense)
+                    if (!my.Box.DisableCollisionDetection && !th.Box.DisableCollisionDetection)
                     {
-                        offense = diff;
+                        var desiredSpacing =
+                            my.Box.IsSpecial || th.Box.IsSpecial
+                            ? 0 // when dealing with spacers, no need for additional cushion around them
+                            : my.Box.ParentId == th.Box.ParentId
+                                ? siblingSpacing // two siblings kicking each other
+                                : branchSpacing; // these are two different branches
+
+                        var diff = my.X + desiredSpacing - th.X;
+                        if (diff > offense)
+                        {
+                            offense = diff;
+                        }
                     }
 
                     if (my.Bottom >= th.Bottom)

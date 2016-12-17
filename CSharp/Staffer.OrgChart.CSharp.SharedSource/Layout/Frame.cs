@@ -45,10 +45,10 @@ namespace Staffer.OrgChart.Layout
         }
 
         /// <summary>
-        /// Copies data from another frame.
+        /// Copies vertical and horionztal measurement data from <paramref name="other"/> frame.
+        /// Does not copy <see cref="Connector"/>.
         /// </summary>
-        /// <param name="other"></param>
-        public void CopyExterior([NotNull]Frame other)
+        public void CopyExteriorFrom([NotNull]Frame other)
         {
             Exterior = other.Exterior;
             BranchExterior = other.BranchExterior;

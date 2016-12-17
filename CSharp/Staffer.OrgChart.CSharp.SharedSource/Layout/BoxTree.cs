@@ -50,9 +50,9 @@ namespace Staffer.OrgChart.Layout
                 TreeNode parentNode;
                 if (result.Nodes.TryGetValue(parentKey, out parentNode))
                 {
-                    if (node.Element.IsAssistant)
+                    if (node.Element.IsAssistant && parentNode.Element.ParentId != Box.None)
                     {
-                        parentNode.AddAssistantChild(node);
+                        parentNode.AddAssistantChild(node, () => Box.Special(Box.None, parentNode.Element.Id, true));
                     }
                     else
                     {

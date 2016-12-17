@@ -81,6 +81,9 @@
     <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\Edge.cs">
       <Link>Layout\Edge.cs</Link>
     </Compile>
+    <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\FishboneAssistantsLayoutStrategy.cs">
+      <Link>Layout\FishboneAssistantsLayoutStrategy.cs</Link>
+    </Compile>
     <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\Frame.cs">
       <Link>Layout\Frame.cs</Link>
     </Compile>

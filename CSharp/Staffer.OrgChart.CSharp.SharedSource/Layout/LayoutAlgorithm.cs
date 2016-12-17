@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Staffer.OrgChart.Annotations;
+using Staffer.OrgChart.Misc;
 
 namespace Staffer.OrgChart.Layout
 {
@@ -117,50 +118,57 @@ namespace Staffer.OrgChart.Layout
 
         private static void PreprocessVisualTree([NotNull]LayoutState state, [NotNull]BoxTree visualTree)
         {
+            var defaultStrategyId = state.Diagram.LayoutSettings.DefaultLayoutStrategyId;
+            var defaultStrategy = state.Diagram.LayoutSettings.RequireDefaultLayoutStrategy();
+            var defaultAssistantsStrategyId = state.Diagram.LayoutSettings.DefaultAssistantLayoutStrategyId;
+            var defaultAssistantsStrategy = state.Diagram.LayoutSettings.RequireDefaultAssistantLayoutStrategy();
+
             visualTree.IterateParentFirst(node =>
             {
-                if (node.Element.IsSpecial && node.Level > 0)
+                LayoutStrategyBase found = null;
+                if (node.ParentNode?.AssistantsRoot == node)
                 {
-                    return false;
-                }
+                    // find and associate assistant layout strategy in effect for this node
+                    var parent = node;
+                    while (parent != null)
+                    {
+                        if (parent.Element.AssistantLayoutStrategyId != null)
+                        {
+                            // can we inherit it from previous level?
+                            found = state.Diagram.LayoutSettings.LayoutStrategies[parent.Element.AssistantLayoutStrategyId];
+                            break;
+                        }
+                        parent = parent.ParentNode;
+                    }
 
-                // first, find and associate layout strategy in effect for this node
-                if (node.Element.LayoutStrategyId != null)
-                {
-                    // is it explicitly specified?
-                    node.State.EffectiveLayoutStrategy = state.Diagram.LayoutSettings.LayoutStrategies[node.Element.LayoutStrategyId];
-                }
-                else if (node.ParentNode != null)
-                {
-                    // can we inherit it from previous level?
-                    node.State.EffectiveLayoutStrategy = node.ParentNode.State.RequireLayoutStrategy();
+                    if (found == null)
+                    {
+                        found = defaultAssistantsStrategy;
+                    }
                 }
                 else
                 {
-                    node.State.EffectiveLayoutStrategy = state.Diagram.LayoutSettings.RequireDefaultLayoutStrategy();
-                }
+                    // find and associate layout strategy in effect for this node
+                    var parent = node;
+                    while (parent != null)
+                    {
+                        if (parent.Element.LayoutStrategyId != null)
+                        {
+                            // can we inherit it from previous level?
+                            found = state.Diagram.LayoutSettings.LayoutStrategies[parent.Element.LayoutStrategyId];
+                            break;
+                        }
+                        parent = parent.ParentNode;
+                    }
 
-                // now, also provision assistant layout strategy
-                if (node.AssistantsRoot != null)
-                {
-                    // first, find and associate layout strategy in effect for this node
-                    if (node.Element.AssistantLayoutStrategyId != null)
+                    if (found == null)
                     {
-                        // is it explicitly specified?
-                        node.AssistantsRoot.State.EffectiveLayoutStrategy = state.Diagram.LayoutSettings.LayoutStrategies[node.Element.AssistantLayoutStrategyId];
-                    }
-                    else if (node.ParentNode?.AssistantsRoot != null)
-                    {
-                        // can we inherit it from previous level?
-                        node.AssistantsRoot.State.EffectiveLayoutStrategy = node.ParentNode.AssistantsRoot.State.RequireLayoutStrategy();
-                    }
-                    else
-                    {
-                        node.AssistantsRoot.State.EffectiveLayoutStrategy = state.Diagram.LayoutSettings.RequireDefaultLayoutStrategy();
+                        found = defaultStrategy;
                     }
                 }
 
                 // now let it pre-allocate special boxes etc
+                node.State.EffectiveLayoutStrategy = found;
                 node.State.RequireLayoutStrategy().PreProcessThisNode(state, node);
 
                 return !node.Element.IsCollapsed && node.ChildCount > 0 || node.AssistantsRoot != null;
@@ -180,7 +188,9 @@ namespace Staffer.OrgChart.Layout
             var level = state.PushLayoutLevel(branchRoot);
             try
             {
-                if (branchRoot.Level == 0 || branchRoot.State.NumberOfSiblings > 0 && !branchRoot.Element.IsCollapsed)
+                if (branchRoot.Level == 0 || 
+                    (branchRoot.State.NumberOfSiblings > 0 || branchRoot.AssistantsRoot != null) 
+                    && !branchRoot.Element.IsCollapsed)
                 {
                     branchRoot.State.RequireLayoutStrategy().ApplyHorizontalLayout(state, level);
                 }
@@ -204,7 +214,9 @@ namespace Staffer.OrgChart.Layout
             var level = state.PushLayoutLevel(branchRoot);
             try
             {
-                if (branchRoot.Level == 0 || branchRoot.State.NumberOfSiblings > 0 && !branchRoot.Element.IsCollapsed)
+                if (branchRoot.Level == 0 ||
+                    (branchRoot.State.NumberOfSiblings > 0 || branchRoot.AssistantsRoot != null)
+                    && !branchRoot.Element.IsCollapsed)
                 {
                     branchRoot.State.RequireLayoutStrategy().ApplyVerticalLayout(state, level);
                 }
@@ -219,7 +231,7 @@ namespace Staffer.OrgChart.Layout
         {
             visualTree.IterateParentFirst(node =>
             {
-                if (node.Element.IsCollapsed || node.State.NumberOfSiblings == 0)
+                if (node.Element.IsCollapsed || node.State.NumberOfSiblings == 0 && node.AssistantsRoot == null)
                 {
                     return false;
                 }
@@ -252,18 +264,24 @@ namespace Staffer.OrgChart.Layout
                 throw new InvalidOperationException("Should never be invoked when children not set");
             }
 
+            Func<Tree<int, Box, NodeLayoutInfo>.TreeNode, bool> action = node =>
+            {
+                if (node.Element.AffectsLayout)
+                {
+                    node.Element.Frame.Exterior = node.Element.Frame.Exterior.MoveH(offset);
+                    node.Element.Frame.BranchExterior = node.Element.Frame.BranchExterior.MoveH(offset);
+                }
+                return true;
+            };
+
+            //if (layoutLevel.BranchRoot.AssistantsRoot != null)
+            {
+                //BoxTree.TreeNode.IterateChildFirst(layoutLevel.BranchRoot.AssistantsRoot, action);
+            }
+
             foreach (var child in children)
             {
-                BoxTree.TreeNode.IterateChildFirst(child,
-                    node =>
-                    {
-                        if (node.Element.AffectsLayout)
-                        {
-                            node.Element.Frame.Exterior = node.Element.Frame.Exterior.MoveH(offset);
-                            node.Element.Frame.BranchExterior = node.Element.Frame.BranchExterior.MoveH(offset);
-                        }
-                        return true;
-                    });
+                BoxTree.TreeNode.IterateChildFirst(child, action);
             }
 
             layoutLevel.Boundary.ReloadFromBranch(layoutLevel.BranchRoot);
@@ -308,7 +326,7 @@ namespace Staffer.OrgChart.Layout
         /// Returns leftmost and rightmost boundaries of all branches in the <paramref name="subset"/>, after alignment.
         /// </summary>
         public static Dimensions AlignHorizontalCenters(
-            [NotNull]LayoutState state, LayoutState.LayoutLevel level,
+            [NotNull]LayoutState state, [NotNull]LayoutState.LayoutLevel level,
             [NotNull]IEnumerable<BoxTree.TreeNode> subset)
         {
             // compute the rightmost center in the column

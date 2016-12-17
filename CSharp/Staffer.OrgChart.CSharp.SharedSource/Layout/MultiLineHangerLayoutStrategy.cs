@@ -88,7 +88,7 @@ namespace Staffer.OrgChart.Layout
         /// <summary>
         /// Applies layout changes to a given box and its children.
         /// </summary>
-        public override void ApplyVerticalLayout([NotNull]LayoutState state, LayoutState.LayoutLevel level)
+        public override void ApplyVerticalLayout([NotNull]LayoutState state, [NotNull]LayoutState.LayoutLevel level)
         {
             var node = level.BranchRoot;
             if (node.State.NumberOfSiblings <= MaxSiblingsPerRow)
@@ -164,7 +164,7 @@ namespace Staffer.OrgChart.Layout
         /// <summary>
         /// Applies layout changes to a given box and its children.
         /// </summary>
-        public override void ApplyHorizontalLayout([NotNull]LayoutState state, LayoutState.LayoutLevel level)
+        public override void ApplyHorizontalLayout([NotNull]LayoutState state, [NotNull]LayoutState.LayoutLevel level)
         {
             var node = level.BranchRoot;
             

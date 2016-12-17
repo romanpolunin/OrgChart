@@ -63,11 +63,15 @@ namespace Staffer.OrgChart.Misc
             /// Adds a new assistant child to the list, under <see cref="AssistantsRoot"/>. 
             /// Returns reference to self.
             /// </summary>
-            public TreeNode AddAssistantChild([NotNull] TreeNode child)
+            public TreeNode AddAssistantChild([NotNull] TreeNode child, [NotNull]Func<TValue> rootGen)
             {
                 if (AssistantsRoot == null)
                 {
-                    AssistantsRoot = new TreeNode(Element);
+                    AssistantsRoot = new TreeNode(rootGen())
+                    {
+                        ParentNode = this,
+                        Level = Level + 1
+                    };
                 }
                 AssistantsRoot.AddRegularChild(child);
                 return this;
@@ -156,12 +160,12 @@ namespace Staffer.OrgChart.Misc
 
             /// <summary>
             /// Goes through all elements depth-first. Applies <paramref name="func"/> to the parent first, then to all children recursively.
-            /// In this mode, children at each level decide for themselves whether they want to iterate further down, e.g. <paramref name="func"/> can cut-off a branch.
+            /// In this mode, children at each level decide for themselves whether they want to iterate further down, 
+            /// e.g. <paramref name="func"/> can cut-off a branch.
             /// </summary>
             /// <param name="root">Current node</param>
-            /// <param name="func">A func to evaluate on <paramref name="root"/> and its children. Whenever it returns false, iteration stops</param>
-            /// <returns>True if <paramref name="func"/> never returned <c>false</c></returns>
-            public static bool IterateParentFirst([NotNull]TreeNode root, [NotNull] Func<TreeNode, bool> func)
+            /// <param name="func">A predicate to allow iteration of branch under <paramref name="root"/></param>
+            public static bool IterateParentFirst([NotNull]TreeNode root, [NotNull] Predicate<TreeNode> func)
             {
                 if (!func(root))
                 {
@@ -245,11 +249,11 @@ namespace Staffer.OrgChart.Misc
 
         /// <summary>
         /// Goes through all elements depth-first. Applies <paramref name="func"/> to the parent first, then to all children recursively.
-        /// In this mode children at each level decide for themselves whether they want to iterate further down, e.g. <paramref name="func"/> can cut-off a branch.
+        /// In this mode children at each level decide for themselves whether they want to iterate further down, 
+        /// e.g. <paramref name="func"/> can cut-off a branch.
         /// </summary>
-        /// <param name="func">A func to evaluate on items of <see cref="Roots"/> and their children. Whenever it returns false, iteration stops</param>
-        /// <returns>True if <paramref name="func"/> never returned <c>false</c></returns>
-        public bool IterateParentFirst([NotNull] Func<TreeNode, bool> func)
+        /// <param name="func">A predicate to allow iteration of a specific branch</param>
+        public void IterateParentFirst([NotNull] Predicate<TreeNode> func)
         {
             foreach (var root in Roots)
             {
@@ -257,8 +261,6 @@ namespace Staffer.OrgChart.Misc
                 // decide for themselves whether they want to iterate further down.
                 TreeNode.IterateParentFirst(root, func);
             }
-
-            return true;
         }
 
         /// <summary>

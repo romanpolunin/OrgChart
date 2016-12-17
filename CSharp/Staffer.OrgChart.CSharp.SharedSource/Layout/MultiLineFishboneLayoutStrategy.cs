@@ -74,7 +74,7 @@ namespace Staffer.OrgChart.Layout
         /// <summary>
         /// Applies layout changes to a given box and its children.
         /// </summary>
-        public override void ApplyVerticalLayout([NotNull]LayoutState state, LayoutState.LayoutLevel level)
+        public override void ApplyVerticalLayout([NotNull]LayoutState state, [NotNull]LayoutState.LayoutLevel level)
         {
             if (level.BranchRoot.State.NumberOfSiblings <= MaxGroups * 2)
             {
@@ -98,7 +98,7 @@ namespace Staffer.OrgChart.Layout
         /// <summary>
         /// Applies layout changes to a given box and its children.
         /// </summary>
-        public override void ApplyHorizontalLayout([NotNull]LayoutState state, LayoutState.LayoutLevel level)
+        public override void ApplyHorizontalLayout([NotNull]LayoutState state, [NotNull]LayoutState.LayoutLevel level)
         {
             if (level.BranchRoot.State.NumberOfSiblings <= MaxGroups * 2)
             {
@@ -388,10 +388,7 @@ namespace Staffer.OrgChart.Layout
                 var spacer = RealRoot.Children[RealRoot.State.NumberOfSiblings + 1 + Iterator.Group];
                 SpecialRoot.AddChildView(spacer);
 
-                SpecialRoot.Element.Frame.Exterior = RealRoot.Element.Frame.Exterior;
-                SpecialRoot.Element.Frame.BranchExterior = RealRoot.Element.Frame.Exterior;
-                SpecialRoot.Element.Frame.SiblingsRowV = RealRoot.Element.Frame.SiblingsRowV;
-
+                SpecialRoot.Element.Frame.CopyExteriorFrom(RealRoot.Element.Frame);
                 return true;
             }
 
@@ -400,7 +397,7 @@ namespace Staffer.OrgChart.Layout
                 throw new NotSupportedException();
             }
 
-            public override void ApplyVerticalLayout(LayoutState state, LayoutState.LayoutLevel level)
+            public override void ApplyVerticalLayout(LayoutState state, [NotNull]LayoutState.LayoutLevel level)
             {
                 var prevRowBottom = SpecialRoot.Element.Frame.SiblingsRowV.To;
                 
@@ -445,7 +442,7 @@ namespace Staffer.OrgChart.Layout
                 }
             }
 
-            public override void ApplyHorizontalLayout(LayoutState state, LayoutState.LayoutLevel level)
+            public override void ApplyHorizontalLayout(LayoutState state, [NotNull]LayoutState.LayoutLevel level)
             {
                 if (level.BranchRoot != SpecialRoot)
                 {

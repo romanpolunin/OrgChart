@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -49,7 +50,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
             StartLayout(false, true);
         }
 
-        private async void StartLayout(bool resetBoxes, bool resetLayout)
+        private void StartLayout(bool resetBoxes, bool resetLayout)
         {
             // release any existing progress on background layout
             m_progressWaitHandle?.Dispose();
@@ -82,7 +83,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
                     new MultiLineFishboneLayoutStrategy {ParentAlignment = BranchParentAlignment.Center, MaxGroups = 3});
 
                 m_diagram.LayoutSettings.LayoutStrategies.Add("assistants",
-                    new MultiLineFishboneLayoutStrategy { MaxGroups = 1, ParentAlignment = BranchParentAlignment.Center });
+                    new FishboneAssistantsLayoutStrategy { ParentAlignment = BranchParentAlignment.Center });
 
                 m_diagram.LayoutSettings.DefaultLayoutStrategyId = "linear";
                 m_diagram.LayoutSettings.DefaultAssistantLayoutStrategyId = "assistants";
@@ -101,18 +102,13 @@ namespace Staffer.OrgChart.CSharp.Test.App
 
             state.OperationChanged += StateOperationChanged;
 
-            await Task.Factory.StartNew(() =>
-             {
-                 try
-                 {
-                     LayoutAlgorithm.Apply(state);
-                 }
-                 finally
-                 {
-                     m_progressWaitHandle.Dispose();
-                     m_progressWaitHandle = null;
-                 }
-             });
+            Task.Factory.StartNew(() => LayoutAlgorithm.Apply(state))
+                .ContinueWith(
+                    (prev, s) =>
+                    {
+                        m_progressWaitHandle.Dispose();
+                        m_progressWaitHandle = null;
+                    }, null, TaskContinuationOptions.None);
         }
 
         private void ProgressButton_Click(object sender, RoutedEventArgs e)
@@ -140,25 +136,30 @@ namespace Staffer.OrgChart.CSharp.Test.App
 
         #region Layout Event Handlers
 
-        private async void StateOperationChanged(object sender, LayoutStateOperationChangedEventArgs args)
+        private void StateOperationChanged(object sender, LayoutStateOperationChangedEventArgs args)
         {
             if (args.State.CurrentOperation > LayoutState.Operation.Preparing)
             {
-                await Dispatcher.RunAsync(CoreDispatcherPriority.High, () => UpdateListView(m_diagram.VisualTree));
+                Dispatcher.RunAsync(CoreDispatcherPriority.High, () => UpdateListView(m_diagram.VisualTree));
             }
 
             if (args.State.CurrentOperation == LayoutState.Operation.Completed)
             {
-                await Dispatcher.RunAsync(CoreDispatcherPriority.High, () => RenderBoxes(m_diagram.VisualTree, DrawCanvas));
+                Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
+                {
+                    FireListViewPropertyChanged(m_diagram.VisualTree);
+                    RenderBoxes(m_diagram.VisualTree, DrawCanvas);
+                });
             }
         }
 
-        private async void StateBoundaryChanged(object sender, BoundaryChangedEventArgs args)
+        private void StateBoundaryChanged(object sender, BoundaryChangedEventArgs args)
         {
             if (args.State.CurrentOperation > LayoutState.Operation.VerticalLayout && args.State.CurrentOperation < LayoutState.Operation.Completed)
             {
-                await Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
+                Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
                  {
+                     FireListViewPropertyChanged(m_diagram.VisualTree);
                      RenderBoxes(m_diagram.VisualTree, DrawCanvas);
                      RenderCurrentBoundary(args, DrawCanvas);
                  });
@@ -183,6 +184,19 @@ namespace Staffer.OrgChart.CSharp.Test.App
 
         private void UpdateListView(BoxTree visualTree)
         {
+            m_nodesForTreeCollection = new ObservableCollection<NodeViewModel>(visualTree.Roots.Select(x => new NodeViewModel {Node = x}));
+            LvBoxes.ItemsSource = m_nodesForTreeCollection;
+        }
+
+        private void FireListViewPropertyChanged(BoxTree visualTree)
+        {
+            if (m_nodesForTreeCollection != null)
+            {
+                foreach (var item in m_nodesForTreeCollection)
+                {
+                    item.Changed();
+                }
+            }
             m_nodesForTreeCollection = new ObservableCollection<NodeViewModel>(visualTree.Roots.Select(x => new NodeViewModel {Node = x}));
             LvBoxes.ItemsSource = m_nodesForTreeCollection;
         }

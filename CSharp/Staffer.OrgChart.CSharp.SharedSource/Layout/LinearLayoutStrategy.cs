@@ -19,10 +19,9 @@ namespace Staffer.OrgChart.Layout
                 throw new InvalidOperationException("Unsupported value for " + nameof(ParentAlignment));
             }
 
-            var normalChildCount = node.ChildCount;
-            if (normalChildCount > 0)
+            if (node.ChildCount > 0)
             {
-                node.State.NumberOfSiblings = node.Element.IsCollapsed ? 0 : normalChildCount;
+                node.State.NumberOfSiblings = node.Element.IsCollapsed ? 0 : node.ChildCount;
 
                 // only add spacers for non-collapsed boxes
                 if (!node.Element.IsCollapsed)
@@ -39,7 +38,7 @@ namespace Staffer.OrgChart.Layout
         /// <summary>
         /// Applies layout changes to a given box and its children.
         /// </summary>
-        public override void ApplyVerticalLayout([NotNull]LayoutState state, LayoutState.LayoutLevel level)
+        public override void ApplyVerticalLayout([NotNull]LayoutState state, [NotNull]LayoutState.LayoutLevel level)
         {
             var node = level.BranchRoot;
 
@@ -48,19 +47,29 @@ namespace Staffer.OrgChart.Layout
                 node.Element.Frame.SiblingsRowV = new Dimensions(node.Element.Frame.Exterior.Top, node.Element.Frame.Exterior.Bottom);
             }
 
+            if (node.AssistantsRoot != null)
+            {
+                // assistants root has to be initialized with main node's exterior 
+                node.AssistantsRoot.Element.Frame.CopyExteriorFrom(node.Element.Frame);
+                LayoutAlgorithm.VerticalLayout(state, node.AssistantsRoot);
+            }
+
             if (node.State.NumberOfSiblings == 0)
             {
                 return;
             }
-
+            
             var siblingsRowExterior = Dimensions.MinMax();
 
+            var top = node.AssistantsRoot == null 
+                ? node.Element.Frame.SiblingsRowV.To + ParentChildSpacing
+                : node.Element.Frame.BranchExterior.Bottom + ParentChildSpacing;
+            
             for (var i = 0; i < node.State.NumberOfSiblings; i++)
             {
                 var child = node.Children[i];
                 var rect = child.Element.Frame.Exterior;
-
-                var top = node.Element.Frame.SiblingsRowV.To + ParentChildSpacing;
+                
                 child.Element.Frame.Exterior = new Rect(
                     rect.Left,
                     top,
@@ -86,9 +95,14 @@ namespace Staffer.OrgChart.Layout
         /// <summary>
         /// Applies layout changes to a given box and its children.
         /// </summary>
-        public override void ApplyHorizontalLayout([NotNull]LayoutState state, LayoutState.LayoutLevel level)
+        public override void ApplyHorizontalLayout([NotNull]LayoutState state, [NotNull]LayoutState.LayoutLevel level)
         {
             var node = level.BranchRoot;
+
+            if (node.AssistantsRoot != null)
+            {
+                LayoutAlgorithm.HorizontalLayout(state, node.AssistantsRoot);
+            }
 
             for (var i = 0; i < node.State.NumberOfSiblings; i++)
             {

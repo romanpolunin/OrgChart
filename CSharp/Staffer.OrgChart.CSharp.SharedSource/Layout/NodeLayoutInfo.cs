@@ -32,7 +32,7 @@ namespace Staffer.OrgChart.Layout
         }
 
         /// <summary>
-        /// Number of visible children in this node's immediate children list
+        /// Number of visible regular children in this node's immediate children list
         /// that are affecting each other as siblings during layout.
         /// Some special auto-generated spacer boxes may not be included into this number,
         /// those are manually merged into the <see cref="Boundary"/> after other boxes are ready.
@@ -53,12 +53,6 @@ namespace Staffer.OrgChart.Layout
         /// Computed by implementations of <see cref="LayoutStrategyBase.PreProcessThisNode"/>.
         /// </summary>
         public int NumberOfSiblingColumns;
-
-        /// <summary>
-        /// Number of non-special child boxes with <see cref="Box.IsDataBound"/>
-        /// Computed by <see cref="LayoutAlgorithm.Apply"/>.
-        /// </summary>
-        public int NumberOfAssistants;
 
         private LayoutStrategyBase m_effectiveLayoutStrategy;
     }

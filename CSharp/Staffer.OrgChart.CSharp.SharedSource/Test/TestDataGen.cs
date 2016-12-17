@@ -43,7 +43,7 @@ namespace Staffer.OrgChart.Test
             var prevLayerSize = 1;
             while (firstInLayer < itemCount)
             {
-                var layerSize = 20 + prevLayerSize + random.Next(prevLayerSize * 2);
+                var layerSize = 5 + prevLayerSize + random.Next(prevLayerSize * 2);
                 for (var i = firstInLayer; i < firstInLayer + layerSize && i < itemCount; i++)
                 {
                     var parentIndex = firstInLayer - 1 - random.Next(prevLayerSize);
@@ -64,11 +64,10 @@ namespace Staffer.OrgChart.Test
                 items[to] = temp;
             }
 
-            // now mark up to one quarter of the boxes as assistants
-            for (var i = 0; i < items.Count/10; i++)
+            // now mark first five boxes 
+            for (var i = 0; i < 5; i++)
             {
-                var k = random.Next(items.Count);
-                items[k].IsAssistant = true;
+                items[i].IsAssistant = true;
             }
 
             foreach (var item in items)

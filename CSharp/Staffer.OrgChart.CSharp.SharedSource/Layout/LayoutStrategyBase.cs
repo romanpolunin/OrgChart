@@ -40,12 +40,12 @@ namespace Staffer.OrgChart.Layout
         /// <summary>
         /// Applies layout changes to a given box and its children.
         /// </summary>
-        public abstract void ApplyVerticalLayout([NotNull] LayoutState state, LayoutState.LayoutLevel level);
+        public abstract void ApplyVerticalLayout([NotNull] LayoutState state, [NotNull]LayoutState.LayoutLevel level);
 
         /// <summary>
         /// Applies layout changes to a given box and its children.
         /// </summary>
-        public abstract void ApplyHorizontalLayout([NotNull] LayoutState state, LayoutState.LayoutLevel level);
+        public abstract void ApplyHorizontalLayout([NotNull] LayoutState state, [NotNull]LayoutState.LayoutLevel level);
 
         /// <summary>
         /// Allocates and routes connectors.

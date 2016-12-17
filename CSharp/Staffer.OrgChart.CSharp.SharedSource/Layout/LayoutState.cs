@@ -226,19 +226,23 @@ namespace Staffer.OrgChart.Layout
 
                     case Operation.HorizontalLayout:
                     {
-                        var strategy = higherLevel.BranchRoot.State.RequireLayoutStrategy();
-
-                        var overlap = higherLevel.Boundary.ComputeOverlap(
-                            innerLevel.Boundary, strategy.SiblingSpacing, Diagram.LayoutSettings.BranchSpacing);
-
-                        if (overlap > 0)
+                        if (higherLevel.BranchRoot.AssistantsRoot != innerLevel.BranchRoot)
                         {
-                            LayoutAlgorithm.MoveBranch(this, innerLevel, overlap);
-                            BoundaryChanged?.Invoke(this, new BoundaryChangedEventArgs(innerLevel.Boundary, innerLevel, this));
-                        }
+                            var strategy = higherLevel.BranchRoot.State.RequireLayoutStrategy();
 
+                            var overlap = higherLevel.Boundary.ComputeOverlap(
+                                innerLevel.Boundary, strategy.SiblingSpacing, Diagram.LayoutSettings.BranchSpacing);
+
+                            if (overlap > 0)
+                            {
+                                LayoutAlgorithm.MoveBranch(this, innerLevel, overlap);
+                                BoundaryChanged?.Invoke(this, new BoundaryChangedEventArgs(innerLevel.Boundary, innerLevel, this));
+                            }
+                        }
                         higherLevel.Boundary.MergeFrom(innerLevel.Boundary);
-                        higherLevel.BranchRoot.Element.Frame.BranchExterior = higherLevel.Boundary.BoundingRect;
+                        var h = higherLevel.Boundary.BoundingRect;
+                        var v = higherLevel.BranchRoot.Element.Frame.BranchExterior;
+                        higherLevel.BranchRoot.Element.Frame.BranchExterior = new Rect(h.Left, v.Top, h.Size.Width, v.Size.Height);
                     }
                         break;
                     default:
