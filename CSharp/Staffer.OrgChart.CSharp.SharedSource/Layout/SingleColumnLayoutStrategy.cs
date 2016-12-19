@@ -50,7 +50,18 @@ namespace Staffer.OrgChart.Layout
                 node.Element.Frame.SiblingsRowV = new Dimensions(node.Element.Frame.Exterior.Top, node.Element.Frame.Exterior.Bottom);
             }
 
-            var prevRowExterior = node.Element.Frame.SiblingsRowV;
+            if (node.AssistantsRoot != null)
+            {
+                // assistants root has to be initialized with main node's exterior 
+                node.AssistantsRoot.Element.Frame.CopyExteriorFrom(node.Element.Frame);
+                LayoutAlgorithm.VerticalLayout(state, node.AssistantsRoot);
+            }
+
+            var prevRowExterior = new Dimensions(
+                node.Element.Frame.SiblingsRowV.From,
+                node.AssistantsRoot == null
+                ? node.Element.Frame.SiblingsRowV.To
+                : node.Element.Frame.BranchExterior.Bottom);
 
             for (var row = 0; row < node.State.NumberOfSiblings; row++)
             {
@@ -89,6 +100,11 @@ namespace Staffer.OrgChart.Layout
 
             var nodeState = node.State;
 
+            if (node.AssistantsRoot != null)
+            {
+                LayoutAlgorithm.HorizontalLayout(state, node.AssistantsRoot);
+            }
+
             // first, perform horizontal layout for every node in this column
             for (var row = 0; row < nodeState.NumberOfSiblings; row++)
             {
@@ -102,7 +118,7 @@ namespace Staffer.OrgChart.Layout
             // now align the column
             var edges = LayoutAlgorithm.AlignHorizontalCenters(state, level, EnumerateColumn(node));
 
-            if (node.Level > 0)
+            if (node.Level > 0 && node.ChildCount > 0)
             {
                 var rect = node.Element.Frame.Exterior;
                 double diff;
@@ -154,6 +170,11 @@ namespace Staffer.OrgChart.Layout
         /// </summary>
         public override void RouteConnectors([NotNull] LayoutState state, [NotNull] BoxTree.TreeNode node)
         {
+            if (node.ChildCount == 0)
+            {
+                return;
+            }
+
             // one parent connector (also serves as mid-sibling carrier) and horizontal carriers
             var count = 1 + node.State.NumberOfSiblings;
 

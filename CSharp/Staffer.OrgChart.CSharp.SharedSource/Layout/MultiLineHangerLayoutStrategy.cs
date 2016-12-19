@@ -103,7 +103,18 @@ namespace Staffer.OrgChart.Layout
                 node.Element.Frame.SiblingsRowV = new Dimensions(node.Element.Frame.Exterior.Top, node.Element.Frame.Exterior.Bottom);
             }
 
-            var prevRowExterior = node.Element.Frame.SiblingsRowV;
+            if (node.AssistantsRoot != null)
+            {
+                // assistants root has to be initialized with main node's exterior 
+                node.AssistantsRoot.Element.Frame.CopyExteriorFrom(node.Element.Frame);
+                LayoutAlgorithm.VerticalLayout(state, node.AssistantsRoot);
+            }
+
+            var prevRowExterior = new Dimensions(
+                node.Element.Frame.SiblingsRowV.From, 
+                node.AssistantsRoot == null
+                ? node.Element.Frame.SiblingsRowV.To
+                : node.Element.Frame.BranchExterior.Bottom);
 
             for (var row = 0; row < node.State.NumberOfSiblingRows; row++)
             {
@@ -167,12 +178,17 @@ namespace Staffer.OrgChart.Layout
         public override void ApplyHorizontalLayout([NotNull]LayoutState state, [NotNull]LayoutState.LayoutLevel level)
         {
             var node = level.BranchRoot;
-            
+
             if (node.State.NumberOfSiblings <= MaxSiblingsPerRow)
             {
                 // fall back to linear layout, only have one row of boxes
                 base.ApplyHorizontalLayout(state, level);
                 return;
+            }
+
+            if (node.AssistantsRoot != null)
+            {
+                LayoutAlgorithm.HorizontalLayout(state, node.AssistantsRoot);
             }
 
             for (var col = 0; col < node.State.NumberOfSiblingColumns; col++)

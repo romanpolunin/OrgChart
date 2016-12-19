@@ -77,15 +77,15 @@ namespace Staffer.OrgChart.CSharp.Test.App
                     new MultiLineHangerLayoutStrategy {ParentAlignment = BranchParentAlignment.Center});
 
                 m_diagram.LayoutSettings.LayoutStrategies.Add("singlecolumn",
-                    new SingleColumnLayoutStrategy {ParentAlignment = BranchParentAlignment.Right});
+                    new SingleColumnLayoutStrategy {ParentAlignment = BranchParentAlignment.Left});
 
                 m_diagram.LayoutSettings.LayoutStrategies.Add("fishbone",
-                    new MultiLineFishboneLayoutStrategy {ParentAlignment = BranchParentAlignment.Center, MaxGroups = 3});
+                    new MultiLineFishboneLayoutStrategy {ParentAlignment = BranchParentAlignment.Center, MaxGroups = 2});
 
                 m_diagram.LayoutSettings.LayoutStrategies.Add("assistants",
                     new FishboneAssistantsLayoutStrategy { ParentAlignment = BranchParentAlignment.Center });
 
-                m_diagram.LayoutSettings.DefaultLayoutStrategyId = "linear";
+                m_diagram.LayoutSettings.DefaultLayoutStrategyId = "singlecolumn";
                 m_diagram.LayoutSettings.DefaultAssistantLayoutStrategyId = "assistants";
             }
             else if (resetLayout)
@@ -305,18 +305,31 @@ namespace Staffer.OrgChart.CSharp.Test.App
 
                 if (!box.IsCollapsed && box.Frame.Connector != null)
                 {
+                    var solidBrush = new SolidColorBrush(Colors.Black);
+                    var nodashes = new DoubleCollection();
+                    var dashes = new DoubleCollection {3, 5};
                     foreach (var edge in box.Frame.Connector.Segments)
                     {
-                        drawCanvas.Children.Add(new Line
+                        var line = new Line
                         {
                             X1 = edge.From.X,
                             Y1 = edge.From.Y,
                             X2 = edge.To.X,
                             Y2 = edge.To.Y,
-                            Stroke = new SolidColorBrush(Colors.Black),
+                            Stroke = solidBrush,
+                            StrokeEndLineCap = PenLineCap.Round,
                             StrokeThickness = 1,
                             IsHitTestVisible = false
-                        });
+                        };
+                        if (box.IsSpecial)
+                        {
+                            var len = Math.Max(Math.Abs(line.X2 - line.X1), Math.Abs(line.Y2 - line.Y1));
+                            if (len > 2)
+                            {
+                                line.StrokeDashArray = new DoubleCollection {2};
+                            }
+                        }
+                        drawCanvas.Children.Add(line);
                     }
                 }
 

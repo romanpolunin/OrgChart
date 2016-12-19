@@ -88,6 +88,13 @@ namespace Staffer.OrgChart.Layout
                 node.Element.Frame.SiblingsRowV = new Dimensions(node.Element.Frame.Exterior.Top, node.Element.Frame.Exterior.Bottom);
             }
 
+            if (node.AssistantsRoot != null)
+            {
+                // assistants root has to be initialized with main node's exterior 
+                node.AssistantsRoot.Element.Frame.CopyExteriorFrom(node.Element.Frame);
+                LayoutAlgorithm.VerticalLayout(state, node.AssistantsRoot);
+            }
+
             var adapter = new SingleFishboneLayoutAdapter(node);
             while (adapter.NextGroup())
             {   
@@ -110,6 +117,11 @@ namespace Staffer.OrgChart.Layout
             if (node.Level == 0)
             {
                 node.Element.Frame.SiblingsRowV = new Dimensions(node.Element.Frame.Exterior.Top, node.Element.Frame.Exterior.Bottom);
+            }
+
+            if (node.AssistantsRoot != null)
+            {
+                LayoutAlgorithm.HorizontalLayout(state, node.AssistantsRoot);
             }
 
             var adapter = new SingleFishboneLayoutAdapter(node);
@@ -399,7 +411,9 @@ namespace Staffer.OrgChart.Layout
 
             public override void ApplyVerticalLayout(LayoutState state, [NotNull]LayoutState.LayoutLevel level)
             {
-                var prevRowBottom = SpecialRoot.Element.Frame.SiblingsRowV.To;
+                var prevRowBottom = RealRoot.AssistantsRoot == null
+                    ? SpecialRoot.Element.Frame.SiblingsRowV.To
+                    : RealRoot.AssistantsRoot.Element.Frame.BranchExterior.Bottom;
                 
                 for (var i = 0; i < Iterator.MaxOnLeft; i++)
                 {

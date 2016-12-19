@@ -16,7 +16,7 @@ namespace Staffer.OrgChart.Layout
         {
             if (ParentAlignment != BranchParentAlignment.Center)
             {
-                throw new InvalidOperationException("Unsupported value for " + nameof(ParentAlignment));
+                throw new InvalidOperationException("Unsupported value for alignment: " + ParentAlignment);
             }
 
             if (node.ChildCount > 0)
@@ -111,46 +111,44 @@ namespace Staffer.OrgChart.Layout
                 LayoutAlgorithm.HorizontalLayout(state, child);
             }
 
-            if (ParentAlignment == BranchParentAlignment.Center)
+            if (ParentAlignment != BranchParentAlignment.Center)
             {
-                if (node.Level > 0 && node.ChildCount > 0)
-                {
-                    var rect = node.Element.Frame.Exterior;
-                    var leftmost = node.Children[0].Element.Frame.Exterior.CenterH;
-                    var rightmost = node.Children[node.State.NumberOfSiblings - 1].Element.Frame.Exterior.CenterH;
-                    var desiredCenter = leftmost + (rightmost - leftmost)/2;
-                    var center = rect.CenterH;
-                    var diff = center - desiredCenter;
-                    LayoutAlgorithm.MoveChildrenOnly(state, level, diff);
-
-                    // vertical connector from parent 
-                    var verticalSpacerBox = node.Children[node.State.NumberOfSiblings].Element;
-                    verticalSpacerBox.Frame.Exterior = new Rect(
-                        center - ParentConnectorShield/2,
-                        rect.Bottom,
-                        ParentConnectorShield,
-                        node.Children[0].Element.Frame.SiblingsRowV.From - rect.Bottom);
-                    verticalSpacerBox.Frame.BranchExterior = verticalSpacerBox.Frame.Exterior;
-
-                    state.MergeSpacer(verticalSpacerBox);
-
-                    // horizontal protector
-                    var firstInRow = node.Children[0].Element.Frame;
-
-                    var horizontalSpacerBox = node.Children[node.State.NumberOfSiblings + 1].Element;
-                    horizontalSpacerBox.Frame.Exterior = new Rect(
-                        firstInRow.Exterior.Left,
-                        firstInRow.SiblingsRowV.From - ParentChildSpacing,
-                        node.Children[node.State.NumberOfSiblings - 1].Element.Frame.Exterior.Right - firstInRow.Exterior.Left,
-                        ParentChildSpacing);
-                    horizontalSpacerBox.Frame.BranchExterior = horizontalSpacerBox.Frame.Exterior;
-
-                    state.MergeSpacer(horizontalSpacerBox);
-                }
+                throw new InvalidOperationException("Unsupported ParentAlignment setting: " + ParentAlignment);
             }
-            else
+
+            if (node.Level > 0 && node.ChildCount > 0)
             {
-                throw new InvalidOperationException("Invalid ParentAlignment setting");
+                var rect = node.Element.Frame.Exterior;
+                var leftmost = node.Children[0].Element.Frame.Exterior.CenterH;
+                var rightmost = node.Children[node.State.NumberOfSiblings - 1].Element.Frame.Exterior.CenterH;
+                var desiredCenter = leftmost + (rightmost - leftmost)/2;
+                var center = rect.CenterH;
+                var diff = center - desiredCenter;
+                LayoutAlgorithm.MoveChildrenOnly(state, level, diff);
+
+                // vertical connector from parent 
+                var verticalSpacerBox = node.Children[node.State.NumberOfSiblings].Element;
+                verticalSpacerBox.Frame.Exterior = new Rect(
+                    center - ParentConnectorShield/2,
+                    rect.Bottom,
+                    ParentConnectorShield,
+                    node.Children[0].Element.Frame.SiblingsRowV.From - rect.Bottom);
+                verticalSpacerBox.Frame.BranchExterior = verticalSpacerBox.Frame.Exterior;
+
+                state.MergeSpacer(verticalSpacerBox);
+
+                // horizontal protector
+                var firstInRow = node.Children[0].Element.Frame;
+
+                var horizontalSpacerBox = node.Children[node.State.NumberOfSiblings + 1].Element;
+                horizontalSpacerBox.Frame.Exterior = new Rect(
+                    firstInRow.Exterior.Left,
+                    firstInRow.SiblingsRowV.From - ParentChildSpacing,
+                    node.Children[node.State.NumberOfSiblings - 1].Element.Frame.Exterior.Right - firstInRow.Exterior.Left,
+                    ParentChildSpacing);
+                horizontalSpacerBox.Frame.BranchExterior = horizontalSpacerBox.Frame.Exterior;
+
+                state.MergeSpacer(horizontalSpacerBox);
             }
         }
 
