@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Staffer.OrgChart.Annotations;
+using Staffer.OrgChart.Misc;
 
 namespace Staffer.OrgChart.Layout
 {
@@ -35,8 +36,8 @@ namespace Staffer.OrgChart.Layout
                 }
 
                 // a vertical carrier from parent 
-                var parentSpacer = Box.Special(Box.None, node.Element.Id, false);
-                node.AddRegularChild(parentSpacer);
+                var spacer = Box.Special(Box.None, node.Element.Id, false);
+                node.AddRegularChild(spacer);
             }
         }
 
@@ -53,8 +54,8 @@ namespace Staffer.OrgChart.Layout
 
             var prevRowBottom = node.Element.Frame.SiblingsRowV.To;
 
-            var iterator = new GroupIterator(node.State.NumberOfSiblings);
-            for (var i = 0; i < iterator.MaxOnLeft; i++)
+            var maxOnLeft = MaxOnLeft(node);
+            for (var i = 0; i < maxOnLeft; i++)
             {
                 var child = node.Children[i];
                 var frame = child.Element.Frame;
@@ -63,7 +64,7 @@ namespace Staffer.OrgChart.Layout
 
                 var rowExterior = new Dimensions(frame.Exterior.Top, frame.Exterior.Bottom);
 
-                var i2 = i + iterator.MaxOnLeft;
+                var i2 = i + maxOnLeft;
                 if (i2 < node.State.NumberOfSiblings)
                 {
                     var child2 = node.Children[i2];
@@ -106,10 +107,9 @@ namespace Staffer.OrgChart.Layout
                 node.Element.Frame.SiblingsRowV = new Dimensions(node.Element.Frame.Exterior.Top, node.Element.Frame.Exterior.Bottom);
             }
 
-            var iterator = new GroupIterator(node.State.NumberOfSiblings);
-
             var left = true;
             var countOnThisSide = 0;
+            var maxOnLeft = MaxOnLeft(node);
             for (var i = 0; i < node.State.NumberOfSiblings; i++)
             {
                 var child = node.Children[i];
@@ -118,25 +118,25 @@ namespace Staffer.OrgChart.Layout
                 // we go top-bottom to layout left side of the group,
                 // then add a carrier protector
                 // then top-bottom to fill right side of the group
-                if (++countOnThisSide == iterator.MaxOnLeft)
+                if (++countOnThisSide == maxOnLeft)
                 {
                     if (left)
                     {
                         // horizontally align children in left pillar
-                        LayoutAlgorithm.AlignHorizontalCenters(state, level, EnumerateSiblings(node, 0, iterator.MaxOnLeft));
+                        LayoutAlgorithm.AlignHorizontalCenters(state, level, EnumerateSiblings(node, 0, maxOnLeft));
 
                         left = false;
                         countOnThisSide = 0;
 
                         var rightmost = double.MinValue;
-                        for (var k = 0; k < i; k++)
+                        for (var k = 0; k <= i; k++)
                         {
                             rightmost = Math.Max(rightmost, node.Children[k].Element.Frame.BranchExterior.Right);
                         }
 
                         // vertical spacer does not have to be extended to the bottom of the lowest branch,
                         // unless the lowest branch on the right side has some children and is expanded
-                        if (node.State.NumberOfSiblings % 2 != 0)
+                        if (node.State.NumberOfSiblings%2 != 0)
                         {
                             rightmost = Math.Max(rightmost, child.Element.Frame.Exterior.Right);
                         }
@@ -154,20 +154,22 @@ namespace Staffer.OrgChart.Layout
                         }
 
                         // integrate protector for group's vertical carrier 
+                        // it must prevent boxes on the right side from overlapping the middle vertical carrier,
+                        // so height must be set to entire assistant branch's height
                         var spacer = node.Children[node.State.NumberOfSiblings].Element;
                         spacer.Frame.Exterior = new Rect(
                             rightmost,
-                            node.Children[0].Element.Frame.SiblingsRowV.From,
+                            node.Element.Frame.Exterior.Bottom, // node.Children[0].Element.Frame.SiblingsRowV.From,
                             state.Diagram.LayoutSettings.BranchSpacing,
-                            node.Element.Frame.BranchExterior.Bottom - node.Children[0].Element.Frame.SiblingsRowV.From
-                            );
+                            node.Element.Frame.BranchExterior.Bottom - node.Element.Frame.Exterior.Bottom//node.Children[0].Element.Frame.SiblingsRowV.From
+                        );
                         spacer.Frame.BranchExterior = spacer.Frame.Exterior;
                         level.Boundary.MergeFrom(spacer);
                     }
                     else
                     {
                         // horizontally align children in right pillar
-                        LayoutAlgorithm.AlignHorizontalCenters(state, level, EnumerateSiblings(node, iterator.MaxOnLeft, node.State.NumberOfSiblings));
+                        LayoutAlgorithm.AlignHorizontalCenters(state, level, EnumerateSiblings(node, maxOnLeft, node.State.NumberOfSiblings));
                     }
                 }
             }
@@ -189,19 +191,6 @@ namespace Staffer.OrgChart.Layout
             {
                 throw new InvalidOperationException("Invalid ParentAlignment setting");
             }
-
-            if (node.Level > 0)
-            {
-                // vertical connector from parent
-                var carrier = node.Children[node.State.NumberOfSiblings].Element;
-                carrier.Frame.Exterior = new Rect(
-                    rect.CenterH - ParentConnectorShield/2,
-                    rect.Bottom,
-                    ParentConnectorShield,
-                    node.Children[0].Element.Frame.SiblingsRowV.From - rect.Bottom);
-                carrier.Frame.BranchExterior = carrier.Frame.Exterior;
-                state.MergeSpacer(carrier);
-            }
         }
 
         /// <summary>
@@ -210,50 +199,50 @@ namespace Staffer.OrgChart.Layout
         public override void RouteConnectors([NotNull] LayoutState state, [NotNull] BoxTree.TreeNode node)
         {
             var count = node.State.NumberOfSiblings;
+            if (NeedCarrierProtector(node))
+            {
+                count++;
+            }
 
             var segments = new Edge[count];
 
             var ix = 0;
 
             // one hook for each child
-            var iterator = new GroupIterator(node.State.NumberOfSiblings);
+            var maxOnLeft = MaxOnLeft(node);
             var carrier = node.Children[node.State.NumberOfSiblings].Element.Frame.Exterior;
             var from = carrier.CenterH;
 
             var isLeft = true;
             var countOnThisSide = 0;
+            var bottomMost = double.MinValue;
             for (var i = 0; i < count; i++)
             {
                 var to = isLeft ? node.Children[i].Element.Frame.Exterior.Right : node.Children[i].Element.Frame.Exterior.Left;
                 var y = node.Children[i].Element.Frame.Exterior.CenterV;
+                bottomMost = Math.Max(bottomMost, y);
                 segments[ix++] = new Edge(new Point(from, y), new Point(to, y));
 
-                if (++countOnThisSide == iterator.MaxOnLeft)
+                if (++countOnThisSide == maxOnLeft)
                 {
                     countOnThisSide = 0;
-                    if (isLeft)
-                    {
-                        // one for each vertical carrier
-                        segments[1 + node.State.NumberOfSiblings] = new Edge(
-                            new Point(carrier.CenterH, carrier.Top - ChildConnectorHookLength),
-                            new Point(carrier.CenterH, node.Children[i].Element.Frame.Exterior.CenterV));
-                    }
                     isLeft = !isLeft;
                 }
+            }
+
+            if (NeedCarrierProtector(node))
+            {
+                // one for each vertical carrier
+                segments[node.State.NumberOfSiblings] = new Edge(
+                    new Point(carrier.CenterH, carrier.Top), // - ChildConnectorHookLength),
+                    new Point(carrier.CenterH, bottomMost));
             }
 
             node.Element.Frame.Connector = new Connector(segments);
         }
 
-        private class GroupIterator
-        {
-            public int MaxOnLeft;
-
-            public GroupIterator(int numberOfSiblings)
-            {
-                MaxOnLeft = numberOfSiblings/2 + numberOfSiblings%2;
-            }
-        }
+        private int MaxOnLeft(BoxTree.TreeNode node) => node.State.NumberOfSiblings/2 + node.State.NumberOfSiblings % 2;
+        private bool NeedCarrierProtector(BoxTree.TreeNode node) => node.ParentNode.ChildCount == 0;
 
         private IEnumerable<BoxTree.TreeNode> EnumerateSiblings(BoxTree.TreeNode node, int from, int to)
         {

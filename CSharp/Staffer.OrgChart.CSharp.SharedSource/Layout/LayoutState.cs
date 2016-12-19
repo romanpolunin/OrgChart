@@ -226,6 +226,7 @@ namespace Staffer.OrgChart.Layout
 
                     case Operation.HorizontalLayout:
                     {
+                        // do not apply overlap adjustment for assistant branch, they are always above regular children
                         if (higherLevel.BranchRoot.AssistantsRoot != innerLevel.BranchRoot)
                         {
                             var strategy = higherLevel.BranchRoot.State.RequireLayoutStrategy();
@@ -240,9 +241,15 @@ namespace Staffer.OrgChart.Layout
                             }
                         }
                         higherLevel.Boundary.MergeFrom(innerLevel.Boundary);
-                        var h = higherLevel.Boundary.BoundingRect;
-                        var v = higherLevel.BranchRoot.Element.Frame.BranchExterior;
-                        higherLevel.BranchRoot.Element.Frame.BranchExterior = new Rect(h.Left, v.Top, h.Size.Width, v.Size.Height);
+
+                        // Do not update branch vertical measurements from the boundary, because boundary adds children one-by-one.
+                        // If we take it from boundary, then branch vertical measurement will be incorrect until all children are laid out horizontally,
+                        // and this temporarily incorrect state will break algorithms they need to know combined branch height.
+                        higherLevel.BranchRoot.Element.Frame.BranchExterior = new Rect(
+                            higherLevel.Boundary.BoundingRect.Left,
+                            higherLevel.BranchRoot.Element.Frame.BranchExterior.Top,
+                            higherLevel.Boundary.BoundingRect.Size.Width,
+                            higherLevel.BranchRoot.Element.Frame.BranchExterior.Size.Height);
                     }
                         break;
                     default:

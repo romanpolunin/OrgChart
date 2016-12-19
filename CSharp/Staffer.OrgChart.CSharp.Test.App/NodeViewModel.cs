@@ -18,18 +18,15 @@ namespace Staffer.OrgChart.CSharp.Test.App
             {
                 if (m_children == null)
                 {
-                    if (Node.Children == null)
+                    m_children = new ObservableCollection<NodeViewModel>();
+                    Node.Children?.All(x =>
                     {
-                        m_children = new ObservableCollection<NodeViewModel>();
-                    }
-                    else
+                        m_children.Add(new NodeViewModel {Node = x});
+                        return true;
+                    });
+                    if (Node.AssistantsRoot != null)
                     {
-                        m_children = new ObservableCollection<NodeViewModel>(
-                            Node.Children.Select(x => new NodeViewModel {Node = x}));
-                        if (Node.AssistantsRoot != null)
-                        {
-                            m_children.Add(new NodeViewModel { Node = Node.AssistantsRoot});
-                        }
+                        m_children.Add(new NodeViewModel {Node = Node.AssistantsRoot});
                     }
                 }
 

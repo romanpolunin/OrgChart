@@ -113,7 +113,7 @@ namespace Staffer.OrgChart.Layout
 
             if (ParentAlignment == BranchParentAlignment.Center)
             {
-                if (node.Level > 0)
+                if (node.Level > 0 && node.ChildCount > 0)
                 {
                     var rect = node.Element.Frame.Exterior;
                     var leftmost = node.Children[0].Element.Frame.Exterior.CenterH;

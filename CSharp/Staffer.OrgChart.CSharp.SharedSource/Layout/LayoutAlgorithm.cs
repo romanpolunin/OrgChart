@@ -241,7 +241,7 @@ namespace Staffer.OrgChart.Layout
                     return true;
                 }
 
-                if (!node.Element.IsSpecial)
+                if (!node.Element.IsSpecial || node.IsAssistantRoot)
                 {
                     node.State.RequireLayoutStrategy().RouteConnectors(state, node);
                     return true;

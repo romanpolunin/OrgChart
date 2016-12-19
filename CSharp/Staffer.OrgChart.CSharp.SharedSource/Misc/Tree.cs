@@ -60,6 +60,11 @@ namespace Staffer.OrgChart.Misc
             public int ChildCount => Children == null ? 0 : Children.Count;
 
             /// <summary>
+            /// <c>true</c> if this node is set as <see cref="AssistantsRoot"/> on its <see cref="ParentNode"/>.
+            /// </summary>
+            public bool IsAssistantRoot => ParentNode?.AssistantsRoot == this;
+
+            /// <summary>
             /// Adds a new assistant child to the list, under <see cref="AssistantsRoot"/>. 
             /// Returns reference to self.
             /// </summary>

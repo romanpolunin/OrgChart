@@ -470,7 +470,7 @@ namespace Staffer.OrgChart.Layout
                             countOnThisSide = 0;
 
                             var rightmost = double.MinValue;
-                            for (var k = 0; k < i; k++)
+                            for (var k = 0; k <= i; k++)
                             {
                                 rightmost = Math.Max(rightmost, SpecialRoot.Children[k].Element.Frame.BranchExterior.Right);
                             }

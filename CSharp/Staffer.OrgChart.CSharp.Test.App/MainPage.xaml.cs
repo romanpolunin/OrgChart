@@ -60,7 +60,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
             if (resetBoxes || m_diagram == null)
             {
                 m_dataSource = new TestDataSource();
-                new TestDataGen().GenerateDataItems((TestDataSource)m_dataSource, 20);
+                new TestDataGen().GenerateDataItems((TestDataSource)m_dataSource, 200);
                 //m_dataSource = new DebugDataSource();
                 //await ((DebugDataSource)m_dataSource).Load();
 

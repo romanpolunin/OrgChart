@@ -65,7 +65,7 @@ namespace Staffer.OrgChart.Test
             }
 
             // now mark first five boxes 
-            for (var i = 0; i < 5; i++)
+            for (var i = 0; i < Math.Max(1, items.Count/10); i++)
             {
                 items[i].IsAssistant = true;
             }
