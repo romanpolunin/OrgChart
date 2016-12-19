@@ -1,6 +1,5 @@
 ﻿using System;
 using Staffer.OrgChart.Annotations;
-using Staffer.OrgChart.Misc;
 
 namespace Staffer.OrgChart.Layout
 {
@@ -13,26 +12,25 @@ namespace Staffer.OrgChart.Layout
         /// <summary>
         /// A chance for layout strategy to append special auto-generated boxes into the visual tree. 
         /// </summary>
-        public override void PreProcessThisNode([NotNull]LayoutState state, [NotNull] Tree<int, Box, NodeLayoutInfo>.TreeNode node)
+        public override void PreProcessThisNode([NotNull]LayoutState state, [NotNull] BoxTree.TreeNode node)
         {
             if (ParentAlignment != BranchParentAlignment.Center)
             {
-                throw new InvalidOperationException("Unsupported value for " + nameof(ParentAlignment));
+                throw new InvalidOperationException("Unsupported value for alignment: " + ParentAlignment);
             }
 
-            var normalChildCount = node.ChildCount;
-            if (normalChildCount > 0)
+            if (node.ChildCount > 0)
             {
-                node.State.NumberOfSiblings = node.Element.IsCollapsed ? 0 : normalChildCount;
+                node.State.NumberOfSiblings = node.Element.IsCollapsed ? 0 : node.ChildCount;
 
                 // only add spacers for non-collapsed boxes
                 if (!node.Element.IsCollapsed)
                 {
                     var verticalSpacer = Box.Special(Box.None, node.Element.Id, false);
-                    node.AddChild(verticalSpacer);
+                    node.AddRegularChild(verticalSpacer);
 
                     var horizontalSpacer = Box.Special(Box.None, node.Element.Id, false);
-                    node.AddChild(horizontalSpacer);
+                    node.AddRegularChild(horizontalSpacer);
                 }
             }
         }
@@ -40,7 +38,7 @@ namespace Staffer.OrgChart.Layout
         /// <summary>
         /// Applies layout changes to a given box and its children.
         /// </summary>
-        public override void ApplyVerticalLayout([NotNull]LayoutState state, LayoutState.LayoutLevel level)
+        public override void ApplyVerticalLayout([NotNull]LayoutState state, [NotNull]LayoutState.LayoutLevel level)
         {
             var node = level.BranchRoot;
 
@@ -49,18 +47,29 @@ namespace Staffer.OrgChart.Layout
                 node.Element.Frame.SiblingsRowV = new Dimensions(node.Element.Frame.Exterior.Top, node.Element.Frame.Exterior.Bottom);
             }
 
-            var siblingsRowExterior = Dimensions.MinMax();
+            if (node.AssistantsRoot != null)
+            {
+                // assistants root has to be initialized with main node's exterior 
+                node.AssistantsRoot.Element.Frame.CopyExteriorFrom(node.Element.Frame);
+                LayoutAlgorithm.VerticalLayout(state, node.AssistantsRoot);
+            }
+
             if (node.State.NumberOfSiblings == 0)
             {
                 return;
             }
+            
+            var siblingsRowExterior = Dimensions.MinMax();
 
+            var top = node.AssistantsRoot == null 
+                ? node.Element.Frame.SiblingsRowV.To + ParentChildSpacing
+                : node.Element.Frame.BranchExterior.Bottom + ParentChildSpacing;
+            
             for (var i = 0; i < node.State.NumberOfSiblings; i++)
             {
                 var child = node.Children[i];
                 var rect = child.Element.Frame.Exterior;
-
-                var top = node.Element.Frame.SiblingsRowV.To + ParentChildSpacing;
+                
                 child.Element.Frame.Exterior = new Rect(
                     rect.Left,
                     top,
@@ -86,9 +95,14 @@ namespace Staffer.OrgChart.Layout
         /// <summary>
         /// Applies layout changes to a given box and its children.
         /// </summary>
-        public override void ApplyHorizontalLayout([NotNull]LayoutState state, LayoutState.LayoutLevel level)
+        public override void ApplyHorizontalLayout([NotNull]LayoutState state, [NotNull]LayoutState.LayoutLevel level)
         {
             var node = level.BranchRoot;
+
+            if (node.AssistantsRoot != null)
+            {
+                LayoutAlgorithm.HorizontalLayout(state, node.AssistantsRoot);
+            }
 
             for (var i = 0; i < node.State.NumberOfSiblings; i++)
             {
@@ -97,53 +111,51 @@ namespace Staffer.OrgChart.Layout
                 LayoutAlgorithm.HorizontalLayout(state, child);
             }
 
-            if (ParentAlignment == BranchParentAlignment.Center)
+            if (ParentAlignment != BranchParentAlignment.Center)
             {
-                if (node.Level > 0)
-                {
-                    var rect = node.Element.Frame.Exterior;
-                    var leftmost = node.Children[0].Element.Frame.Exterior.CenterH;
-                    var rightmost = node.Children[node.State.NumberOfSiblings - 1].Element.Frame.Exterior.CenterH;
-                    var desiredCenter = leftmost + (rightmost - leftmost)/2;
-                    var center = rect.CenterH;
-                    var diff = center - desiredCenter;
-                    LayoutAlgorithm.MoveChildrenOnly(state, level, diff);
-
-                    // vertical connector from parent 
-                    var verticalSpacerBox = node.Children[node.State.NumberOfSiblings].Element;
-                    verticalSpacerBox.Frame.Exterior = new Rect(
-                        center - ParentConnectorShield/2,
-                        rect.Bottom,
-                        ParentConnectorShield,
-                        node.Children[0].Element.Frame.SiblingsRowV.From - rect.Bottom);
-                    verticalSpacerBox.Frame.BranchExterior = verticalSpacerBox.Frame.Exterior;
-
-                    state.MergeSpacer(verticalSpacerBox);
-
-                    // horizontal protector
-                    var firstInRow = node.Children[0].Element.Frame;
-
-                    var horizontalSpacerBox = node.Children[node.State.NumberOfSiblings + 1].Element;
-                    horizontalSpacerBox.Frame.Exterior = new Rect(
-                        firstInRow.Exterior.Left,
-                        firstInRow.SiblingsRowV.From - ParentChildSpacing,
-                        node.Children[node.State.NumberOfSiblings - 1].Element.Frame.Exterior.Right - firstInRow.Exterior.Left,
-                        ParentChildSpacing);
-                    horizontalSpacerBox.Frame.BranchExterior = horizontalSpacerBox.Frame.Exterior;
-
-                    state.MergeSpacer(horizontalSpacerBox);
-                }
+                throw new InvalidOperationException("Unsupported ParentAlignment setting: " + ParentAlignment);
             }
-            else
+
+            if (node.Level > 0 && node.ChildCount > 0)
             {
-                throw new InvalidOperationException("Invalid ParentAlignment setting");
+                var rect = node.Element.Frame.Exterior;
+                var leftmost = node.Children[0].Element.Frame.Exterior.CenterH;
+                var rightmost = node.Children[node.State.NumberOfSiblings - 1].Element.Frame.Exterior.CenterH;
+                var desiredCenter = leftmost + (rightmost - leftmost)/2;
+                var center = rect.CenterH;
+                var diff = center - desiredCenter;
+                LayoutAlgorithm.MoveChildrenOnly(state, level, diff);
+
+                // vertical connector from parent 
+                var verticalSpacerBox = node.Children[node.State.NumberOfSiblings].Element;
+                verticalSpacerBox.Frame.Exterior = new Rect(
+                    center - ParentConnectorShield/2,
+                    rect.Bottom,
+                    ParentConnectorShield,
+                    node.Children[0].Element.Frame.SiblingsRowV.From - rect.Bottom);
+                verticalSpacerBox.Frame.BranchExterior = verticalSpacerBox.Frame.Exterior;
+
+                state.MergeSpacer(verticalSpacerBox);
+
+                // horizontal protector
+                var firstInRow = node.Children[0].Element.Frame;
+
+                var horizontalSpacerBox = node.Children[node.State.NumberOfSiblings + 1].Element;
+                horizontalSpacerBox.Frame.Exterior = new Rect(
+                    firstInRow.Exterior.Left,
+                    firstInRow.SiblingsRowV.From - ParentChildSpacing,
+                    node.Children[node.State.NumberOfSiblings - 1].Element.Frame.Exterior.Right - firstInRow.Exterior.Left,
+                    ParentChildSpacing);
+                horizontalSpacerBox.Frame.BranchExterior = horizontalSpacerBox.Frame.Exterior;
+
+                state.MergeSpacer(horizontalSpacerBox);
             }
         }
 
         /// <summary>
         /// Allocates and routes connectors.
         /// </summary>
-        public override void RouteConnectors([NotNull] LayoutState state, [NotNull] Tree<int, Box, NodeLayoutInfo>.TreeNode node)
+        public override void RouteConnectors([NotNull] LayoutState state, [NotNull] BoxTree.TreeNode node)
         {
             var normalChildCount = node.State.NumberOfSiblings;
 

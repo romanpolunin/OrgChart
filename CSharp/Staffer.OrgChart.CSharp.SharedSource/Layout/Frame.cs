@@ -43,5 +43,16 @@ namespace Staffer.OrgChart.Layout
             Connector = null;
             SiblingsRowV = Dimensions.MinMax();
         }
+
+        /// <summary>
+        /// Copies vertical and horionztal measurement data from <paramref name="other"/> frame.
+        /// Does not copy <see cref="Connector"/>.
+        /// </summary>
+        public void CopyExteriorFrom([NotNull]Frame other)
+        {
+            Exterior = other.Exterior;
+            BranchExterior = other.BranchExterior;
+            SiblingsRowV = other.SiblingsRowV;
+        }
     }
 }

@@ -32,7 +32,7 @@
                             ItemsSource="{Binding Children}" />
                         </data:DataTemplateExtensions.Hierarchy>
                         <ContentControl>
-                            <TextBlock Text="{Binding Text}" />
+                            <TextBlock Text="{Binding Text, Mode=OneWay}" />
                         </ContentControl>
                     </DataTemplate>
                 </controls:TreeView.ItemTemplate>

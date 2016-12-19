@@ -47,38 +47,69 @@ namespace Staffer.OrgChart.Misc
             public IList<TreeNode> Children { get; protected set; }
 
             /// <summary>
+            /// Special child used as root for assistants.
+            /// Have to declare it separately to enable re-use of layout algorithms,
+            /// otherwise this would not be possible due to mixing of assistants and regulars into shared collection.
+            /// </summary>
+            [CanBeNull]
+            public TreeNode AssistantsRoot { get; protected set; }
+
+            /// <summary>
             /// Number of children nodes.
             /// </summary>
             public int ChildCount => Children == null ? 0 : Children.Count;
 
             /// <summary>
-            /// Adds a new child to the list. Returns reference to self.
+            /// <c>true</c> if this node is set as <see cref="AssistantsRoot"/> on its <see cref="ParentNode"/>.
             /// </summary>
-            public TreeNode AddChild([NotNull] TreeNode child)
+            public bool IsAssistantRoot => ParentNode?.AssistantsRoot == this;
+
+            /// <summary>
+            /// Adds a new assistant child to the list, under <see cref="AssistantsRoot"/>. 
+            /// Returns reference to self.
+            /// </summary>
+            public TreeNode AddAssistantChild([NotNull] TreeNode child, [NotNull]Func<TValue> rootGen)
             {
-                return InsertChild(ChildCount, child);
+                if (AssistantsRoot == null)
+                {
+                    AssistantsRoot = new TreeNode(rootGen())
+                    {
+                        ParentNode = this,
+                        Level = Level + 1
+                    };
+                }
+                AssistantsRoot.AddRegularChild(child);
+                return this;
             }
 
             /// <summary>
             /// Adds a new child to the list. Returns reference to self.
             /// </summary>
-            public TreeNode AddChild([NotNull] TValue child)
+            public TreeNode AddRegularChild([NotNull] TreeNode child)
             {
-                return InsertChild(ChildCount, child);
+                return InsertRegularChild(ChildCount, child);
             }
 
             /// <summary>
             /// Adds a new child to the list. Returns reference to self.
             /// </summary>
-            public TreeNode InsertChild(int index, [NotNull] TValue child)
+            public TreeNode AddRegularChild([NotNull] TValue child)
             {
-                return InsertChild(index, new TreeNode(child));
+                return InsertRegularChild(ChildCount, child);
             }
 
             /// <summary>
             /// Adds a new child to the list. Returns reference to self.
             /// </summary>
-            public TreeNode InsertChild(int index, [NotNull] TreeNode child)
+            public TreeNode InsertRegularChild(int index, [NotNull] TValue child)
+            {
+                return InsertRegularChild(index, new TreeNode(child));
+            }
+
+            /// <summary>
+            /// Adds a new child to the list. Returns reference to self.
+            /// </summary>
+            public TreeNode InsertRegularChild(int index, [NotNull] TreeNode child)
             {
                 if (Children == null)
                 {
@@ -110,6 +141,14 @@ namespace Staffer.OrgChart.Misc
             /// <returns>True if <paramref name="func"/> never returned <c>false</c></returns>
             public static bool IterateChildFirst([NotNull]TreeNode root, [NotNull] Func<TreeNode, bool> func)
             {
+                if (root.AssistantsRoot != null)
+                {
+                    if (!IterateChildFirst(root.AssistantsRoot, func))
+                    {
+                        return false;
+                    }
+                }
+
                 if (root.Children != null)
                 {
                     foreach (var child in root.Children)
@@ -126,16 +165,21 @@ namespace Staffer.OrgChart.Misc
 
             /// <summary>
             /// Goes through all elements depth-first. Applies <paramref name="func"/> to the parent first, then to all children recursively.
-            /// In this mode, children at each level decide for themselves whether they want to iterate further down, e.g. <paramref name="func"/> can cut-off a branch.
+            /// In this mode, children at each level decide for themselves whether they want to iterate further down, 
+            /// e.g. <paramref name="func"/> can cut-off a branch.
             /// </summary>
             /// <param name="root">Current node</param>
-            /// <param name="func">A func to evaluate on <paramref name="root"/> and its children. Whenever it returns false, iteration stops</param>
-            /// <returns>True if <paramref name="func"/> never returned <c>false</c></returns>
-            public static bool IterateParentFirst([NotNull]TreeNode root, [NotNull] Func<TreeNode, bool> func)
+            /// <param name="func">A predicate to allow iteration of branch under <paramref name="root"/></param>
+            public static bool IterateParentFirst([NotNull]TreeNode root, [NotNull] Predicate<TreeNode> func)
             {
                 if (!func(root))
                 {
                     return false;
+                }
+
+                if (root.AssistantsRoot != null)
+                {
+                    IterateParentFirst(root.AssistantsRoot, func);
                 }
 
                 if (root.Children != null)
@@ -210,11 +254,11 @@ namespace Staffer.OrgChart.Misc
 
         /// <summary>
         /// Goes through all elements depth-first. Applies <paramref name="func"/> to the parent first, then to all children recursively.
-        /// In this mode children at each level decide for themselves whether they want to iterate further down, e.g. <paramref name="func"/> can cut-off a branch.
+        /// In this mode children at each level decide for themselves whether they want to iterate further down, 
+        /// e.g. <paramref name="func"/> can cut-off a branch.
         /// </summary>
-        /// <param name="func">A func to evaluate on items of <see cref="Roots"/> and their children. Whenever it returns false, iteration stops</param>
-        /// <returns>True if <paramref name="func"/> never returned <c>false</c></returns>
-        public bool IterateParentFirst([NotNull] Func<TreeNode, bool> func)
+        /// <param name="func">A predicate to allow iteration of a specific branch</param>
+        public void IterateParentFirst([NotNull] Predicate<TreeNode> func)
         {
             foreach (var root in Roots)
             {
@@ -222,59 +266,6 @@ namespace Staffer.OrgChart.Misc
                 // decide for themselves whether they want to iterate further down.
                 TreeNode.IterateParentFirst(root, func);
             }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Constructs a new tree.
-        /// </summary>
-        /// <param name="source">Source collection of elements, will be iterated only once</param>
-        /// <param name="getKeyFunc">Func to extract key of the element. Key must not be null and must be unique across all elements of <paramref name="source"/></param>
-        /// <param name="getParentKeyFunc">Func to extract parent key of the element</param>
-        public static Tree<TKey, TValue, TValueState> Build([NotNull] IEnumerable<TValue> source, Func<TValue, TKey> getKeyFunc,
-            Func<TValue, TKey> getParentKeyFunc)
-        {
-            var result = new Tree<TKey, TValue, TValueState>(getParentKeyFunc, getKeyFunc);
-
-            // build dictionary of nodes
-            foreach (var item in source)
-            {
-                var key = getKeyFunc(item);
-
-                if (ReferenceEquals(null, key))
-                {
-                    throw new Exception("Null key for an element");
-                }
-
-                if (result.Nodes.ContainsKey(key))
-                {
-                    throw new Exception("Duplicate key: " + key);
-                }
-
-                var node = new TreeNode(item);
-                result.Nodes.Add(getKeyFunc(item), node);
-            }
-
-            // build the tree
-            foreach (var node in result.Nodes.Values)
-            {
-                var parentKey = getParentKeyFunc(node.Element);
-
-                TreeNode parentNode;
-                if (result.Nodes.TryGetValue(parentKey, out parentNode))
-                {
-                    parentNode.AddChild(node);
-                }
-                else
-                {
-                    // In case of data errors, parent key may be not null, but parent node is not there.
-                    // Just add the node to roots.
-                    result.Roots.Add(node);
-                }
-            }
-
-            return result;
         }
 
         /// <summary>

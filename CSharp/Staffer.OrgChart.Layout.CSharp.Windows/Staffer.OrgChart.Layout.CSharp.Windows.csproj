@@ -54,6 +54,9 @@
     <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\BoxContainer.cs">
       <Link>Layout\BoxContainer.cs</Link>
     </Compile>
+    <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\BoxTree.cs">
+      <Link>Layout\BoxTree.cs</Link>
+    </Compile>
     <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\BranchParentAlignment.cs">
       <Link>Layout\BranchParentAlignment.cs</Link>
     </Compile>
@@ -77,6 +80,9 @@
     </Compile>
     <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\Edge.cs">
       <Link>Layout\Edge.cs</Link>
+    </Compile>
+    <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\FishboneAssistantsLayoutStrategy.cs">
+      <Link>Layout\FishboneAssistantsLayoutStrategy.cs</Link>
     </Compile>
     <Compile Include="..\Staffer.OrgChart.CSharp.SharedSource\Layout\Frame.cs">
       <Link>Layout\Frame.cs</Link>

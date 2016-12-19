@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,7 +14,6 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Shapes;
 using Staffer.OrgChart.Annotations;
 using Staffer.OrgChart.Layout;
-using Staffer.OrgChart.Misc;
 using Staffer.OrgChart.Test;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
@@ -50,7 +50,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
             StartLayout(false, true);
         }
 
-        private async void StartLayout(bool resetBoxes, bool resetLayout)
+        private void StartLayout(bool resetBoxes, bool resetLayout)
         {
             // release any existing progress on background layout
             m_progressWaitHandle?.Dispose();
@@ -60,7 +60,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
             if (resetBoxes || m_diagram == null)
             {
                 m_dataSource = new TestDataSource();
-                new TestDataGen().GenerateDataItems((TestDataSource)m_dataSource, 100);
+                new TestDataGen().GenerateDataItems((TestDataSource)m_dataSource, 200);
                 //m_dataSource = new DebugDataSource();
                 //await ((DebugDataSource)m_dataSource).Load();
 
@@ -77,12 +77,16 @@ namespace Staffer.OrgChart.CSharp.Test.App
                     new MultiLineHangerLayoutStrategy {ParentAlignment = BranchParentAlignment.Center});
 
                 m_diagram.LayoutSettings.LayoutStrategies.Add("singlecolumn",
-                    new SingleColumnLayoutStrategy {ParentAlignment = BranchParentAlignment.Right});
+                    new SingleColumnLayoutStrategy {ParentAlignment = BranchParentAlignment.Left});
 
                 m_diagram.LayoutSettings.LayoutStrategies.Add("fishbone",
-                    new MultiLineFishboneLayoutStrategy {ParentAlignment = BranchParentAlignment.Center, MaxGroups = 3});
+                    new MultiLineFishboneLayoutStrategy {ParentAlignment = BranchParentAlignment.Center, MaxGroups = 2});
 
-                m_diagram.LayoutSettings.DefaultLayoutStrategyId = "linear";
+                m_diagram.LayoutSettings.LayoutStrategies.Add("assistants",
+                    new FishboneAssistantsLayoutStrategy { ParentAlignment = BranchParentAlignment.Center });
+
+                m_diagram.LayoutSettings.DefaultLayoutStrategyId = "singlecolumn";
+                m_diagram.LayoutSettings.DefaultAssistantLayoutStrategyId = "assistants";
             }
             else if (resetLayout)
             {
@@ -98,18 +102,13 @@ namespace Staffer.OrgChart.CSharp.Test.App
 
             state.OperationChanged += StateOperationChanged;
 
-            await Task.Factory.StartNew(() =>
-             {
-                 try
-                 {
-                     LayoutAlgorithm.Apply(state);
-                 }
-                 finally
-                 {
-                     m_progressWaitHandle.Dispose();
-                     m_progressWaitHandle = null;
-                 }
-             });
+            Task.Factory.StartNew(() => LayoutAlgorithm.Apply(state))
+                .ContinueWith(
+                    (prev, s) =>
+                    {
+                        m_progressWaitHandle.Dispose();
+                        m_progressWaitHandle = null;
+                    }, null, TaskContinuationOptions.None);
         }
 
         private void ProgressButton_Click(object sender, RoutedEventArgs e)
@@ -137,25 +136,30 @@ namespace Staffer.OrgChart.CSharp.Test.App
 
         #region Layout Event Handlers
 
-        private async void StateOperationChanged(object sender, LayoutStateOperationChangedEventArgs args)
+        private void StateOperationChanged(object sender, LayoutStateOperationChangedEventArgs args)
         {
             if (args.State.CurrentOperation > LayoutState.Operation.Preparing)
             {
-                await Dispatcher.RunAsync(CoreDispatcherPriority.High, () => UpdateListView(m_diagram.VisualTree));
+                Dispatcher.RunAsync(CoreDispatcherPriority.High, () => UpdateListView(m_diagram.VisualTree));
             }
 
             if (args.State.CurrentOperation == LayoutState.Operation.Completed)
             {
-                await Dispatcher.RunAsync(CoreDispatcherPriority.High, () => RenderBoxes(m_diagram.VisualTree, DrawCanvas));
+                Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
+                {
+                    FireListViewPropertyChanged(m_diagram.VisualTree);
+                    RenderBoxes(m_diagram.VisualTree, DrawCanvas);
+                });
             }
         }
 
-        private async void StateBoundaryChanged(object sender, BoundaryChangedEventArgs args)
+        private void StateBoundaryChanged(object sender, BoundaryChangedEventArgs args)
         {
             if (args.State.CurrentOperation > LayoutState.Operation.VerticalLayout && args.State.CurrentOperation < LayoutState.Operation.Completed)
             {
-                await Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
+                Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
                  {
+                     FireListViewPropertyChanged(m_diagram.VisualTree);
                      RenderBoxes(m_diagram.VisualTree, DrawCanvas);
                      RenderCurrentBoundary(args, DrawCanvas);
                  });
@@ -178,8 +182,21 @@ namespace Staffer.OrgChart.CSharp.Test.App
 
         #region Rendering
 
-        private void UpdateListView(Tree<int, Box, NodeLayoutInfo> visualTree)
+        private void UpdateListView(BoxTree visualTree)
         {
+            m_nodesForTreeCollection = new ObservableCollection<NodeViewModel>(visualTree.Roots.Select(x => new NodeViewModel {Node = x}));
+            LvBoxes.ItemsSource = m_nodesForTreeCollection;
+        }
+
+        private void FireListViewPropertyChanged(BoxTree visualTree)
+        {
+            if (m_nodesForTreeCollection != null)
+            {
+                foreach (var item in m_nodesForTreeCollection)
+                {
+                    item.Changed();
+                }
+            }
             m_nodesForTreeCollection = new ObservableCollection<NodeViewModel>(visualTree.Roots.Select(x => new NodeViewModel {Node = x}));
             LvBoxes.ItemsSource = m_nodesForTreeCollection;
         }
@@ -213,7 +230,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
             render(boundary.Right);
         }
 
-        private void RenderBoxes(Tree<int, Box, NodeLayoutInfo> visualTree, Canvas drawCanvas)
+        private void RenderBoxes(BoxTree visualTree, Canvas drawCanvas)
         {
             drawCanvas.Children.Clear();
 
@@ -226,7 +243,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
                 Y = -boundingRect.Top
             };
 
-            Func<Tree<int, Box, NodeLayoutInfo>.TreeNode, bool> renderBox = node =>
+            Func<BoxTree.TreeNode, bool> renderBox = node =>
             {
                 if (node.Level == 0)
                 {
@@ -258,8 +275,15 @@ namespace Staffer.OrgChart.CSharp.Test.App
                         new TranslateTransform {X = frame.Exterior.Left, Y = frame.Exterior.Top},
                     Width = frame.Exterior.Size.Width,
                     Height = frame.Exterior.Size.Height,
-                    Fill = new SolidColorBrush(box.IsSpecial ? Colors.DarkGray : box.IsCollapsed ? Colors.BurlyWood : Colors.Beige) {Opacity = box.IsSpecial ? 0.1 : 1},
-                    Stroke = new SolidColorBrush(box.IsSpecial ? Colors.DarkGray : Colors.Black) { Opacity = box.IsSpecial ? 0.1 : 1 },
+                    Fill = new SolidColorBrush(GetBoxFillColor(box))
+                    {
+                        Opacity = box.IsSpecial ? 0.1 : 1
+                    },
+                    Stroke = new SolidColorBrush(GetBoxStroke(box))
+                    {
+                        Opacity = box.IsSpecial ? 0.1 : 1
+                    },
+                    IsHitTestVisible = !box.IsSpecial,
                     StrokeThickness = 1,
                     DataContext = box
                 };
@@ -281,18 +305,31 @@ namespace Staffer.OrgChart.CSharp.Test.App
 
                 if (!box.IsCollapsed && box.Frame.Connector != null)
                 {
+                    var solidBrush = new SolidColorBrush(Colors.Black);
+                    var nodashes = new DoubleCollection();
+                    var dashes = new DoubleCollection {3, 5};
                     foreach (var edge in box.Frame.Connector.Segments)
                     {
-                        drawCanvas.Children.Add(new Line
+                        var line = new Line
                         {
                             X1 = edge.From.X,
                             Y1 = edge.From.Y,
                             X2 = edge.To.X,
                             Y2 = edge.To.Y,
-                            Stroke = new SolidColorBrush(Colors.Black),
+                            Stroke = solidBrush,
+                            StrokeEndLineCap = PenLineCap.Round,
                             StrokeThickness = 1,
                             IsHitTestVisible = false
-                        });
+                        };
+                        if (box.IsSpecial)
+                        {
+                            var len = Math.Max(Math.Abs(line.X2 - line.X1), Math.Abs(line.Y2 - line.Y1));
+                            if (len > 2)
+                            {
+                                line.StrokeDashArray = new DoubleCollection {2};
+                            }
+                        }
+                        drawCanvas.Children.Add(line);
                     }
                 }
 
@@ -300,6 +337,16 @@ namespace Staffer.OrgChart.CSharp.Test.App
             };
 
             visualTree.IterateChildFirst(renderBox);
+        }
+
+        private static Color GetBoxStroke(Box box)
+        {
+            return box.IsSpecial ? Colors.DarkGray : Colors.Black;
+        }
+
+        private static Color GetBoxFillColor(Box box)
+        {
+            return box.IsSpecial ? Colors.DarkGray : box.IsCollapsed ? Colors.BurlyWood : Colors.Beige;
         }
 
         private string TrimText(string text)

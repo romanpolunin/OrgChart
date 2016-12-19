@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Staffer.OrgChart.Annotations;
-using Staffer.OrgChart.Misc;
 
 namespace Staffer.OrgChart.Layout
 {
@@ -20,7 +19,7 @@ namespace Staffer.OrgChart.Layout
         /// <summary>
         /// A chance for layout strategy to append special auto-generated boxes into the visual tree. 
         /// </summary>
-        public override void PreProcessThisNode([NotNull]LayoutState state, [NotNull] Tree<int, Box, NodeLayoutInfo>.TreeNode node)
+        public override void PreProcessThisNode([NotNull]LayoutState state, [NotNull] BoxTree.TreeNode node)
         {
             if (ParentAlignment != BranchParentAlignment.Center)
             {
@@ -54,20 +53,20 @@ namespace Staffer.OrgChart.Layout
 
                 // a connector from parent to horizontal carrier
                 var parentSpacer = Box.Special(Box.None, node.Element.Id, false);
-                node.AddChild(parentSpacer);
+                node.AddRegularChild(parentSpacer);
 
                 // spacers for vertical carriers 
                 for (var i = 0; i < node.State.NumberOfSiblingColumns; i++)
                 {
                     var verticalSpacer = Box.Special(Box.None, node.Element.Id, false);
-                    node.AddChild(verticalSpacer);
+                    node.AddRegularChild(verticalSpacer);
                 }
 
                 // if needed, horizontal carrier 
                 if (node.State.NumberOfSiblingColumns > 1)
                 {
                     var horizontalSpacer = Box.Special(Box.None, node.Element.Id, false);
-                    node.AddChild(horizontalSpacer);
+                    node.AddRegularChild(horizontalSpacer);
                 }
             }
         }
@@ -75,7 +74,7 @@ namespace Staffer.OrgChart.Layout
         /// <summary>
         /// Applies layout changes to a given box and its children.
         /// </summary>
-        public override void ApplyVerticalLayout([NotNull]LayoutState state, LayoutState.LayoutLevel level)
+        public override void ApplyVerticalLayout([NotNull]LayoutState state, [NotNull]LayoutState.LayoutLevel level)
         {
             if (level.BranchRoot.State.NumberOfSiblings <= MaxGroups * 2)
             {
@@ -89,6 +88,13 @@ namespace Staffer.OrgChart.Layout
                 node.Element.Frame.SiblingsRowV = new Dimensions(node.Element.Frame.Exterior.Top, node.Element.Frame.Exterior.Bottom);
             }
 
+            if (node.AssistantsRoot != null)
+            {
+                // assistants root has to be initialized with main node's exterior 
+                node.AssistantsRoot.Element.Frame.CopyExteriorFrom(node.Element.Frame);
+                LayoutAlgorithm.VerticalLayout(state, node.AssistantsRoot);
+            }
+
             var adapter = new SingleFishboneLayoutAdapter(node);
             while (adapter.NextGroup())
             {   
@@ -99,7 +105,7 @@ namespace Staffer.OrgChart.Layout
         /// <summary>
         /// Applies layout changes to a given box and its children.
         /// </summary>
-        public override void ApplyHorizontalLayout([NotNull]LayoutState state, LayoutState.LayoutLevel level)
+        public override void ApplyHorizontalLayout([NotNull]LayoutState state, [NotNull]LayoutState.LayoutLevel level)
         {
             if (level.BranchRoot.State.NumberOfSiblings <= MaxGroups * 2)
             {
@@ -111,6 +117,11 @@ namespace Staffer.OrgChart.Layout
             if (node.Level == 0)
             {
                 node.Element.Frame.SiblingsRowV = new Dimensions(node.Element.Frame.Exterior.Top, node.Element.Frame.Exterior.Bottom);
+            }
+
+            if (node.AssistantsRoot != null)
+            {
+                LayoutAlgorithm.HorizontalLayout(state, node.AssistantsRoot);
             }
 
             var adapter = new SingleFishboneLayoutAdapter(node);
@@ -182,7 +193,7 @@ namespace Staffer.OrgChart.Layout
         /// <summary>
         /// Allocates and routes connectors.
         /// </summary>
-        public override void RouteConnectors([NotNull] LayoutState state, [NotNull] Tree<int, Box, NodeLayoutInfo>.TreeNode node)
+        public override void RouteConnectors([NotNull] LayoutState state, [NotNull] BoxTree.TreeNode node)
         {
             if (node.State.NumberOfSiblings <= MaxGroups * 2)
             {
@@ -323,7 +334,7 @@ namespace Staffer.OrgChart.Layout
                 }
             }
 
-            public class TreeNodeView : Tree<int, Box, NodeLayoutInfo>.TreeNode
+            public class TreeNodeView : BoxTree.TreeNode
             {
                 public TreeNodeView([NotNull] Box element) : base(element)
                 {
@@ -333,7 +344,7 @@ namespace Staffer.OrgChart.Layout
                 {
                     if (Children == null)
                     {
-                        Children = new List<Tree<int, Box, NodeLayoutInfo>.TreeNode>(capacity);
+                        Children = new List<BoxTree.TreeNode>(capacity);
                     }
                     else
                     {
@@ -341,17 +352,17 @@ namespace Staffer.OrgChart.Layout
                     }
                 }
 
-                public void AddChildView(Tree<int, Box, NodeLayoutInfo>.TreeNode node)
+                public void AddChildView(BoxTree.TreeNode node)
                 {
                     Children.Add(node);
                 }
             }
 
-            public readonly Tree<int, Box, NodeLayoutInfo>.TreeNode RealRoot;
+            public readonly BoxTree.TreeNode RealRoot;
             public readonly TreeNodeView SpecialRoot;
             public readonly GroupIterator Iterator;
 
-            public SingleFishboneLayoutAdapter([NotNull]Tree<int, Box, NodeLayoutInfo>.TreeNode realRoot)
+            public SingleFishboneLayoutAdapter([NotNull]BoxTree.TreeNode realRoot)
             {
                 Iterator = new GroupIterator(realRoot.State.NumberOfSiblings, realRoot.State.NumberOfSiblingColumns);
 
@@ -389,21 +400,20 @@ namespace Staffer.OrgChart.Layout
                 var spacer = RealRoot.Children[RealRoot.State.NumberOfSiblings + 1 + Iterator.Group];
                 SpecialRoot.AddChildView(spacer);
 
-                SpecialRoot.Element.Frame.Exterior = RealRoot.Element.Frame.Exterior;
-                SpecialRoot.Element.Frame.BranchExterior = RealRoot.Element.Frame.Exterior;
-                SpecialRoot.Element.Frame.SiblingsRowV = RealRoot.Element.Frame.SiblingsRowV;
-
+                SpecialRoot.Element.Frame.CopyExteriorFrom(RealRoot.Element.Frame);
                 return true;
             }
 
-            public override void PreProcessThisNode(LayoutState state, Tree<int, Box, NodeLayoutInfo>.TreeNode node)
+            public override void PreProcessThisNode(LayoutState state, BoxTree.TreeNode node)
             {
                 throw new NotSupportedException();
             }
 
-            public override void ApplyVerticalLayout(LayoutState state, LayoutState.LayoutLevel level)
+            public override void ApplyVerticalLayout(LayoutState state, [NotNull]LayoutState.LayoutLevel level)
             {
-                var prevRowBottom = SpecialRoot.Element.Frame.SiblingsRowV.To;
+                var prevRowBottom = RealRoot.AssistantsRoot == null
+                    ? SpecialRoot.Element.Frame.SiblingsRowV.To
+                    : RealRoot.AssistantsRoot.Element.Frame.BranchExterior.Bottom;
                 
                 for (var i = 0; i < Iterator.MaxOnLeft; i++)
                 {
@@ -446,7 +456,7 @@ namespace Staffer.OrgChart.Layout
                 }
             }
 
-            public override void ApplyHorizontalLayout(LayoutState state, LayoutState.LayoutLevel level)
+            public override void ApplyHorizontalLayout(LayoutState state, [NotNull]LayoutState.LayoutLevel level)
             {
                 if (level.BranchRoot != SpecialRoot)
                 {
@@ -474,7 +484,7 @@ namespace Staffer.OrgChart.Layout
                             countOnThisSide = 0;
 
                             var rightmost = double.MinValue;
-                            for (var k = 0; k < i; k++)
+                            for (var k = 0; k <= i; k++)
                             {
                                 rightmost = Math.Max(rightmost, SpecialRoot.Children[k].Element.Frame.BranchExterior.Right);
                             }
@@ -518,7 +528,7 @@ namespace Staffer.OrgChart.Layout
                 }
             }
 
-            private IEnumerable<Tree<int, Box, NodeLayoutInfo>.TreeNode> EnumerateSiblings(int from, int to)
+            private IEnumerable<BoxTree.TreeNode> EnumerateSiblings(int from, int to)
             {
                 for (var i = from; i < to; i++)
                 {
@@ -526,7 +536,7 @@ namespace Staffer.OrgChart.Layout
                 }
             }
 
-            public override void RouteConnectors(LayoutState state, Tree<int, Box, NodeLayoutInfo>.TreeNode node)
+            public override void RouteConnectors(LayoutState state, BoxTree.TreeNode node)
             {
                 throw new NotSupportedException();
             }
