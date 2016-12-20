@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Windows.Devices.AllJoyn;
 using Windows.Storage;
 using Newtonsoft.Json.Linq;
 using Staffer.OrgChart.Layout;
@@ -40,6 +41,27 @@ namespace Staffer.OrgChart.CSharp.Test.App
         public Func<string, IChartDataItem> GetDataItemFunc
         {
             get { return x => Parsed[x]; }
+        }
+
+        public async Task ApplyState(BoxContainer boxContainer)
+        {
+            var text = await FileIO.ReadTextAsync(await StorageFile.GetFileFromPathAsync(
+                @"C:\Users\poluninr\Videos\Data2.json"));
+            var data = JObject.Parse(text);
+
+            foreach (JProperty prop in ((JObject)data["entries"]).Properties())
+            {
+                var rec = ((JArray)prop.Value)[0];
+                var dataId = rec["value"]["dataId"].ToString();
+                if (!string.IsNullOrEmpty(dataId))
+                {
+                    var idvalue = rec["value"]["layoutStrategyId"];
+                    if (idvalue != null)
+                    {
+                        boxContainer.BoxesByDataId[dataId].LayoutStrategyId = idvalue.ToString();
+                    }
+                }
+            }
         }
     }
 }

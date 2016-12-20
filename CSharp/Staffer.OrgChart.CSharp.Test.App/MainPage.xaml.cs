@@ -50,7 +50,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
             StartLayout(false, true);
         }
 
-        private void StartLayout(bool resetBoxes, bool resetLayout)
+        private async void StartLayout(bool resetBoxes, bool resetLayout)
         {
             // release any existing progress on background layout
             m_progressWaitHandle?.Dispose();
@@ -67,25 +67,28 @@ namespace Staffer.OrgChart.CSharp.Test.App
                 var boxContainer = new BoxContainer(m_dataSource);
 
                 TestDataGen.GenerateBoxSizes(boxContainer);
+                //await ((DebugDataSource)m_dataSource).ApplyState(boxContainer);
 
                 m_diagram = new Diagram {Boxes = boxContainer};
 
                 m_diagram.LayoutSettings.LayoutStrategies.Add("linear",
                     new LinearLayoutStrategy {ParentAlignment = BranchParentAlignment.Center});
 
-                m_diagram.LayoutSettings.LayoutStrategies.Add("multiline",
+                m_diagram.LayoutSettings.LayoutStrategies.Add("hanger",
                     new MultiLineHangerLayoutStrategy {ParentAlignment = BranchParentAlignment.Center});
 
-                m_diagram.LayoutSettings.LayoutStrategies.Add("singlecolumn",
+                m_diagram.LayoutSettings.LayoutStrategies.Add("singleColumn",
                     new SingleColumnLayoutStrategy {ParentAlignment = BranchParentAlignment.Left});
 
-                m_diagram.LayoutSettings.LayoutStrategies.Add("fishbone",
+                m_diagram.LayoutSettings.LayoutStrategies.Add("fishbone1",
+                    new MultiLineFishboneLayoutStrategy {ParentAlignment = BranchParentAlignment.Center, MaxGroups = 1});
+                m_diagram.LayoutSettings.LayoutStrategies.Add("fishbone2",
                     new MultiLineFishboneLayoutStrategy {ParentAlignment = BranchParentAlignment.Center, MaxGroups = 2});
 
                 m_diagram.LayoutSettings.LayoutStrategies.Add("assistants",
                     new FishboneAssistantsLayoutStrategy { ParentAlignment = BranchParentAlignment.Center });
 
-                m_diagram.LayoutSettings.DefaultLayoutStrategyId = "singlecolumn";
+                m_diagram.LayoutSettings.DefaultLayoutStrategyId = "hanger";
                 m_diagram.LayoutSettings.DefaultAssistantLayoutStrategyId = "assistants";
             }
             else if (resetLayout)

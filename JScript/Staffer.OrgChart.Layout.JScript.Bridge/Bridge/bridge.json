@@ -3,7 +3,7 @@
   "preserveMemberCase": false,
   "cleanOutputFolderBeforeBuild": true,
   "outputBy": "module",
-  "fileNameCasing":  "Lowercase"    
+  "fileNameCasing": "Lowercase"
 
   // Uncomment to add TypeScript Definition file (.d.ts) generation to your project.
   // , "generateTypeScript": true

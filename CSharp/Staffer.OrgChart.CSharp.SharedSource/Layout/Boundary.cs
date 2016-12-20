@@ -385,7 +385,7 @@ namespace Staffer.OrgChart.Layout
         {
             for (var i = 1; i < Left.Count; i++)
             {
-                if (Left[i].Top < Left[i - 1].Bottom || Left[i].Top <= Left[i - 1].Top || Left[i].Bottom <= Left[i].Top || Left[i].Bottom <= Left[i - 1].Bottom)
+                if (Left[i].Top == Left[i].Bottom || Left[i].Top < Left[i - 1].Bottom || Left[i].Top <= Left[i - 1].Top || Left[i].Bottom <= Left[i].Top || Left[i].Bottom <= Left[i - 1].Bottom)
                 {
                     throw new Exception("State error at Left index " + i);
                 }
@@ -393,7 +393,7 @@ namespace Staffer.OrgChart.Layout
 
             for (var i = 1; i < Right.Count; i++)
             {
-                if (Right[i].Top < Right[i - 1].Bottom || Right[i].Top <= Right[i - 1].Top || Right[i].Bottom <= Right[i].Top ||
+                if (Right[i].Top == Right[i].Bottom || Right[i].Top < Right[i - 1].Bottom || Right[i].Top <= Right[i - 1].Top || Right[i].Bottom <= Right[i].Top ||
                     Right[i].Bottom <= Right[i - 1].Bottom)
                 {
                     throw new Exception("State error at Right index " + i);

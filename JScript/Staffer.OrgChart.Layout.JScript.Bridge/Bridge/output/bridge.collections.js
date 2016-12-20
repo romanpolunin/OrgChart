@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @version 1.3.3
  * @author Object.NET, Inc.
  * @copyright Copyright 2008-2016 Object.NET, Inc.

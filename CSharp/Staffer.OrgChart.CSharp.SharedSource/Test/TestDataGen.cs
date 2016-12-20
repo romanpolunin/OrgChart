@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Staffer.OrgChart.Annotations;
 using Staffer.OrgChart.Layout;
 
@@ -86,12 +87,15 @@ namespace Staffer.OrgChart.Test
             const int widthVariation = 50;
             const int heightVariation = 50;
 
-            var random = new Random(0);
+            var seed = 0;//Environment.TickCount;
+            Debug.WriteLine(seed.ToString());
+            var random = new Random(seed);
             foreach (var box in boxContainer.BoxesById.Values)
             {
-                box.Frame.Exterior = box.IsSpecial
-                    ? new Rect(new Size(minWidth, minHeight))
-                    : new Rect(new Size(minWidth + random.Next(widthVariation), minHeight + random.Next(heightVariation)));
+                if (!box.IsSpecial)
+                {
+                    box.Frame.Exterior = new Rect(new Size(minWidth + random.Next(widthVariation), minHeight + random.Next(heightVariation)));
+                }
             }
         }
     }
