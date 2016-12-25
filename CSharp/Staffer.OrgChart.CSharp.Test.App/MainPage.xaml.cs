@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -34,6 +34,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
         private IChartDataSource m_dataSource;
         private Diagram m_diagram;
         private ObservableCollection<NodeViewModel> m_nodesForTreeCollection;
+        private Stopwatch m_timer;
 
         private void StartWithFullReset_Click(object sender, RoutedEventArgs e)
         {
@@ -105,7 +106,13 @@ namespace Staffer.OrgChart.CSharp.Test.App
 
             state.OperationChanged += StateOperationChanged;
 
-            Task.Factory.StartNew(() => LayoutAlgorithm.Apply(state))
+            Task.Factory.StartNew(() =>
+                {
+                    m_timer = Stopwatch.StartNew();
+                    LayoutAlgorithm.Apply(state);
+                    m_timer.Stop();
+                    Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => { TextLayoutTimeElapsed.Text = m_timer.Elapsed.ToString(); });
+                })
                 .ContinueWith(
                     (prev, s) =>
                     {
