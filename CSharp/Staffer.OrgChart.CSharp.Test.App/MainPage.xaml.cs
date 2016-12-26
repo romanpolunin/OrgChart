@@ -38,21 +38,18 @@ namespace Staffer.OrgChart.CSharp.Test.App
 
         private void StartWithFullReset_Click(object sender, RoutedEventArgs e)
         {
-            StartLayout(true, true);
+            StartLayout(true);
         }
-
-        public void StartCurrent_Click(object sender, RoutedEventArgs e)
-        {
-            StartLayout(false, false);
-        }
-
+        
         public void StartWithCleanLayout_Click(object sender, RoutedEventArgs e)
         {
-            StartLayout(false, true);
+            StartLayout(false);
         }
 
-        private async void StartLayout(bool resetBoxes, bool resetLayout)
+        private void StartLayout(bool resetBoxes)
         {
+            TextLayoutTimeElapsed.Text = string.Empty;
+
             // release any existing progress on background layout
             m_progressWaitHandle?.Dispose();
             m_progressWaitHandle = new AutoResetEvent(true);
@@ -92,10 +89,6 @@ namespace Staffer.OrgChart.CSharp.Test.App
                 m_diagram.LayoutSettings.DefaultLayoutStrategyId = "hanger";
                 m_diagram.LayoutSettings.DefaultAssistantLayoutStrategyId = "assistants";
             }
-            else if (resetLayout)
-            {
-                LayoutAlgorithm.ResetBoxPositions(m_diagram);
-            }
 
             var state = new LayoutState(m_diagram);
             
@@ -129,7 +122,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
         private void QuickLayout()
         {
             var state = new LayoutState(m_diagram);
-            state.BoxSizeFunc = dataId => m_diagram.Boxes.BoxesByDataId[dataId].Frame.Exterior.Size;
+            state.BoxSizeFunc = dataId => m_diagram.Boxes.BoxesByDataId[dataId].Size;
 
             LayoutAlgorithm.Apply(state);
 
@@ -266,14 +259,14 @@ namespace Staffer.OrgChart.CSharp.Test.App
                     return true;
                 }
 
-                var frame = box.Frame;
+                var frame = node.State.Frame;
 
                 var branchFrameRectangle = new Rectangle
                 {
                     RenderTransform =
-                        new TranslateTransform {X = node.Element.Frame.BranchExterior.Left, Y = node.Element.Frame.BranchExterior.Top},
-                    Width = node.Element.Frame.BranchExterior.Size.Width,
-                    Height = node.Element.Frame.BranchExterior.Size.Height,
+                        new TranslateTransform {X = node.State.Frame.BranchExterior.Left, Y = node.State.Frame.BranchExterior.Top},
+                    Width = node.State.Frame.BranchExterior.Size.Width,
+                    Height = node.State.Frame.BranchExterior.Size.Height,
                     Stroke = new SolidColorBrush(Colors.Blue) { Opacity = 0.6 },
                     StrokeThickness = 0.5,
                     DataContext = box
@@ -313,12 +306,12 @@ namespace Staffer.OrgChart.CSharp.Test.App
                     IsHitTestVisible = false
                 });
 
-                if (!box.IsCollapsed && box.Frame.Connector != null)
+                if (!box.IsCollapsed && node.State.Frame.Connector != null)
                 {
                     var solidBrush = new SolidColorBrush(Colors.Black);
                     var nodashes = new DoubleCollection();
                     var dashes = new DoubleCollection {3, 5};
-                    foreach (var edge in box.Frame.Connector.Segments)
+                    foreach (var edge in node.State.Frame.Connector.Segments)
                     {
                         var line = new Line
                         {

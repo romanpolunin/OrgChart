@@ -13,6 +13,7 @@ namespace Staffer.OrgChart.Layout
         public BranchParentAlignment ParentAlignment;
 
         /// <summary>
+        /// 
         /// Minimum distance between a parent box and any child box.
         /// </summary>
         public double ParentChildSpacing = 20;

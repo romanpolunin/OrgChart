@@ -163,11 +163,11 @@ namespace Staffer.OrgChart.Layout
             switch (CurrentOperation)
             {
                 case Operation.VerticalLayout:
-                    boundary.Prepare(node.Element);
+                    boundary.Prepare(node);
                     break;
 
                 case Operation.HorizontalLayout:
-                    boundary.PrepareForHorizontalLayout(node.Element);
+                    boundary.PrepareForHorizontalLayout(node);
                     break;
                 default:
                     throw new InvalidOperationException("This operation can only be invoked when performing vertical or horizontal layouts");
@@ -184,7 +184,7 @@ namespace Staffer.OrgChart.Layout
         /// <summary>
         /// Merges a provided spacer box into the current branch boundary.
         /// </summary>
-        public void MergeSpacer([NotNull]Box spacerBox)
+        public void MergeSpacer([NotNull]BoxTree.TreeNode spacer)
         {
             if (CurrentOperation != Operation.HorizontalLayout)
             {
@@ -197,7 +197,7 @@ namespace Staffer.OrgChart.Layout
             }
 
             var level = m_layoutStack.Peek();
-            level.Boundary.MergeFrom(spacerBox);
+            level.Boundary.MergeFrom(spacer);
 
             BoundaryChanged?.Invoke(this, new BoundaryChangedEventArgs(level.Boundary, level, this));
         }
@@ -221,7 +221,7 @@ namespace Staffer.OrgChart.Layout
                 {
                     case Operation.VerticalLayout:
                         higherLevel.Boundary.VerticalMergeFrom(innerLevel.Boundary);
-                        higherLevel.BranchRoot.Element.Frame.BranchExterior = higherLevel.Boundary.BoundingRect;
+                        higherLevel.BranchRoot.State.Frame.BranchExterior = higherLevel.Boundary.BoundingRect;
                         break;
 
                     case Operation.HorizontalLayout:
@@ -245,11 +245,11 @@ namespace Staffer.OrgChart.Layout
                         // Do not update branch vertical measurements from the boundary, because boundary adds children one-by-one.
                         // If we take it from boundary, then branch vertical measurement will be incorrect until all children are laid out horizontally,
                         // and this temporarily incorrect state will break algorithms they need to know combined branch height.
-                        higherLevel.BranchRoot.Element.Frame.BranchExterior = new Rect(
+                        higherLevel.BranchRoot.State.Frame.BranchExterior = new Rect(
                             higherLevel.Boundary.BoundingRect.Left,
-                            higherLevel.BranchRoot.Element.Frame.BranchExterior.Top,
+                            higherLevel.BranchRoot.State.Frame.BranchExterior.Top,
                             higherLevel.Boundary.BoundingRect.Size.Width,
-                            higherLevel.BranchRoot.Element.Frame.BranchExterior.Size.Height);
+                            higherLevel.BranchRoot.State.Frame.BranchExterior.Size.Height);
                     }
                         break;
                     default:

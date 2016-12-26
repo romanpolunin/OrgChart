@@ -79,7 +79,7 @@ namespace Staffer.OrgChart.Layout
         /// <summary>
         /// Creates a new <see cref="Box"/> and adds it to collection.
         /// </summary>
-        /// <returns>Newly created Box object</returns>
+        /// <returns>Newly created Node object</returns>
         public Box AddBox([CanBeNull]string dataId, int visualParentId, bool isAssistant)
         {
             return AddBox(dataId, NextBoxId(), visualParentId, isAssistant);

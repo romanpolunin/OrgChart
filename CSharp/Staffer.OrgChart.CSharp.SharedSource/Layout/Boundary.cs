@@ -15,14 +15,14 @@ namespace Staffer.OrgChart.Layout
         /// Each individual element in <see cref="Left"/> and <see cref="Right"/> collections
         /// represents one step of the boundary.
         /// </summary>
-        [DebuggerDisplay("{X}, {Top} - {Bottom}, {Box.Id}")]
+        [DebuggerDisplay("{X}, {Top} - {Bottom}, {Node.Element.Id}")]
         public struct Step
         {
             /// <summary>
-            /// Which <see cref="Box"/> holds this edge.
+            /// Which <see cref="Node"/> holds this edge.
             /// </summary>
             [NotNull]
-            public readonly Box Box;
+            public readonly BoxTree.TreeNode Node;
             /// <summary>
             /// Horizontal position of the edge.
             /// </summary>
@@ -39,9 +39,9 @@ namespace Staffer.OrgChart.Layout
             /// <summary>
             /// Ctr.
             /// </summary>
-            public Step([NotNull]Box box, double x, double top, double bottom)
+            public Step([NotNull]BoxTree.TreeNode node, double x, double top, double bottom)
             {
-                Box = box;
+                Node = node;
                 X = x;
                 Top = top;
                 Bottom = bottom;
@@ -52,7 +52,7 @@ namespace Staffer.OrgChart.Layout
             /// </summary>
             public Step ChangeTop(double newTop)
             {
-                return new Step(Box, X, newTop, Bottom);
+                return new Step(Node, X, newTop, Bottom);
             }
 
             /// <summary>
@@ -60,15 +60,23 @@ namespace Staffer.OrgChart.Layout
             /// </summary>
             public Step ChangeBottom(double newBottom)
             {
-                return new Step(Box, X, Top, newBottom);
+                return new Step(Node, X, Top, newBottom);
             }
 
             /// <summary>
-            /// Returns a new <see cref="Step"/> whose <see cref="Box"/> property was set to <paramref name="newBox"/> and <see cref="X"/> to <paramref name="newX"/>.
+            /// Returns a new <see cref="Step"/> whose <see cref="Node"/> property was set to <paramref name="newNode"/> and <see cref="X"/> to <paramref name="newX"/>.
             /// </summary>
-            public Step ChangeBox([NotNull]Box newBox, double newX)
+            public Step ChangeOwner([NotNull]BoxTree.TreeNode newNode, double newX)
             {
-                return new Step(newBox, newX, Top, Bottom);
+                return new Step(newNode, newX, Top, Bottom);
+            }
+
+            /// <summary>
+            /// Returns a new <see cref="Step"/> whose <see cref="X"/> was set to <paramref name="newX"/>.
+            /// </summary>
+            public Step ChangeX(double newX)
+            {
+                return new Step(Node, newX, Top, Bottom);
             }
         }
 
@@ -127,32 +135,32 @@ namespace Staffer.OrgChart.Layout
         /// <summary>
         /// Resets the edges, use when re-using this object from pool.
         /// </summary>
-        public void PrepareForHorizontalLayout([NotNull]Box box)
+        public void PrepareForHorizontalLayout([NotNull]BoxTree.TreeNode node)
         {
-            Prepare(box);
+            Prepare(node);
 
-            if (box.DisableCollisionDetection)
+            if (node.Element.DisableCollisionDetection)
             {
                 return;
             }
 
-            var rect = box.Frame.Exterior;
+            var rect = node.State.Frame.Exterior;
 
-            var margin = box.IsSpecial ? 0 : VerticalMargin;
-            Left.Add(new Step(box, rect.Left, rect.Top - margin, rect.Bottom + margin));
-            Right.Add(new Step(box, rect.Right, rect.Top - margin, rect.Bottom + margin));
+            var margin = node.Element.IsSpecial ? 0 : VerticalMargin;
+            Left.Add(new Step(node, rect.Left, rect.Top - margin, rect.Bottom + margin));
+            Right.Add(new Step(node, rect.Right, rect.Top - margin, rect.Bottom + margin));
         }
 
         /// <summary>
         /// Resets the edges, use when re-using this object from pool.
         /// </summary>
-        public void Prepare([NotNull]Box box)
+        public void Prepare([NotNull]BoxTree.TreeNode node)
         {
             Left.Clear();
             Right.Clear();
 
             // adjust the top edge to fit the logical grid
-            BoundingRect = box.Frame.Exterior;
+            BoundingRect = node.State.Frame.Exterior;
         }
 
         /// <summary>
@@ -227,7 +235,7 @@ namespace Staffer.OrgChart.Layout
                             // my: ***
                             if (theirWins)
                             {
-                                mySteps[i] = my.ChangeBox(th.Box, th.X); // replace my with a piece of theirs
+                                mySteps[i] = my.ChangeOwner(th.Node, th.X); // replace my with a piece of theirs
                             }
                             theirSteps[k] = th.ChangeTop(my.Bottom); // push their top down
                             i++;
@@ -298,7 +306,7 @@ namespace Staffer.OrgChart.Layout
                         if (theirWins)
                         {
                             mySteps[i] = my.ChangeBottom(th.Top); // contract myself to their top
-                            mySteps.Insert(i + 1, new Step(th.Box, th.X, th.Top, my.Bottom)); // insert a piece of theirs after my
+                            mySteps.Insert(i + 1, new Step(th.Node, th.X, th.Top, my.Bottom)); // insert a piece of theirs after my
                             i++;
                         }
                         theirSteps[k] = th.ChangeTop(my.Bottom); // push theirs down
@@ -404,21 +412,19 @@ namespace Staffer.OrgChart.Layout
         /// <summary>
         /// Merges a box into this one, potentially pushing its edges out.
         /// </summary>
-        public void MergeFrom([NotNull]Box box)
+        public void MergeFrom([NotNull]BoxTree.TreeNode node)
         {
-            if (box.DisableCollisionDetection)
+            if (node.Element.DisableCollisionDetection)
             {
                 return;
             }
 
-            var rect = box.Frame.Exterior;
-
-            if (rect.Size.Height == 0)
+            if (node.State.Frame.Exterior.Size.Height == 0)
             {
                 return;
             }
 
-            m_spacerMerger.PrepareForHorizontalLayout(box);
+            m_spacerMerger.PrepareForHorizontalLayout(node);
             MergeFrom(m_spacerMerger);
         }
 
@@ -444,12 +450,12 @@ namespace Staffer.OrgChart.Layout
                 }
                 else
                 {
-                    if (!my.Box.DisableCollisionDetection && !th.Box.DisableCollisionDetection)
+                    if (!my.Node.Element.DisableCollisionDetection && !th.Node.Element.DisableCollisionDetection)
                     {
                         var desiredSpacing =
-                            my.Box.IsSpecial || th.Box.IsSpecial
+                            my.Node.Element.IsSpecial || th.Node.Element.IsSpecial
                             ? 0 // when dealing with spacers, no need for additional cushion around them
-                            : my.Box.ParentId == th.Box.ParentId
+                            : my.Node.Element.ParentId == th.Node.Element.ParentId
                                 ? siblingSpacing // two siblings kicking each other
                                 : branchSpacing; // these are two different branches
 
@@ -484,21 +490,21 @@ namespace Staffer.OrgChart.Layout
             for (var i = 0; i < Left.Count; i++)
             {
                 var left = Left[i];
-                var rect = left.Box.Frame.Exterior;
-                Left[i] = left.ChangeBox(left.Box, rect.Left);
-                leftmost = Math.Min(leftmost, rect.Left);
+                var newLeft = left.Node.State.Frame.Exterior.Left;
+                Left[i] = left.ChangeX(newLeft);
+                leftmost = Math.Min(leftmost, newLeft);
             }
 
             for (var i = 0; i < Right.Count; i++)
             {
                 var right = Right[i];
-                var rect = right.Box.Frame.Exterior;
-                Right[i] = right.ChangeBox(right.Box, rect.Right);
-                rightmost = Math.Max(rightmost, rect.Right);
+                var newRight = right.Node.State.Frame.Exterior.Right;
+                Right[i] = right.ChangeX(newRight);
+                rightmost = Math.Max(rightmost, newRight);
             }
 
-            leftmost = Math.Min(branchRoot.Element.Frame.Exterior.Left, leftmost);
-            rightmost = Math.Max(branchRoot.Element.Frame.Exterior.Right, rightmost);
+            leftmost = Math.Min(branchRoot.State.Frame.Exterior.Left, leftmost);
+            rightmost = Math.Max(branchRoot.State.Frame.Exterior.Right, rightmost);
 
             BoundingRect = new Rect(new Point(leftmost, BoundingRect.Top),
                 new Size(rightmost - leftmost, BoundingRect.Size.Height));

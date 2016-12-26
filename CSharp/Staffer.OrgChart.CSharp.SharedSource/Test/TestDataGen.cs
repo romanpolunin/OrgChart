@@ -94,7 +94,7 @@ namespace Staffer.OrgChart.Test
             {
                 if (!box.IsSpecial)
                 {
-                    box.Frame.Exterior = new Rect(new Size(minWidth + random.Next(widthVariation), minHeight + random.Next(heightVariation)));
+                    box.Size = new Size(minWidth + random.Next(widthVariation), minHeight + random.Next(heightVariation));
                 }
             }
         }

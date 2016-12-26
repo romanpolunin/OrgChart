@@ -54,6 +54,12 @@ namespace Staffer.OrgChart.Layout
         /// </summary>
         public int NumberOfSiblingColumns;
 
+        /// <summary>
+        /// Bounding box.
+        /// </summary>
+        [NotNull]
+        public readonly Frame Frame = new Frame();
+
         private LayoutStrategyBase m_effectiveLayoutStrategy;
     }
 }

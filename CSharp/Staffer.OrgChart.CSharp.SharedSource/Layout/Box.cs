@@ -67,10 +67,10 @@ namespace Staffer.OrgChart.Layout
         [CanBeNull] public string AssistantLayoutStrategyId;
 
         /// <summary>
-        /// Bounding box.
+        /// Size of this box.
         /// </summary>
-        [NotNull] public readonly Frame Frame;
-
+        public Size Size;
+        
         /// <summary>
         /// When <c>true</c>, layout operations can be applied only to this box.
         /// Its children will not participate in the layout.
@@ -114,7 +114,6 @@ namespace Staffer.OrgChart.Layout
             Id = id;
             ParentId = parentId;
             DataId = dataId;
-            Frame = new Frame();
             IsSpecial = isSpecial;
             IsAssistant = isAssistant;
             AffectsLayout = true;

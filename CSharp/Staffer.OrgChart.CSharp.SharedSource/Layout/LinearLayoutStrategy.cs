@@ -44,13 +44,13 @@ namespace Staffer.OrgChart.Layout
 
             if (node.Level == 0)
             {
-                node.Element.Frame.SiblingsRowV = new Dimensions(node.Element.Frame.Exterior.Top, node.Element.Frame.Exterior.Bottom);
+                node.State.Frame.SiblingsRowV = new Dimensions(node.State.Frame.Exterior.Top, node.State.Frame.Exterior.Bottom);
             }
 
             if (node.AssistantsRoot != null)
             {
                 // assistants root has to be initialized with main node's exterior 
-                node.AssistantsRoot.Element.Frame.CopyExteriorFrom(node.Element.Frame);
+                node.AssistantsRoot.State.Frame.CopyExteriorFrom(node.State.Frame);
                 LayoutAlgorithm.VerticalLayout(state, node.AssistantsRoot);
             }
 
@@ -62,20 +62,20 @@ namespace Staffer.OrgChart.Layout
             var siblingsRowExterior = Dimensions.MinMax();
 
             var top = node.AssistantsRoot == null 
-                ? node.Element.Frame.SiblingsRowV.To + ParentChildSpacing
-                : node.Element.Frame.BranchExterior.Bottom + ParentChildSpacing;
+                ? node.State.Frame.SiblingsRowV.To + ParentChildSpacing
+                : node.State.Frame.BranchExterior.Bottom + ParentChildSpacing;
             
             for (var i = 0; i < node.State.NumberOfSiblings; i++)
             {
                 var child = node.Children[i];
-                var rect = child.Element.Frame.Exterior;
+                var rect = child.State.Frame.Exterior;
                 
-                child.Element.Frame.Exterior = new Rect(
+                child.State.Frame.Exterior = new Rect(
                     rect.Left,
                     top,
                     rect.Size.Width,
                     rect.Size.Height);
-                child.Element.Frame.BranchExterior = child.Element.Frame.Exterior;
+                child.State.Frame.BranchExterior = child.State.Frame.Exterior;
 
                 siblingsRowExterior += new Dimensions(top, top + rect.Size.Height);
             }
@@ -85,7 +85,7 @@ namespace Staffer.OrgChart.Layout
             for (var i = 0; i < node.State.NumberOfSiblings; i++)
             {
                 var child = node.Children[i];
-                child.Element.Frame.SiblingsRowV = siblingsRowExterior;
+                child.State.Frame.SiblingsRowV = siblingsRowExterior;
 
                 // re-enter layout algorithm for child branch
                 LayoutAlgorithm.VerticalLayout(state, child);
@@ -118,37 +118,37 @@ namespace Staffer.OrgChart.Layout
 
             if (node.Level > 0 && node.ChildCount > 0)
             {
-                var rect = node.Element.Frame.Exterior;
-                var leftmost = node.Children[0].Element.Frame.Exterior.CenterH;
-                var rightmost = node.Children[node.State.NumberOfSiblings - 1].Element.Frame.Exterior.CenterH;
+                var rect = node.State.Frame.Exterior;
+                var leftmost = node.Children[0].State.Frame.Exterior.CenterH;
+                var rightmost = node.Children[node.State.NumberOfSiblings - 1].State.Frame.Exterior.CenterH;
                 var desiredCenter = leftmost + (rightmost - leftmost)/2;
                 var center = rect.CenterH;
                 var diff = center - desiredCenter;
                 LayoutAlgorithm.MoveChildrenOnly(state, level, diff);
 
                 // vertical connector from parent 
-                var verticalSpacerBox = node.Children[node.State.NumberOfSiblings].Element;
-                verticalSpacerBox.Frame.Exterior = new Rect(
+                var verticalSpacer = node.Children[node.State.NumberOfSiblings];
+                verticalSpacer.State.Frame.Exterior = new Rect(
                     center - ParentConnectorShield/2,
                     rect.Bottom,
                     ParentConnectorShield,
-                    node.Children[0].Element.Frame.SiblingsRowV.From - rect.Bottom);
-                verticalSpacerBox.Frame.BranchExterior = verticalSpacerBox.Frame.Exterior;
+                    node.Children[0].State.Frame.SiblingsRowV.From - rect.Bottom);
+                verticalSpacer.State.Frame.BranchExterior = verticalSpacer.State.Frame.Exterior;
 
-                state.MergeSpacer(verticalSpacerBox);
+                state.MergeSpacer(verticalSpacer);
 
                 // horizontal protector
-                var firstInRow = node.Children[0].Element.Frame;
+                var firstInRow = node.Children[0].State.Frame;
 
-                var horizontalSpacerBox = node.Children[node.State.NumberOfSiblings + 1].Element;
-                horizontalSpacerBox.Frame.Exterior = new Rect(
+                var horizontalSpacer = node.Children[node.State.NumberOfSiblings + 1];
+                horizontalSpacer.State.Frame.Exterior = new Rect(
                     firstInRow.Exterior.Left,
                     firstInRow.SiblingsRowV.From - ParentChildSpacing,
-                    node.Children[node.State.NumberOfSiblings - 1].Element.Frame.Exterior.Right - firstInRow.Exterior.Left,
+                    node.Children[node.State.NumberOfSiblings - 1].State.Frame.Exterior.Right - firstInRow.Exterior.Left,
                     ParentChildSpacing);
-                horizontalSpacerBox.Frame.BranchExterior = horizontalSpacerBox.Frame.Exterior;
+                horizontalSpacer.State.Frame.BranchExterior = horizontalSpacer.State.Frame.Exterior;
 
-                state.MergeSpacer(horizontalSpacerBox);
+                state.MergeSpacer(horizontalSpacer);
             }
         }
 
@@ -169,13 +169,13 @@ namespace Staffer.OrgChart.Layout
 
             if (count == 0)
             {
-                node.Element.Frame.Connector = null;
+                node.State.Frame.Connector = null;
                 return;
             }
 
             var segments = new Edge[count];
 
-            var rootRect = node.Element.Frame.Exterior;
+            var rootRect = node.State.Frame.Exterior;
             var center = rootRect.CenterH;
 
             if (node.Children == null)
@@ -186,18 +186,18 @@ namespace Staffer.OrgChart.Layout
             if (count == 1)
             {
                 segments[0] = new Edge(new Point(center, rootRect.Bottom),
-                    new Point(center, node.Children[0].Element.Frame.Exterior.Top));
+                    new Point(center, node.Children[0].State.Frame.Exterior.Top));
             }
             else
             {
-                var space = node.Children[0].Element.Frame.SiblingsRowV.From - rootRect.Bottom;
+                var space = node.Children[0].State.Frame.SiblingsRowV.From - rootRect.Bottom;
 
                 segments[0] = new Edge(new Point(center, rootRect.Bottom),
                     new Point(center, rootRect.Bottom + space - ChildConnectorHookLength));
 
                 for (var i = 0; i < normalChildCount; i++)
                 {
-                    var childRect = node.Children[i].Element.Frame.Exterior;
+                    var childRect = node.Children[i].State.Frame.Exterior;
                     var childCenter = childRect.CenterH;
                     segments[1 + i] = new Edge(new Point(childCenter, childRect.Top),
                         new Point(childCenter, childRect.Top - ChildConnectorHookLength));
@@ -208,7 +208,7 @@ namespace Staffer.OrgChart.Layout
                     new Point(segments[count-2].To.X, segments[1].To.Y));
             }
 
-            node.Element.Frame.Connector = new Connector(segments);
+            node.State.Frame.Connector = new Connector(segments);
         }
     }
 }

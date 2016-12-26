@@ -47,45 +47,45 @@ namespace Staffer.OrgChart.Layout
 
             if (node.Level == 0)
             {
-                node.Element.Frame.SiblingsRowV = new Dimensions(node.Element.Frame.Exterior.Top, node.Element.Frame.Exterior.Bottom);
+                node.State.Frame.SiblingsRowV = new Dimensions(node.State.Frame.Exterior.Top, node.State.Frame.Exterior.Bottom);
             }
 
             if (node.AssistantsRoot != null)
             {
                 // assistants root has to be initialized with main node's exterior 
-                node.AssistantsRoot.Element.Frame.CopyExteriorFrom(node.Element.Frame);
+                node.AssistantsRoot.State.Frame.CopyExteriorFrom(node.State.Frame);
                 LayoutAlgorithm.VerticalLayout(state, node.AssistantsRoot);
             }
 
             var prevRowExterior = new Dimensions(
-                node.Element.Frame.SiblingsRowV.From,
+                node.State.Frame.SiblingsRowV.From,
                 node.AssistantsRoot == null
-                ? node.Element.Frame.SiblingsRowV.To
-                : node.Element.Frame.BranchExterior.Bottom);
+                ? node.State.Frame.SiblingsRowV.To
+                : node.State.Frame.BranchExterior.Bottom);
 
             for (var row = 0; row < node.State.NumberOfSiblings; row++)
             {
                 // first, compute
                 var child = node.Children[row];
-                var rect = child.Element.Frame.Exterior;
+                var rect = child.State.Frame.Exterior;
 
                 var top = prevRowExterior.To + ParentChildSpacing;
-                child.Element.Frame.Exterior = new Rect(
+                child.State.Frame.Exterior = new Rect(
                     rect.Left,
                     top,
                     rect.Size.Width,
                     rect.Size.Height);
-                child.Element.Frame.BranchExterior = child.Element.Frame.Exterior;
+                child.State.Frame.BranchExterior = child.State.Frame.Exterior;
 
                 var rowExterior = new Dimensions(top, top + rect.Size.Height);
 
                 child = node.Children[row];
-                child.Element.Frame.SiblingsRowV = rowExterior;
+                child.State.Frame.SiblingsRowV = rowExterior;
 
                 // re-enter layout algorithm for child branch
                 LayoutAlgorithm.VerticalLayout(state, child);
 
-                var childBranchBottom = child.Element.Frame.BranchExterior.Bottom;
+                var childBranchBottom = child.State.Frame.BranchExterior.Bottom;
 
                 prevRowExterior = new Dimensions(rowExterior.From, Math.Max(childBranchBottom, rowExterior.To));
             }
@@ -120,7 +120,7 @@ namespace Staffer.OrgChart.Layout
 
             if (node.Level > 0 && node.ChildCount > 0)
             {
-                var rect = node.Element.Frame.Exterior;
+                var rect = node.State.Frame.Exterior;
                 double diff;
                 if (ParentAlignment == BranchParentAlignment.Left)
                 {
@@ -141,18 +141,18 @@ namespace Staffer.OrgChart.Layout
                 LayoutAlgorithm.MoveChildrenOnly(state, level, diff);
 
                 // spacer for the vertical carrier 
-                var verticalSpacerBox = node.Level > 0 ? node.Children[node.ChildCount - 1].Element : null;
-                if (verticalSpacerBox != null)
+                var verticalSpacer = node.Level > 0 ? node.Children[node.ChildCount - 1] : null;
+                if (verticalSpacer != null)
                 {
-                    var spacerTop = node.Element.Frame.Exterior.Bottom;
-                    var spacerBottom = node.Children[node.ChildCount - 2].Element.Frame.Exterior.Bottom;
-                    verticalSpacerBox.Frame.Exterior = new Rect(
+                    var spacerTop = node.State.Frame.Exterior.Bottom;
+                    var spacerBottom = node.Children[node.ChildCount - 2].State.Frame.Exterior.Bottom;
+                    verticalSpacer.State.Frame.Exterior = new Rect(
                         rect.CenterH - ParentConnectorShield/2,
                         spacerTop,
                         ParentConnectorShield,
                         spacerBottom - spacerTop);
-                    verticalSpacerBox.Frame.BranchExterior = verticalSpacerBox.Frame.Exterior;
-                    state.MergeSpacer(verticalSpacerBox);
+                    verticalSpacer.State.Frame.BranchExterior = verticalSpacer.State.Frame.Exterior;
+                    state.MergeSpacer(verticalSpacer);
                 }
             }
         }
@@ -180,24 +180,24 @@ namespace Staffer.OrgChart.Layout
 
             var segments = new Edge[count];
 
-            var rootRect = node.Element.Frame.Exterior;
+            var rootRect = node.State.Frame.Exterior;
             var center = rootRect.CenterH;
 
-            var verticalCarrierHeight = node.Children[node.State.NumberOfSiblings - 1].Element.Frame.Exterior.CenterV - node.Element.Frame.Exterior.Bottom;
+            var verticalCarrierHeight = node.Children[node.State.NumberOfSiblings - 1].State.Frame.Exterior.CenterV - node.State.Frame.Exterior.Bottom;
 
             // big vertical connector, from parent to last row
             segments[0] = new Edge(new Point(center, rootRect.Bottom), new Point(center, rootRect.Bottom + verticalCarrierHeight));
 
             for (var ix = 0; ix < node.State.NumberOfSiblings; ix++)
             {
-                var rect = node.Children[ix].Element.Frame.Exterior;
+                var rect = node.Children[ix].State.Frame.Exterior;
                 var destination = ParentAlignment == BranchParentAlignment.Left ? rect.Left : rect.Right;
                 segments[1 + ix] = new Edge(
                     new Point(center, rect.CenterV),
                     new Point(destination, rect.CenterV));
             }
 
-            node.Element.Frame.Connector = new Connector(segments);
+            node.State.Frame.Connector = new Connector(segments);
         }
     }
 }
