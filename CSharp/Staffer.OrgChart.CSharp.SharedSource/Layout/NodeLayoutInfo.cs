@@ -55,9 +55,39 @@ namespace Staffer.OrgChart.Layout
         public int NumberOfSiblingColumns;
 
         /// <summary>
-        /// Exterior bounds of this frame.
+        /// Position of corresponding Box.
         /// </summary>
-        public Rect Exterior;
+        public Point TopLeft;
+        /// <summary>
+        /// Size of corresponding Box.
+        /// </summary>
+        public Size Size;
+
+        /// <summary>
+        /// Left edge of the bounding rectangle.
+        /// </summary>
+        public double Left => TopLeft.X;
+        /// <summary>
+        /// Right edge of the bounding rectangle.
+        /// </summary>
+        public double Right => TopLeft.X + Size.Width;
+        /// <summary>
+        /// Top edge of the bounding rectangle.
+        /// </summary>
+        public double Top => TopLeft.Y;
+        /// <summary>
+        /// Bottom edge of the bounding rectangle.
+        /// </summary>
+        public double Bottom => TopLeft.Y + Size.Height;
+        /// <summary>
+        /// Horizontal center.
+        /// </summary>
+        public double CenterH => TopLeft.X + Size.Width / 2;
+
+        /// <summary>
+        /// Vertical center.
+        /// </summary>
+        public double CenterV => TopLeft.Y + Size.Height / 2;
 
         /// <summary>
         /// External boundaries of this branch, updated by <see cref="LayoutAlgorithm"/> 

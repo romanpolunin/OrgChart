@@ -275,9 +275,9 @@ namespace Staffer.OrgChart.CSharp.Test.App
                 var boxRectangle = new Rectangle
                 {
                     RenderTransform =
-                        new TranslateTransform {X = frame.Exterior.Left, Y = frame.Exterior.Top},
-                    Width = frame.Exterior.Size.Width,
-                    Height = frame.Exterior.Size.Height,
+                        new TranslateTransform {X = frame.Left, Y = frame.Top},
+                    Width = frame.Size.Width,
+                    Height = frame.Size.Height,
                     Fill = new SolidColorBrush(GetBoxFillColor(box))
                     {
                         Opacity = box.IsSpecial ? 0.1 : 1
@@ -299,7 +299,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
                 drawCanvas.Children.Add(new TextBlock
                 {
                     RenderTransform =
-                        new TranslateTransform {X = frame.Exterior.Left + 5, Y = frame.Exterior.Top + 5},
+                        new TranslateTransform {X = frame.Left + 5, Y = frame.Top + 5},
                     Width = double.NaN,
                     Height = double.NaN,
                     Text = box.IsSpecial ? "" : TrimText($"{box.Id} ({box.DataId})"),

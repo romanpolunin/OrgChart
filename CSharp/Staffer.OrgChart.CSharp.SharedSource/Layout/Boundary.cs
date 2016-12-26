@@ -144,7 +144,7 @@ namespace Staffer.OrgChart.Layout
                 return;
             }
 
-            var rect = node.State.Exterior;
+            var rect = node.State;
 
             var margin = node.Element.IsSpecial ? 0 : VerticalMargin;
             Left.Add(new Step(node, rect.Left, rect.Top - margin, rect.Bottom + margin));
@@ -160,7 +160,7 @@ namespace Staffer.OrgChart.Layout
             Right.Clear();
 
             // adjust the top edge to fit the logical grid
-            BoundingRect = node.State.Exterior;
+            BoundingRect = new Rect(node.State.TopLeft, node.State.Size);
         }
 
         /// <summary>
@@ -426,7 +426,7 @@ namespace Staffer.OrgChart.Layout
                 return;
             }
 
-            if (node.State.Exterior.Size.Height.IsZero())
+            if (node.State.Size.Height.IsZero())
             {
                 return;
             }
@@ -497,7 +497,7 @@ namespace Staffer.OrgChart.Layout
             for (var i = 0; i < Left.Count; i++)
             {
                 var left = Left[i];
-                var newLeft = left.Node.State.Exterior.Left;
+                var newLeft = left.Node.State.Left;
                 Left[i] = left.ChangeX(newLeft);
                 leftmost = Math.Min(leftmost, newLeft);
             }
@@ -505,13 +505,13 @@ namespace Staffer.OrgChart.Layout
             for (var i = 0; i < Right.Count; i++)
             {
                 var right = Right[i];
-                var newRight = right.Node.State.Exterior.Right;
+                var newRight = right.Node.State.Right;
                 Right[i] = right.ChangeX(newRight);
                 rightmost = Math.Max(rightmost, newRight);
             }
 
-            leftmost = Math.Min(branchRoot.State.Exterior.Left, leftmost);
-            rightmost = Math.Max(branchRoot.State.Exterior.Right, rightmost);
+            leftmost = Math.Min(branchRoot.State.Left, leftmost);
+            rightmost = Math.Max(branchRoot.State.Right, rightmost);
 
             BoundingRect = new Rect(new Point(leftmost, BoundingRect.Top),
                 new Size(rightmost - leftmost, BoundingRect.Size.Height));

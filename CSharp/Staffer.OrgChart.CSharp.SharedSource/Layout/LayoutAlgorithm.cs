@@ -29,12 +29,12 @@ namespace Staffer.OrgChart.Layout
                 {
                     if (initialized)
                     {
-                        result += node.State.Exterior;
+                        result += new Rect(node.State.TopLeft, node.State.Size);
                     }
                     else
                     {
                         initialized = true;
-                        result = node.State.Exterior;
+                        result = new Rect(node.State.TopLeft, node.State.Size);
                     }
                 }
 
@@ -156,7 +156,8 @@ namespace Staffer.OrgChart.Layout
                     }
                 }
 
-                node.State.Exterior = new Rect(new Point(0, 0), node.Element.Size);
+                node.State.TopLeft = new Point(0, 0);
+                node.State.Size = node.Element.Size;
                 node.State.BranchExterior = new Rect(new Point(0, 0), node.Element.Size);
 
                 // now let it pre-allocate special boxes etc
@@ -260,7 +261,7 @@ namespace Staffer.OrgChart.Layout
             {
                 if (node.Element.AffectsLayout)
                 {
-                    node.State.Exterior = node.State.Exterior.MoveH(offset);
+                    node.State.TopLeft = node.State.TopLeft.MoveH(offset);
                     node.State.BranchExterior = node.State.BranchExterior.MoveH(offset);
                 }
                 return true;
@@ -293,7 +294,7 @@ namespace Staffer.OrgChart.Layout
                 {
                     if (node.Element.AffectsLayout)
                     {
-                        node.State.Exterior = node.State.Exterior.MoveH(offset);
+                        node.State.TopLeft = node.State.TopLeft.MoveH(offset);
                         node.State.BranchExterior = node.State.BranchExterior.MoveH(offset);
                     }
                     return true;
@@ -326,7 +327,7 @@ namespace Staffer.OrgChart.Layout
             var center = double.MinValue;
             foreach (var child in subset)
             {
-                var c = child.State.Exterior.CenterH;
+                var c = child.State.CenterH;
                 if (c > center)
                 {
                     center = c;
@@ -339,7 +340,7 @@ namespace Staffer.OrgChart.Layout
             foreach (var child in subset)
             {
                 var frame = child.State;
-                var c = frame.Exterior.CenterH;
+                var c = frame.CenterH;
                 if (!c.IsEqual(center))
                 {
                     var diff = center - c;
@@ -357,12 +358,12 @@ namespace Staffer.OrgChart.Layout
         
         /// <summary>
         /// Resets content to start a fresh layout.
-        /// Does not modify size of the <see cref="NodeLayoutInfo.Exterior"/>.
+        /// Does not modify size of the <see cref="NodeLayoutInfo.TopLeft"/>.
         /// </summary>
         public static void ResetLayout([NotNull]this NodeLayoutInfo state)
         {
-            state.Exterior = new Rect(new Point(), state.Exterior.Size);
-            state.BranchExterior = state.Exterior;
+            state.TopLeft = new Point();
+            state.BranchExterior = new Rect(state.TopLeft, state.Size);
             state.Connector = null;
             state.SiblingsRowV = Dimensions.MinMax();
         }
@@ -373,7 +374,8 @@ namespace Staffer.OrgChart.Layout
         /// </summary>
         public static void CopyExteriorFrom([NotNull]this NodeLayoutInfo state, [NotNull]NodeLayoutInfo other)
         {
-            state.Exterior = other.Exterior;
+            state.TopLeft = other.TopLeft;
+            state.Size = other.Size;
             state.BranchExterior = other.BranchExterior;
             state.SiblingsRowV = other.SiblingsRowV;
         }

@@ -22,6 +22,14 @@
             X = x;
             Y = y;
         }
+
+        /// <summary>
+        /// Returns a point moved by <paramref name="offsetX"/> horizontally.
+        /// </summary>
+        public Point MoveH(double offsetX)
+        {
+            return new Point(X + offsetX, Y);
+        }
     }
 
     /// <summary>
