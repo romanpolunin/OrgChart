@@ -318,7 +318,8 @@ namespace Staffer.OrgChart.Layout
                 {
                     var childRect = child.State.Exterior;
                     var childCenter = childRect.CenterH;
-                    segments[ix++] = new Edge(new Point(childCenter, childRect.Top),
+                    segments[ix++] = new Edge(
+                        new Point(childCenter, childRect.Top),
                         new Point(childCenter, childRect.Top - ChildConnectorHookLength));
                 }
             }

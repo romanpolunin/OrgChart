@@ -212,9 +212,9 @@ namespace Staffer.OrgChart.Layout
 
                     var theirWins = (merge == 'r' && my.X <= th.X) || (merge == 'l' && my.X >= th.X);
 
-                    if (my.Top == th.Top)
+                    if (my.Top.IsEqual(th.Top))
                     {
-                        if (my.Bottom == th.Bottom)
+                        if (my.Bottom.IsEqual(th.Bottom))
                         {
                             // case 1: exactly same length and vertical position
                             // th: ********
@@ -258,7 +258,7 @@ namespace Staffer.OrgChart.Layout
                             ValidateState();
                         }
                     }
-                    else if (my.Bottom == th.Bottom)
+                    else if (my.Bottom.IsEqual(th.Bottom))
                     {
                         if (my.Top < th.Top)
                         {
@@ -393,7 +393,11 @@ namespace Staffer.OrgChart.Layout
         {
             for (var i = 1; i < Left.Count; i++)
             {
-                if (Left[i].Top == Left[i].Bottom || Left[i].Top < Left[i - 1].Bottom || Left[i].Top <= Left[i - 1].Top || Left[i].Bottom <= Left[i].Top || Left[i].Bottom <= Left[i - 1].Bottom)
+                if (Left[i].Top.IsEqual(Left[i].Bottom) 
+                    || Left[i].Top < Left[i - 1].Bottom 
+                    || Left[i].Top <= Left[i - 1].Top 
+                    || Left[i].Bottom <= Left[i].Top 
+                    || Left[i].Bottom <= Left[i - 1].Bottom)
                 {
                     throw new Exception("State error at Left index " + i);
                 }
@@ -401,8 +405,11 @@ namespace Staffer.OrgChart.Layout
 
             for (var i = 1; i < Right.Count; i++)
             {
-                if (Right[i].Top == Right[i].Bottom || Right[i].Top < Right[i - 1].Bottom || Right[i].Top <= Right[i - 1].Top || Right[i].Bottom <= Right[i].Top ||
-                    Right[i].Bottom <= Right[i - 1].Bottom)
+                if (Right[i].Top.IsEqual(Right[i].Bottom) 
+                    || Right[i].Top < Right[i - 1].Bottom 
+                    || Right[i].Top <= Right[i - 1].Top 
+                    || Right[i].Bottom <= Right[i].Top 
+                    || Right[i].Bottom <= Right[i - 1].Bottom)
                 {
                     throw new Exception("State error at Right index " + i);
                 }
@@ -419,7 +426,7 @@ namespace Staffer.OrgChart.Layout
                 return;
             }
 
-            if (node.State.Exterior.Size.Height == 0)
+            if (node.State.Exterior.Size.Height.IsZero())
             {
                 return;
             }

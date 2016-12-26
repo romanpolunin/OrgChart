@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Staffer.OrgChart.Annotations;
 using Staffer.OrgChart.Misc;
 
@@ -317,7 +318,8 @@ namespace Staffer.OrgChart.Layout
         /// Returns leftmost and rightmost boundaries of all branches in the <paramref name="subset"/>, after alignment.
         /// </summary>
         public static Dimensions AlignHorizontalCenters(
-            [NotNull]LayoutState state, [NotNull]LayoutState.LayoutLevel level,
+            [NotNull]LayoutState state, 
+            [NotNull]LayoutState.LayoutLevel level,
             [NotNull]IEnumerable<BoxTree.TreeNode> subset)
         {
             // compute the rightmost center in the column
@@ -338,7 +340,7 @@ namespace Staffer.OrgChart.Layout
             {
                 var frame = child.State;
                 var c = frame.Exterior.CenterH;
-                if (c != center)
+                if (!c.IsEqual(center))
                 {
                     var diff = center - c;
                     MoveOneChild(state, child, diff);
@@ -376,6 +378,40 @@ namespace Staffer.OrgChart.Layout
             state.SiblingsRowV = other.SiblingsRowV;
         }
 
-        
+        /// <summary>
+        /// <c>true</c> if specified <paramref name="value"/> is equal to <see cref="double.MinValue"/>.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsMinValue(this double value)
+        {
+            return value <= double.MinValue + double.Epsilon;
+        }
+
+        /// <summary>
+        /// <c>true</c> if specified <paramref name="value"/> is equal to <see cref="double.MinValue"/>.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsMaxValue(this double value)
+        {
+            return value >= double.MaxValue - double.Epsilon;
+        }
+
+        /// <summary>
+        /// <c>true</c> if specified <paramref name="value"/> is equal to <see cref="double.MinValue"/>.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsZero(this double value)
+        {
+            return value <= double.Epsilon && value >= -double.Epsilon;
+        }
+
+        /// <summary>
+        /// <c>true</c> if specified <paramref name="value"/> is equal to <see cref="double.MinValue"/>.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsEqual(this double value, double other)
+        {
+            return Math.Abs(value - other) <= double.Epsilon;
+        }
     }
 }

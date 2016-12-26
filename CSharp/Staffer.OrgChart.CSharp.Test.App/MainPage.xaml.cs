@@ -208,7 +208,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
         {
             var boundary = args.Boundary;
             var top = boundary.BoundingRect.Top;
-            if (top == double.MinValue)
+            if (top.IsMinValue())
             {
                 return;
             }
