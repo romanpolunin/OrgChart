@@ -5,10 +5,11 @@ using Staffer.OrgChart.Annotations;
 namespace Staffer.OrgChart.Layout
 {
     /// <summary>
-    /// A box in some <see cref="Diagram"/>. Has <see cref="Frame"/> and layout-related config such as <see cref="LayoutStrategyId"/>.
+    /// A box in some <see cref="Diagram"/>. 
+    /// Has <see cref="Size"/> and layout-related config such as <see cref="LayoutStrategyId"/>.
     /// This is a purely visual object, created based on underlying chart's data.
     /// </summary>
-    [DebuggerDisplay("{Id}, {Frame.Exterior.Left}:{Frame.Exterior.Top}, {Frame.Exterior.Size.Width}x{Frame.Exterior.Size.Height}")]
+    [DebuggerDisplay("{Id}, Size.Width}x{Size.Height}")]
     public class Box
     {
         /// <summary>

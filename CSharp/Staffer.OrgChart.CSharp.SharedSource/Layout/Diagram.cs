@@ -3,7 +3,7 @@
 namespace Staffer.OrgChart.Layout
 {
     /// <summary>
-    /// A collection of <see cref="Frame"/> and <see cref="Connector"/> objects.
+    /// A combination of source Boxes, layout setttings and all derived data.
     /// </summary>
     public class Diagram
     {

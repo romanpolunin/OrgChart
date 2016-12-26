@@ -11,7 +11,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
         private ObservableCollection<NodeViewModel> m_children;
         public BoxTree.TreeNode Node { get; set; }
 
-        public string Text => $"{Node.Element.Id}, ({Node.State.Frame.Exterior.Left},{Node.State.Frame.Exterior.Top}), {Node.State.Frame.Exterior.Size.Width}x{Node.State.Frame.Exterior.Size.Height}";
+        public string Text => $"{Node.Element.Id}, ({Node.State.Exterior.Left},{Node.State.Exterior.Top}), {Node.State.Exterior.Size.Width}x{Node.State.Exterior.Size.Height}";
 
         public ObservableCollection<NodeViewModel> Children {
             get

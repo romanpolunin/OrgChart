@@ -28,12 +28,12 @@ namespace Staffer.OrgChart.Layout
                 {
                     if (initialized)
                     {
-                        result += node.State.Frame.Exterior;
+                        result += node.State.Exterior;
                     }
                     else
                     {
                         initialized = true;
-                        result = node.State.Frame.Exterior;
+                        result = node.State.Exterior;
                     }
                 }
 
@@ -155,8 +155,8 @@ namespace Staffer.OrgChart.Layout
                     }
                 }
 
-                node.State.Frame.Exterior = new Rect(new Point(0, 0), node.Element.Size);
-                node.State.Frame.BranchExterior = new Rect(new Point(0, 0), node.Element.Size);
+                node.State.Exterior = new Rect(new Point(0, 0), node.Element.Size);
+                node.State.BranchExterior = new Rect(new Point(0, 0), node.Element.Size);
 
                 // now let it pre-allocate special boxes etc
                 node.State.EffectiveLayoutStrategy = found;
@@ -259,8 +259,8 @@ namespace Staffer.OrgChart.Layout
             {
                 if (node.Element.AffectsLayout)
                 {
-                    node.State.Frame.Exterior = node.State.Frame.Exterior.MoveH(offset);
-                    node.State.Frame.BranchExterior = node.State.Frame.BranchExterior.MoveH(offset);
+                    node.State.Exterior = node.State.Exterior.MoveH(offset);
+                    node.State.BranchExterior = node.State.BranchExterior.MoveH(offset);
                 }
                 return true;
             };
@@ -276,7 +276,7 @@ namespace Staffer.OrgChart.Layout
             }
 
             layoutLevel.Boundary.ReloadFromBranch(layoutLevel.BranchRoot);
-            layoutLevel.BranchRoot.State.Frame.BranchExterior = layoutLevel.Boundary.BoundingRect;
+            layoutLevel.BranchRoot.State.BranchExterior = layoutLevel.Boundary.BoundingRect;
         }
 
         /// <summary>
@@ -292,8 +292,8 @@ namespace Staffer.OrgChart.Layout
                 {
                     if (node.Element.AffectsLayout)
                     {
-                        node.State.Frame.Exterior = node.State.Frame.Exterior.MoveH(offset);
-                        node.State.Frame.BranchExterior = node.State.Frame.BranchExterior.MoveH(offset);
+                        node.State.Exterior = node.State.Exterior.MoveH(offset);
+                        node.State.BranchExterior = node.State.BranchExterior.MoveH(offset);
                     }
                     return true;
                 });
@@ -308,7 +308,7 @@ namespace Staffer.OrgChart.Layout
         {
             MoveOneChild(state, layoutLevel.BranchRoot, offset);
             layoutLevel.Boundary.ReloadFromBranch(layoutLevel.BranchRoot);
-            layoutLevel.BranchRoot.State.Frame.BranchExterior = layoutLevel.Boundary.BoundingRect;
+            layoutLevel.BranchRoot.State.BranchExterior = layoutLevel.Boundary.BoundingRect;
         }
 
         /// <summary>
@@ -324,7 +324,7 @@ namespace Staffer.OrgChart.Layout
             var center = double.MinValue;
             foreach (var child in subset)
             {
-                var c = child.State.Frame.Exterior.CenterH;
+                var c = child.State.Exterior.CenterH;
                 if (c > center)
                 {
                     center = c;
@@ -336,15 +336,15 @@ namespace Staffer.OrgChart.Layout
             var rightmost = double.MinValue;
             foreach (var child in subset)
             {
-                var frame = child.State.Frame;
+                var frame = child.State;
                 var c = frame.Exterior.CenterH;
                 if (c != center)
                 {
                     var diff = center - c;
                     MoveOneChild(state, child, diff);
                 }
-                leftmost = Math.Min(leftmost, child.State.Frame.BranchExterior.Left);
-                rightmost = Math.Max(rightmost, child.State.Frame.BranchExterior.Right);
+                leftmost = Math.Min(leftmost, child.State.BranchExterior.Left);
+                rightmost = Math.Max(rightmost, child.State.BranchExterior.Right);
             }
 
             // update branch boundary
@@ -352,5 +352,30 @@ namespace Staffer.OrgChart.Layout
 
             return new Dimensions(leftmost, rightmost);
         }
+        
+        /// <summary>
+        /// Resets content to start a fresh layout.
+        /// Does not modify size of the <see cref="NodeLayoutInfo.Exterior"/>.
+        /// </summary>
+        public static void ResetLayout([NotNull]this NodeLayoutInfo state)
+        {
+            state.Exterior = new Rect(new Point(), state.Exterior.Size);
+            state.BranchExterior = state.Exterior;
+            state.Connector = null;
+            state.SiblingsRowV = Dimensions.MinMax();
+        }
+
+        /// <summary>
+        /// Copies vertical and horionztal measurement data from <paramref name="other"/> frame.
+        /// Does not copy <see cref="Connector"/>.
+        /// </summary>
+        public static void CopyExteriorFrom([NotNull]this NodeLayoutInfo state, [NotNull]NodeLayoutInfo other)
+        {
+            state.Exterior = other.Exterior;
+            state.BranchExterior = other.BranchExterior;
+            state.SiblingsRowV = other.SiblingsRowV;
+        }
+
+        
     }
 }

@@ -8,7 +8,7 @@ namespace Staffer.OrgChart.Layout
     /// with its shape and connectors.
     /// </summary>
     [DebuggerDisplay("{Exterior.Left}:{Exterior.Top}, {Exterior.Size.Width}x{Exterior.Size.Height}")]
-    public class Frame
+    public class Frame1
     {
         /// <summary>
         /// Exterior bounds of this frame.
@@ -31,28 +31,5 @@ namespace Staffer.OrgChart.Layout
         /// </summary>
         [CanBeNull]
         public Connector Connector;
-
-        /// <summary>
-        /// Resets content to start a fresh layout.
-        /// Does not modify size of the <see cref="Exterior"/>.
-        /// </summary>
-        public void ResetLayout()
-        {
-            Exterior = new Rect(new Point(), Exterior.Size);
-            BranchExterior = Exterior;
-            Connector = null;
-            SiblingsRowV = Dimensions.MinMax();
-        }
-
-        /// <summary>
-        /// Copies vertical and horionztal measurement data from <paramref name="other"/> frame.
-        /// Does not copy <see cref="Connector"/>.
-        /// </summary>
-        public void CopyExteriorFrom([NotNull]Frame other)
-        {
-            Exterior = other.Exterior;
-            BranchExterior = other.BranchExterior;
-            SiblingsRowV = other.SiblingsRowV;
-        }
     }
 }

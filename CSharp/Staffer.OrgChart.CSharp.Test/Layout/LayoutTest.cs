@@ -40,7 +40,7 @@ namespace Staffer.OrgChart.CSharp.Test.Layout
 
             var state = new LayoutState(diagram)
             {
-                BoxSizeFunc = dataId => boxContainer.BoxesByDataId[dataId].Frame.Exterior.Size
+                BoxSizeFunc = dataId => boxContainer.BoxesByDataId[dataId].Size
             };
 
             LayoutAlgorithm.Apply(state);

@@ -55,10 +55,26 @@ namespace Staffer.OrgChart.Layout
         public int NumberOfSiblingColumns;
 
         /// <summary>
-        /// Bounding box.
+        /// Exterior bounds of this frame.
         /// </summary>
-        [NotNull]
-        public readonly Frame Frame = new Frame();
+        public Rect Exterior;
+
+        /// <summary>
+        /// External boundaries of this branch, updated by <see cref="LayoutAlgorithm"/> 
+        /// after each merge of <see cref="Boundary"/> containing children boxes.
+        /// </summary>
+        public Rect BranchExterior;
+
+        /// <summary>
+        /// Exterior vertical boundaries of the layout row of siblings of this frame.
+        /// </summary>
+        public Dimensions SiblingsRowV;
+
+        /// <summary>
+        /// Connectors to dependent objects.
+        /// </summary>
+        [CanBeNull]
+        public Connector Connector;
 
         private LayoutStrategyBase m_effectiveLayoutStrategy;
     }
