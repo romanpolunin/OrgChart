@@ -72,7 +72,7 @@ namespace Staffer.OrgChart.Layout
                 var child = node.Children[i];
                 var rect = child.State;
                 
-                child.State.TopLeft = new Point(rect.Left, top);
+                child.State.MoveTo(0, top);
                 child.State.BranchExterior = new Rect(child.State.TopLeft, child.State.Size);
 
                 siblingsRowExterior += new Dimensions(top, top + rect.Size.Height);
@@ -126,14 +126,9 @@ namespace Staffer.OrgChart.Layout
 
                 // vertical connector from parent 
                 var verticalSpacer = node.Children[node.State.NumberOfSiblings];
-                verticalSpacer.State.TopLeft = new Point(
-                    center - ParentConnectorShield/2,
-                    rect.Bottom);
-                verticalSpacer.State.Size = new Size(
-                    ParentConnectorShield,
-                    node.Children[0].State.SiblingsRowV.From - rect.Bottom);
-                verticalSpacer.State.BranchExterior = new Rect(
-                    verticalSpacer.State.TopLeft, verticalSpacer.State.Size);
+                verticalSpacer.State.AdjustSpacer(
+                    center - ParentConnectorShield / 2, rect.Bottom,
+                    ParentConnectorShield, node.Children[0].State.SiblingsRowV.From - rect.Bottom);
 
                 state.MergeSpacer(verticalSpacer);
 
@@ -141,15 +136,11 @@ namespace Staffer.OrgChart.Layout
                 var firstInRow = node.Children[0].State;
 
                 var horizontalSpacer = node.Children[node.State.NumberOfSiblings + 1];
-                horizontalSpacer.State.TopLeft = new Point(
+                horizontalSpacer.State.AdjustSpacer(
                     firstInRow.Left,
-                    firstInRow.SiblingsRowV.From - ParentChildSpacing);
-                horizontalSpacer.State.Size = new Size(
+                    firstInRow.SiblingsRowV.From - ParentChildSpacing,
                     node.Children[node.State.NumberOfSiblings - 1].State.Right - firstInRow.Left,
                     ParentChildSpacing);
-                horizontalSpacer.State.BranchExterior = new Rect(
-                    horizontalSpacer.State.TopLeft, horizontalSpacer.State.Size);
-
                 state.MergeSpacer(horizontalSpacer);
             }
         }

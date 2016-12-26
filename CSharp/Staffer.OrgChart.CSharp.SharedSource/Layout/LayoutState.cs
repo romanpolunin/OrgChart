@@ -95,7 +95,7 @@ namespace Staffer.OrgChart.Layout
         /// Pool of currently-unused <see cref="Boundary"/> objects. They are added and removed here as they are taken for use in <see cref="m_layoutStack"/>.
         /// </summary>
         [NotNull]
-        private readonly List<Boundary> m_pooledBoundaries = new List<Boundary>();
+        private readonly Stack<Boundary> m_pooledBoundaries = new Stack<Boundary>();
 
         private Operation m_currentOperation;
 
@@ -141,7 +141,7 @@ namespace Staffer.OrgChart.Layout
         {
             for (var i = 0; i < tree.Depth; i++)
             {
-                m_pooledBoundaries.Add(new Boundary(Diagram.LayoutSettings.BoxVerticalMargin));
+                m_pooledBoundaries.Push(new Boundary(Diagram.LayoutSettings.BoxVerticalMargin));
             }
         }
 
@@ -153,12 +153,10 @@ namespace Staffer.OrgChart.Layout
         {
             if (m_pooledBoundaries.Count == 0)
             {
-                //throw new InvalidOperationException("Hierarchy is deeper than expected");
-                m_pooledBoundaries.Add(new Boundary(Diagram.LayoutSettings.BoxVerticalMargin));
+                m_pooledBoundaries.Push(new Boundary(Diagram.LayoutSettings.BoxVerticalMargin));
             }
 
-            var boundary = m_pooledBoundaries[m_pooledBoundaries.Count - 1];
-            m_pooledBoundaries.RemoveAt(m_pooledBoundaries.Count - 1);
+            var boundary = m_pooledBoundaries.Pop();
 
             switch (CurrentOperation)
             {
@@ -204,7 +202,7 @@ namespace Staffer.OrgChart.Layout
 
         /// <summary>
         /// Pops a box from current layout stack, thus getting higher out from layout hierarchy.
-        /// Automatically merges corresponding popped <see cref="Boundary"/> into the new-leaf level.
+        /// Automatically merges popped <see cref="Boundary"/> into the current level.
         /// </summary>
         public void PopLayoutLevel()
         {
@@ -244,7 +242,7 @@ namespace Staffer.OrgChart.Layout
 
                         // Do not update branch vertical measurements from the boundary, because boundary adds children one-by-one.
                         // If we take it from boundary, then branch vertical measurement will be incorrect until all children are laid out horizontally,
-                        // and this temporarily incorrect state will break algorithms they need to know combined branch height.
+                        // and this temporarily incorrect state will break those algorithms that need to know combined branch height.
                         higherLevel.BranchRoot.State.BranchExterior = new Rect(
                             higherLevel.Boundary.BoundingRect.Left,
                             higherLevel.BranchRoot.State.BranchExterior.Top,
@@ -261,7 +259,7 @@ namespace Staffer.OrgChart.Layout
             }
 
             // return boundary to the pool
-            m_pooledBoundaries.Add(innerLevel.Boundary);
+            m_pooledBoundaries.Push(innerLevel.Boundary);
         }
     }
 }

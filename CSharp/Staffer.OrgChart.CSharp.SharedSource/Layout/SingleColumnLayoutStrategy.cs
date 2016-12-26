@@ -70,15 +70,8 @@ namespace Staffer.OrgChart.Layout
                 var rect = child.State;
 
                 var top = prevRowExterior.To + ParentChildSpacing;
-                child.State.TopLeft = new Point(
-                    rect.Left,
-                    top);
-                child.State.Size = new Size(
-                    rect.Size.Width,
-                    rect.Size.Height);
-                child.State.BranchExterior = new Rect(
-                    child.State.TopLeft,
-                    child.State.Size);
+                child.State.MoveTo(rect.Left, top);
+                child.State.BranchExterior = new Rect(child.State.TopLeft, child.State.Size);
 
                 var rowExterior = new Dimensions(top, top + rect.Size.Height);
 
@@ -149,15 +142,9 @@ namespace Staffer.OrgChart.Layout
                 {
                     var spacerTop = node.State.Bottom;
                     var spacerBottom = node.Children[node.ChildCount - 2].State.Bottom;
-                    verticalSpacer.State.TopLeft = new Point(
-                        rect.CenterH - ParentConnectorShield/2,
-                        spacerTop);
-                    verticalSpacer.State.Size = new Size(
-                        ParentConnectorShield,
-                        spacerBottom - spacerTop);
-                    verticalSpacer.State.BranchExterior = new Rect(
-                        verticalSpacer.State.TopLeft, 
-                        verticalSpacer.State.Size);
+                    verticalSpacer.State.AdjustSpacer(
+                        rect.CenterH - ParentConnectorShield/2, spacerTop,
+                        ParentConnectorShield, spacerBottom - spacerTop);
                     state.MergeSpacer(verticalSpacer);
                 }
             }

@@ -107,9 +107,7 @@ namespace Staffer.OrgChart.Layout
 
         private static void PreprocessVisualTree([NotNull]LayoutState state, [NotNull]BoxTree visualTree)
         {
-            var defaultStrategyId = state.Diagram.LayoutSettings.DefaultLayoutStrategyId;
             var defaultStrategy = state.Diagram.LayoutSettings.RequireDefaultLayoutStrategy();
-            var defaultAssistantsStrategyId = state.Diagram.LayoutSettings.DefaultAssistantLayoutStrategyId;
             var defaultAssistantsStrategy = state.Diagram.LayoutSettings.RequireDefaultAssistantLayoutStrategy();
 
             visualTree.IterateParentFirst(node =>
@@ -156,7 +154,7 @@ namespace Staffer.OrgChart.Layout
                     }
                 }
 
-                node.State.TopLeft = new Point(0, 0);
+                node.State.MoveTo(0, 0);
                 node.State.Size = node.Element.Size;
                 node.State.BranchExterior = new Rect(new Point(0, 0), node.Element.Size);
 
@@ -266,12 +264,7 @@ namespace Staffer.OrgChart.Layout
                 }
                 return true;
             };
-
-            //if (layoutLevel.BranchRoot.AssistantsRoot != null)
-            {
-                //BoxTree.TreeNode.IterateChildFirst(layoutLevel.BranchRoot.AssistantsRoot, action);
-            }
-
+            
             foreach (var child in children)
             {
                 BoxTree.TreeNode.IterateChildFirst(child, action);
@@ -362,7 +355,7 @@ namespace Staffer.OrgChart.Layout
         /// </summary>
         public static void ResetLayout([NotNull]this NodeLayoutInfo state)
         {
-            state.TopLeft = new Point();
+            state.MoveTo(0, 0);
             state.BranchExterior = new Rect(state.TopLeft, state.Size);
             state.Connector = null;
             state.SiblingsRowV = Dimensions.MinMax();
@@ -414,6 +407,27 @@ namespace Staffer.OrgChart.Layout
         public static bool IsEqual(this double value, double other)
         {
             return Math.Abs(value - other) <= double.Epsilon;
+        }
+
+        /// <summary>
+        /// Changes <see cref="NodeLayoutInfo.TopLeft"/>.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void MoveTo([NotNull] this NodeLayoutInfo state, double x, double y)
+        {
+            state.TopLeft = new Point(x, y);
+        }
+
+        /// <summary>
+        /// Uitility for special boxes, spacers etc. 
+        /// Adjusts exterior and resets branch exterior to size.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void AdjustSpacer([NotNull] this NodeLayoutInfo state, double x, double y, double w, double h)
+        {
+            state.TopLeft = new Point(x, y);
+            state.Size = new Size(w, h);
+            state.BranchExterior = new Rect(x, y, w, h);
         }
     }
 }

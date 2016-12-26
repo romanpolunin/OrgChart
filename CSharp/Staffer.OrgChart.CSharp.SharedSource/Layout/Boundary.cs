@@ -209,8 +209,8 @@ namespace Staffer.OrgChart.Layout
                         ValidateState();
                         continue;
                     }
-
-                    var theirWins = (merge == 'r' && my.X <= th.X) || (merge == 'l' && my.X >= th.X);
+                    
+                    var theirWins = merge == 'r' ? my.X <= th.X : my.X >= th.X;
 
                     if (my.Top.IsEqual(th.Top))
                     {

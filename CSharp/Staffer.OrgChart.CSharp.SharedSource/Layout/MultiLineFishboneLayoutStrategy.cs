@@ -163,14 +163,9 @@ namespace Staffer.OrgChart.Layout
                 // vertical connector from parent
                 var ix = node.State.NumberOfSiblings;
                 var verticalSpacer = node.Children[ix];
-                verticalSpacer.State.TopLeft = new Point(
-                    rect.CenterH - ParentConnectorShield/2,
-                    rect.Bottom);
-                verticalSpacer.State.Size = new Size(
-                    ParentConnectorShield,
-                    node.Children[0].State.SiblingsRowV.From - rect.Bottom);
-                verticalSpacer.State.BranchExterior = new Rect(
-                    verticalSpacer.State.TopLeft, verticalSpacer.State.Size);
+                verticalSpacer.State.AdjustSpacer(
+                    rect.CenterH - ParentConnectorShield/2, rect.Bottom,
+                    ParentConnectorShield, node.Children[0].State.SiblingsRowV.From - rect.Bottom);
                 state.MergeSpacer(verticalSpacer);
                 ix++;
 
@@ -183,10 +178,9 @@ namespace Staffer.OrgChart.Layout
                     var horizontalSpacer = node.Children[ix];
                     var leftmost = node.Children[node.State.NumberOfSiblings + 1].State.TopLeft;
                     var rightmost = node.Children[ix - 1].State.Right;
-                    horizontalSpacer.State.TopLeft = new Point(leftmost.X, leftmost.Y - ParentChildSpacing);
-                    horizontalSpacer.State.Size = new Size(rightmost - leftmost.X, ParentChildSpacing);
-                    horizontalSpacer.State.BranchExterior = new Rect(
-                        horizontalSpacer.State.TopLeft, horizontalSpacer.State.Size);
+                    horizontalSpacer.State.AdjustSpacer(
+                        leftmost.X, leftmost.Y - ParentChildSpacing,
+                        rightmost - leftmost.X, ParentChildSpacing);
                     state.MergeSpacer(horizontalSpacer);
                 }
             }
@@ -421,8 +415,7 @@ namespace Staffer.OrgChart.Layout
                 {
                     var child = SpecialRoot.Children[i];
                     var frame = child.State;
-                    frame.TopLeft = new Point(frame.Left, prevRowBottom + ParentChildSpacing);
-                    frame.Size = new Size(frame.Size.Width, frame.Size.Height);
+                    frame.MoveTo(frame.Left, prevRowBottom + ParentChildSpacing);
 
                     var rowExterior = new Dimensions(frame.Top, frame.Bottom);
 
@@ -431,25 +424,19 @@ namespace Staffer.OrgChart.Layout
                     {
                         var child2 = SpecialRoot.Children[i2];
                         var frame2 = child2.State;
-                        var rect2 = child2.State;
-                        frame2.TopLeft = new Point(rect2.Left, prevRowBottom + ParentChildSpacing);
-                        frame2.Size = new Size(rect2.Size.Width, rect2.Size.Height);
+                        frame2.MoveTo(frame2.Left, prevRowBottom + ParentChildSpacing);
 
                         if (frame2.Bottom > frame.Bottom)
                         {
-                            frame.TopLeft = new Point(frame.Left, frame2.CenterV - frame.Size.Height/2);
-                            frame.Size = new Size(frame.Size.Width, frame.Size.Height);
+                            frame.MoveTo(frame.Left, frame2.CenterV - frame.Size.Height/2);
                         }
                         else if (frame2.Bottom < frame.Bottom)
                         {
-                            frame2.TopLeft = new Point(rect2.Left, frame.CenterV - rect2.Size.Height / 2);
-                            frame2.Size = new Size(rect2.Size.Width, rect2.Size.Height);
+                            frame2.MoveTo(frame2.Left, frame.CenterV - frame2.Size.Height / 2);
                         }
 
-                        frame2.BranchExterior = new Rect(
-                            frame2.TopLeft, frame2.Size);
-                        rowExterior += new Dimensions(
-                            frame2.Top, frame2.Bottom + state.Diagram.LayoutSettings.BoxVerticalMargin);
+                        frame2.BranchExterior = new Rect(frame2.TopLeft, frame2.Size);
+                        rowExterior += new Dimensions(frame2.Top, frame2.Bottom + state.Diagram.LayoutSettings.BoxVerticalMargin);
 
                         frame2.SiblingsRowV = rowExterior;
                         LayoutAlgorithm.VerticalLayout(state, child2);
@@ -517,15 +504,9 @@ namespace Staffer.OrgChart.Layout
 
                             // integrate protector for group's vertical carrier 
                             var spacer = SpecialRoot.Children[SpecialRoot.State.NumberOfSiblings];
-                            spacer.State.TopLeft = new Point(
-                                rightmost,
-                                SpecialRoot.Children[0].State.SiblingsRowV.From);
-                            spacer.State.Size = new Size(
-                                SiblingSpacing,
-                                child.State.SiblingsRowV.To - SpecialRoot.Children[0].State.SiblingsRowV.From
-                                );
-                            spacer.State.BranchExterior = new Rect(
-                                spacer.State.TopLeft, spacer.State.Size);
+                            spacer.State.AdjustSpacer(
+                                rightmost, SpecialRoot.Children[0].State.SiblingsRowV.From,
+                                SiblingSpacing, child.State.SiblingsRowV.To - SpecialRoot.Children[0].State.SiblingsRowV.From);
                             level.Boundary.MergeFrom(spacer);
                         }
                         else

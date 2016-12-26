@@ -58,7 +58,7 @@ namespace Staffer.OrgChart.Layout
             {
                 var child = node.Children[i];
                 var frame = child.State;
-                frame.TopLeft = new Point(frame.Left, prevRowBottom + ParentChildSpacing);
+                frame.MoveTo(frame.Left, prevRowBottom + ParentChildSpacing);
 
                 var rowExterior = new Dimensions(frame.Top, frame.Bottom);
 
@@ -67,15 +67,15 @@ namespace Staffer.OrgChart.Layout
                 {
                     var child2 = node.Children[i2];
                     var frame2 = child2.State;
-                    frame2.TopLeft = new Point(frame2.Left, prevRowBottom + ParentChildSpacing);
+                    frame2.MoveTo(frame2.Left, prevRowBottom + ParentChildSpacing);
 
                     if (frame2.Bottom > frame.Bottom)
                     {
-                        frame.TopLeft = new Point(frame.Left, frame2.CenterV - frame.Size.Height/2);
+                        frame.MoveTo(frame.Left, frame2.CenterV - frame.Size.Height/2);
                     }
                     else if (frame2.Bottom < frame.Bottom)
                     {
-                        frame2.TopLeft = new Point(frame2.Left, frame.CenterV - frame2.Size.Height/2);
+                        frame2.MoveTo(frame2.Left, frame.CenterV - frame2.Size.Height/2);
                     }
 
                     frame2.BranchExterior = new Rect(frame2.TopLeft, frame2.Size);
@@ -154,15 +154,12 @@ namespace Staffer.OrgChart.Layout
                         // it must prevent boxes on the right side from overlapping the middle vertical connector,
                         // so protector's height must be set to height of this entire assistant branch
                         var spacer = node.Children[node.State.NumberOfSiblings];
-                        spacer.State.TopLeft = new Point(
+                        spacer.State.AdjustSpacer(
                             rightmost,
-                            node.State.Bottom
-                        );
-                        spacer.State.Size = new Size(
+                            node.State.Bottom,
                             state.Diagram.LayoutSettings.BranchSpacing,
                             node.State.BranchExterior.Bottom - node.State.Bottom
                         );
-                        spacer.State.BranchExterior = new Rect(spacer.State.TopLeft, spacer.State.Size);
                         level.Boundary.MergeFrom(spacer);
                     }
                     else
