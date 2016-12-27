@@ -22,11 +22,6 @@ namespace Staffer.OrgChart.Layout
         /// </summary>
         public override void PreProcessThisNode([NotNull]LayoutState state, [NotNull] BoxTree.TreeNode node)
         {
-            if (ParentAlignment != BranchParentAlignment.Center)
-            {
-                throw new InvalidOperationException("Unsupported value for " + nameof(ParentAlignment));
-            }
-
             if (MaxSiblingsPerRow <= 0 || MaxSiblingsPerRow%2 != 0)
             {
                 throw new InvalidOperationException(nameof(MaxSiblingsPerRow) + " must be a positive even value");
@@ -141,7 +136,7 @@ namespace Staffer.OrgChart.Layout
                     siblingsRowExterior += new Dimensions(top, top + rect.Size.Height);
                 }
 
-                siblingsRowExterior = new Dimensions(siblingsRowExterior.From, siblingsRowExterior.To + state.Diagram.LayoutSettings.BoxVerticalMargin);
+                siblingsRowExterior = new Dimensions(siblingsRowExterior.From, siblingsRowExterior.To);
 
                 var siblingsBottom = double.MinValue;
                 for (var i = from; i < to; i++)
@@ -161,10 +156,17 @@ namespace Staffer.OrgChart.Layout
                 var spacerIndex = from + node.State.NumberOfSiblingColumns / 2;
                 if (spacerIndex < node.State.NumberOfSiblings)
                 {
+                    // in the last row, spacer should only extend to the siblings row bottom,
+                    // because main vertical carrier does not go below last row 
+                    // and thus cannot conflict with branches of children of the last row
+                    var spacerBottom = row == node.State.NumberOfSiblingRows - 1
+                        ? node.Children[spacerIndex - 1].State.SiblingsRowV.To
+                        : prevRowExterior.To;
+
                     var spacer = node.Children[spacerIndex].State;
                     spacer.AdjustSpacer(
                         0, prevRowExterior.From,
-                        ParentConnectorShield, prevRowExterior.To - prevRowExterior.From);
+                        ParentConnectorShield, spacerBottom - prevRowExterior.From);
                 }
             }
         }
@@ -193,7 +195,7 @@ namespace Staffer.OrgChart.Layout
                 // first, perform horizontal layout for every node in this column
                 for (var row = 0; row < node.State.NumberOfSiblingRows; row++)
                 {
-                    var ix = row* node.State.NumberOfSiblingColumns + col;
+                    var ix = row*node.State.NumberOfSiblingColumns + col;
                     if (ix >= node.State.NumberOfSiblings)
                     {
                         break;
@@ -207,43 +209,37 @@ namespace Staffer.OrgChart.Layout
                 LayoutAlgorithm.AlignHorizontalCenters(state, level, EnumerateColumn(node, col));
             }
 
-            if (ParentAlignment == BranchParentAlignment.Center)
+            // now align children under parent
+            var rect = node.State;
+            var spacer = node.Children[node.State.NumberOfSiblingColumns/2];
+            var desiredCenter = spacer.State.CenterH;
+            var diff = rect.CenterH - desiredCenter;
+            LayoutAlgorithm.MoveChildrenOnly(state, level, diff);
+
+            // vertical connector from parent
+            var verticalSpacer = node.Children[node.State.NumberOfSiblings];
+            verticalSpacer.State.AdjustSpacer(
+                rect.CenterH - ParentConnectorShield/2, rect.Bottom,
+                ParentConnectorShield, node.Children[0].State.SiblingsRowV.From - rect.Bottom);
+            state.MergeSpacer(verticalSpacer);
+
+            // horizontal row carrier protectors
+            for (var firstInRowIndex = 0; firstInRowIndex < node.State.NumberOfSiblings; firstInRowIndex += node.State.NumberOfSiblingColumns)
             {
-                var rect = node.State;
-                var spacer = node.Children[node.State.NumberOfSiblingColumns/2];
-                var desiredCenter = spacer.State.CenterH;
-                var diff = rect.CenterH - desiredCenter;
-                LayoutAlgorithm.MoveChildrenOnly(state, level, diff);
+                var firstInRow = node.Children[firstInRowIndex].State;
+                var lastInRow = node.Children[Math.Min(firstInRowIndex + node.State.NumberOfSiblingColumns - 1, node.State.NumberOfSiblings - 1)].State;
 
-                // vertical connector from parent
-                var verticalSpacer = node.Children[node.State.NumberOfSiblings];
-                verticalSpacer.State.AdjustSpacer(
-                    rect.CenterH - ParentConnectorShield/2, rect.Bottom,
-                    ParentConnectorShield, node.Children[0].State.SiblingsRowV.From - rect.Bottom);
-                state.MergeSpacer(verticalSpacer);
+                var horizontalSpacer = node.Children[1 + node.State.NumberOfSiblings + firstInRowIndex/node.State.NumberOfSiblingColumns];
 
-                // horizontal row carrier protectors
-                for (var firstInRowIndex = 0; firstInRowIndex < node.State.NumberOfSiblings; firstInRowIndex += node.State.NumberOfSiblingColumns)
-                {
-                    var firstInRow = node.Children[firstInRowIndex].State;
-                    var lastInRow = node.Children[Math.Min(firstInRowIndex + node.State.NumberOfSiblingColumns - 1, node.State.NumberOfSiblings - 1)].State;
+                var width = lastInRow.Right >= verticalSpacer.State.Right
+                    ? lastInRow.Right - firstInRow.Left
+                    : // extend protector at least to the central carrier
+                    verticalSpacer.State.Right - firstInRow.Left;
 
-                    var horizontalSpacer = node.Children[1 + node.State.NumberOfSiblings + firstInRowIndex/ node.State.NumberOfSiblingColumns];
-
-                    var width = (lastInRow.Right >= verticalSpacer.State.Right)
-                        ? lastInRow.Right - firstInRow.Left
-                        : // extend protector at least to the central carrier
-                        verticalSpacer.State.Right - firstInRow.Left;
-
-                    horizontalSpacer.State.AdjustSpacer(
-                        firstInRow.Left, firstInRow.SiblingsRowV.From - ParentChildSpacing,
-                        width, ParentChildSpacing);
-                    state.MergeSpacer(horizontalSpacer);
-                }
-            }
-            else
-            {
-                throw new InvalidOperationException("Invalid ParentAlignment setting");
+                horizontalSpacer.State.AdjustSpacer(
+                    firstInRow.Left, firstInRow.SiblingsRowV.From - ParentChildSpacing,
+                    width, ParentChildSpacing);
+                state.MergeSpacer(horizontalSpacer);
             }
         }
 

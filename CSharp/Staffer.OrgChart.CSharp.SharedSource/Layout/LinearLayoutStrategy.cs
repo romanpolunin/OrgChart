@@ -14,11 +14,6 @@ namespace Staffer.OrgChart.Layout
         /// </summary>
         public override void PreProcessThisNode([NotNull]LayoutState state, [NotNull] BoxTree.TreeNode node)
         {
-            if (ParentAlignment != BranchParentAlignment.Center)
-            {
-                throw new InvalidOperationException("Unsupported value for alignment: " + ParentAlignment);
-            }
-
             if (node.ChildCount > 0)
             {
                 node.State.NumberOfSiblings = node.Element.IsCollapsed ? 0 : node.ChildCount;
@@ -78,7 +73,7 @@ namespace Staffer.OrgChart.Layout
                 siblingsRowExterior += new Dimensions(top, top + rect.Size.Height);
             }
 
-            siblingsRowExterior = new Dimensions(siblingsRowExterior.From, siblingsRowExterior.To + state.Diagram.LayoutSettings.BoxVerticalMargin);
+            siblingsRowExterior = new Dimensions(siblingsRowExterior.From, siblingsRowExterior.To);
 
             for (var i = 0; i < node.State.NumberOfSiblings; i++)
             {
@@ -108,18 +103,18 @@ namespace Staffer.OrgChart.Layout
                 // re-enter layout algorithm for child branch
                 LayoutAlgorithm.HorizontalLayout(state, child);
             }
-
-            if (ParentAlignment != BranchParentAlignment.Center)
-            {
-                throw new InvalidOperationException("Unsupported ParentAlignment setting: " + ParentAlignment);
-            }
-
+            
             if (node.Level > 0 && node.ChildCount > 0)
             {
                 var rect = node.State;
                 var leftmost = node.Children[0].State.CenterH;
                 var rightmost = node.Children[node.State.NumberOfSiblings - 1].State.CenterH;
-                var desiredCenter = leftmost + (rightmost - leftmost)/2;
+                var desiredCenter = 
+                    node.State.NumberOfSiblings == 1 || ParentAlignment == BranchParentAlignment.Center 
+                    ? leftmost + (rightmost - leftmost)/2
+                    : ParentAlignment == BranchParentAlignment.Left 
+                    ? leftmost + ChildConnectorHookLength
+                    : rightmost - ChildConnectorHookLength;
                 var center = rect.CenterH;
                 var diff = center - desiredCenter;
                 LayoutAlgorithm.MoveChildrenOnly(state, level, diff);

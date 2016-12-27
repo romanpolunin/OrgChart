@@ -141,7 +141,7 @@ namespace Staffer.OrgChart.Layout
         {
             for (var i = 0; i < tree.Depth; i++)
             {
-                m_pooledBoundaries.Push(new Boundary(Diagram.LayoutSettings.BoxVerticalMargin));
+                m_pooledBoundaries.Push(new Boundary());
             }
         }
 
@@ -153,7 +153,7 @@ namespace Staffer.OrgChart.Layout
         {
             if (m_pooledBoundaries.Count == 0)
             {
-                m_pooledBoundaries.Push(new Boundary(Diagram.LayoutSettings.BoxVerticalMargin));
+                m_pooledBoundaries.Push(new Boundary());
             }
 
             var boundary = m_pooledBoundaries.Pop();

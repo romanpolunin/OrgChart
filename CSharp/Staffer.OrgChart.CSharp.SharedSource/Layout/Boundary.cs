@@ -95,14 +95,7 @@ namespace Staffer.OrgChart.Layout
         /// Right edge. Each element is a point in some logical space.
         /// </summary>
         public List<Step> Right;
-
-        /// <summary>
-        /// A margin to add on top and under each box, to prevent edges from coming too close to each other.
-        /// Normally, branch connector spacers prevent most of such visual effects,
-        /// but it is still possible to have one box almost touching another when there's no other cushion around it.
-        /// </summary>
-        public double VerticalMargin;
-
+        
         /// <summary>
         /// A temporary Boundary used for merging Boxes in, since they don't come with their own Boundary.
         /// </summary>
@@ -111,24 +104,18 @@ namespace Staffer.OrgChart.Layout
         /// <summary>
         /// Ctr.
         /// </summary>
-        public Boundary(int verticalMargin) : this(true, verticalMargin)
+        public Boundary() : this(true)
         {
         }
 
-        private Boundary(bool frompublic, int verticalMargin)
+        private Boundary(bool frompublic)
         {
-            if (verticalMargin < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(verticalMargin));
-            }
-            VerticalMargin = verticalMargin;
-
             Left = new List<Step>();
             Right = new List<Step>();
 
             if (frompublic)
             {
-                m_spacerMerger = new Boundary(false, 0);
+                m_spacerMerger = new Boundary(false);
             }
         }
 
@@ -146,9 +133,8 @@ namespace Staffer.OrgChart.Layout
 
             var rect = node.State;
 
-            var margin = node.Element.IsSpecial ? 0 : VerticalMargin;
-            Left.Add(new Step(node, rect.Left, rect.Top - margin, rect.Bottom + margin));
-            Right.Add(new Step(node, rect.Right, rect.Top - margin, rect.Bottom + margin));
+            Left.Add(new Step(node, rect.Left, rect.Top, rect.Bottom));
+            Right.Add(new Step(node, rect.Right, rect.Top, rect.Bottom));
         }
 
         /// <summary>

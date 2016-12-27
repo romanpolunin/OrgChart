@@ -44,7 +44,7 @@ namespace Staffer.OrgChart.Test
             var prevLayerSize = 1;
             while (firstInLayer < itemCount)
             {
-                var layerSize = 5 + prevLayerSize + random.Next(prevLayerSize * 2);
+                var layerSize = 15 + prevLayerSize + random.Next(prevLayerSize * 2);
                 for (var i = firstInLayer; i < firstInLayer + layerSize && i < itemCount; i++)
                 {
                     var parentIndex = firstInLayer - 1 - random.Next(prevLayerSize);
@@ -68,7 +68,7 @@ namespace Staffer.OrgChart.Test
             // now mark first five boxes 
             for (var i = 0; i < Math.Max(1, items.Count/10); i++)
             {
-                items[i].IsAssistant = true;
+                items[random.Next(items.Count)].IsAssistant = true;
             }
 
             foreach (var item in items)

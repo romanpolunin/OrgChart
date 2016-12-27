@@ -79,7 +79,7 @@ namespace Staffer.OrgChart.Layout
                     }
 
                     frame2.BranchExterior = new Rect(frame2.TopLeft, frame2.Size);
-                    rowExterior += new Dimensions(frame2.Top, frame2.Bottom + state.Diagram.LayoutSettings.BoxVerticalMargin);
+                    rowExterior += new Dimensions(frame2.Top, frame2.Bottom);
 
                     frame2.SiblingsRowV = rowExterior;
                     LayoutAlgorithm.VerticalLayout(state, child2);

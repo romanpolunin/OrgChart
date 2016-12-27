@@ -21,11 +21,6 @@ namespace Staffer.OrgChart.Layout
         /// </summary>
         public override void PreProcessThisNode([NotNull]LayoutState state, [NotNull] BoxTree.TreeNode node)
         {
-            if (ParentAlignment != BranchParentAlignment.Center)
-            {
-                throw new InvalidOperationException("Unsupported value for " + nameof(ParentAlignment));
-            }
-
             if (MaxGroups <= 0)
             {
                 throw new InvalidOperationException(nameof(MaxGroups) + " must be a positive value");
@@ -107,7 +102,7 @@ namespace Staffer.OrgChart.Layout
         /// </summary>
         public override void ApplyHorizontalLayout([NotNull]LayoutState state, [NotNull]LayoutState.LayoutLevel level)
         {
-            if (level.BranchRoot.State.NumberOfSiblings <= MaxGroups * 2)
+            if (level.BranchRoot.State.NumberOfSiblings <= MaxGroups*2)
             {
                 base.ApplyHorizontalLayout(state, level);
                 return;
@@ -132,30 +127,32 @@ namespace Staffer.OrgChart.Layout
 
             var rect = node.State;
 
-            if (ParentAlignment == BranchParentAlignment.Center)
+            // now align child nodes under the parent
+            if (node.Level > 0)
             {
-                if (node.Level > 0)
+                double diff;
+                if (node.State.NumberOfSiblingColumns > 1)
                 {
-                    double diff;
-                    if (node.State.NumberOfSiblingColumns > 1)
-                    {
-                        var leftCarrier = node.Children[node.State.NumberOfSiblings + 1].State.CenterH;
-                        var rightCarrier = node.Children[node.State.NumberOfSiblings + node.State.NumberOfSiblingColumns].State.CenterH;
-                        var desiredCenter = (leftCarrier + rightCarrier) / 2.0;
-                        diff = rect.CenterH - desiredCenter;
-                    }
-                    else
-                    {
-                        var carrier = node.Children[1 + node.State.NumberOfSiblings].State.CenterH;
-                        var desiredCenter = rect.CenterH;
-                        diff = desiredCenter - carrier;
-                    }
-                    LayoutAlgorithm.MoveChildrenOnly(state, level, diff);
+                    var leftCarrier = node.Children[node.State.NumberOfSiblings + 1].State.CenterH;
+                    var rightCarrier = node.Children[node.State.NumberOfSiblings + node.State.NumberOfSiblingColumns].State.CenterH;
+
+                    var desiredCenter =
+                    node.State.NumberOfSiblings == 1 || ParentAlignment == BranchParentAlignment.Center
+                    ? leftCarrier + (rightCarrier - leftCarrier) / 2
+                    : ParentAlignment == BranchParentAlignment.Left
+                    ? leftCarrier + ChildConnectorHookLength
+                    : rightCarrier - ChildConnectorHookLength;
+
+                    //var desiredCenter = (leftCarrier + rightCarrier)/2.0;
+                    diff = rect.CenterH - desiredCenter;
                 }
-            }
-            else
-            {
-                throw new InvalidOperationException("Invalid ParentAlignment setting");
+                else
+                {
+                    var carrier = node.Children[1 + node.State.NumberOfSiblings].State.CenterH;
+                    var desiredCenter = rect.CenterH;
+                    diff = desiredCenter - carrier;
+                }
+                LayoutAlgorithm.MoveChildrenOnly(state, level, diff);
             }
 
             if (node.Level > 0)
@@ -436,7 +433,7 @@ namespace Staffer.OrgChart.Layout
                         }
 
                         frame2.BranchExterior = new Rect(frame2.TopLeft, frame2.Size);
-                        rowExterior += new Dimensions(frame2.Top, frame2.Bottom + state.Diagram.LayoutSettings.BoxVerticalMargin);
+                        rowExterior += new Dimensions(frame2.Top, frame2.Bottom);
 
                         frame2.SiblingsRowV = rowExterior;
                         LayoutAlgorithm.VerticalLayout(state, child2);
@@ -478,32 +475,16 @@ namespace Staffer.OrgChart.Layout
                             countOnThisSide = 0;
 
                             var rightmost = double.MinValue;
-                            for (var k = 0; k <= i; k++)
+                            for (var k = 0; k < i; k++)
                             {
                                 rightmost = Math.Max(rightmost, SpecialRoot.Children[k].State.BranchExterior.Right);
                             }
 
-                            // vertical spacer does not have to be extended to the bottom of the lowest branch,
-                            // unless the lowest branch on the right side has some children and is expanded
-                            if (Iterator.Count %2 != 0)
-                            {
-                                rightmost = Math.Max(rightmost, child.State.Right);
-                            }
-                            else
-                            {
-                                var opposite = SpecialRoot.Children[SpecialRoot.State.NumberOfSiblings - 1];
-                                if (opposite.Element.IsCollapsed || opposite.ChildCount == 0)
-                                {
-                                    rightmost = Math.Max(rightmost, child.State.Right);
-                                }
-                                else
-                                {
-                                    rightmost = Math.Max(rightmost, child.State.BranchExterior.Right);
-                                }
-                            }
-
+                            rightmost = Math.Max(rightmost, child.State.Right);
+                            
                             // integrate protector for group's vertical carrier 
                             var spacer = SpecialRoot.Children[SpecialRoot.State.NumberOfSiblings];
+
                             spacer.State.AdjustSpacer(
                                 rightmost, SpecialRoot.Children[0].State.SiblingsRowV.From,
                                 SiblingSpacing, child.State.SiblingsRowV.To - SpecialRoot.Children[0].State.SiblingsRowV.From);

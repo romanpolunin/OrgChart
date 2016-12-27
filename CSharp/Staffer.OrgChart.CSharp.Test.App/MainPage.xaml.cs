@@ -73,10 +73,10 @@ namespace Staffer.OrgChart.CSharp.Test.App
                     new LinearLayoutStrategy {ParentAlignment = BranchParentAlignment.Center});
 
                 m_diagram.LayoutSettings.LayoutStrategies.Add("hanger",
-                    new MultiLineHangerLayoutStrategy {ParentAlignment = BranchParentAlignment.Center});
+                    new MultiLineHangerLayoutStrategy {ParentAlignment = BranchParentAlignment.Center });
 
                 m_diagram.LayoutSettings.LayoutStrategies.Add("singleColumn",
-                    new SingleColumnLayoutStrategy {ParentAlignment = BranchParentAlignment.Left});
+                    new SingleColumnLayoutStrategy {ParentAlignment = BranchParentAlignment.Left });
 
                 m_diagram.LayoutSettings.LayoutStrategies.Add("fishbone1",
                     new MultiLineFishboneLayoutStrategy {ParentAlignment = BranchParentAlignment.Center, MaxGroups = 1});
