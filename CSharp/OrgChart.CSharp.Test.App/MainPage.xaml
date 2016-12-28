@@ -1,0 +1,45 @@
+﻿<Page
+    x:Class="OrgChart.CSharp.Test.App.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:OrgChart.CSharp.Test.App"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:system="using:System"
+    xmlns:controls="using:WinRTXamlToolkit.Controls"
+    xmlns:data="using:WinRTXamlToolkit.Controls.Data"
+    mc:Ignorable="d">
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"></RowDefinition>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"></ColumnDefinition>
+            <ColumnDefinition Width="*"></ColumnDefinition>
+        </Grid.ColumnDefinitions>
+        <StackPanel Grid.Row="0" Grid.Column="0">
+            <CheckBox Name="CbInteractiveMode">Incremental</CheckBox>
+            <Button Click="StartWithFullReset_Click">Start With Full Reset</Button>
+            <Button Click="StartWithCleanLayout_Click">Start With Clean Layout</Button>
+            <Button Click="ProgressButton_Click" IsEnabled="{Binding Path=IsChecked, ElementName=CbInteractiveMode}">Progress</Button>
+            <TextBox Name="TextLayoutTimeElapsed" Text="Elapsed: 00:00:00" IsReadOnly="true"></TextBox>
+            <controls:TreeView x:Name="LvBoxes" >
+                <controls:TreeView.ItemTemplate>
+                    <DataTemplate x:DataType="local:NodeViewModel">
+                        <data:DataTemplateExtensions.Hierarchy>
+                            <data:HierarchicalDataTemplate
+                            ItemsSource="{Binding Children}" />
+                        </data:DataTemplateExtensions.Hierarchy>
+                        <ContentControl>
+                            <TextBlock Text="{Binding Text, Mode=OneWay}" />
+                        </ContentControl>
+                    </DataTemplate>
+                </controls:TreeView.ItemTemplate>
+            </controls:TreeView>
+        </StackPanel>
+        <ScrollViewer Name="ScrollViewer" ZoomMode="Enabled" Grid.Row="0" Grid.Column="1" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+            <Canvas x:Name="DrawCanvas"></Canvas>
+        </ScrollViewer>
+    </Grid>
+</Page>
