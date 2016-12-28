@@ -79,12 +79,6 @@ namespace Staffer.OrgChart.Layout
         public bool IsCollapsed;
         
         /// <summary>
-        /// When <c>true</c>, this box and its children will not participate in the layout.
-        /// Is automatically set to <c>true</c> when any parent upwards is <see cref="IsCollapsed"/>.
-        /// </summary>
-        public bool AffectsLayout;
-        
-        /// <summary>
         /// <c>true</c> is this box is bound to some data item.
         /// </summary>
         public bool IsDataBound => !string.IsNullOrEmpty(DataId);
@@ -117,7 +111,6 @@ namespace Staffer.OrgChart.Layout
             DataId = dataId;
             IsSpecial = isSpecial;
             IsAssistant = isAssistant;
-            AffectsLayout = true;
             DisableCollisionDetection = disableCollisionDetection;
         }
     }

@@ -62,7 +62,10 @@ namespace Staffer.OrgChart.Misc
             /// <summary>
             /// <c>true</c> if this node is set as <see cref="AssistantsRoot"/> on its <see cref="ParentNode"/>.
             /// </summary>
-            public bool IsAssistantRoot => ParentNode?.AssistantsRoot == this;
+            /// <remarks>Important! Do not remove parentheses from the null-coalescing expression.
+            /// When this code is converted to JavaScript using Bridge.Net v15.6.0,
+            /// it produces incorrect condition. Parentheses are the workaround for their bug.</remarks>
+            public bool IsAssistantRoot => (ParentNode?.AssistantsRoot) == this;
 
             /// <summary>
             /// Adds a new assistant child to the list, under <see cref="AssistantsRoot"/>. 

@@ -24,7 +24,7 @@
             <Button Click="StartWithCleanLayout_Click">Start With Clean Layout</Button>
             <Button Click="ProgressButton_Click" IsEnabled="{Binding Path=IsChecked, ElementName=CbInteractiveMode}">Progress</Button>
             <TextBox Name="TextLayoutTimeElapsed" Text="Elapsed: 00:00:00" IsReadOnly="true"></TextBox>
-            <controls:TreeView x:Name="LvBoxes">
+            <controls:TreeView x:Name="LvBoxes" >
                 <controls:TreeView.ItemTemplate>
                     <DataTemplate x:DataType="local:NodeViewModel">
                         <data:DataTemplateExtensions.Hierarchy>

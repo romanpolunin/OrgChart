@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Staffer.OrgChart.Annotations;
 using Staffer.OrgChart.Layout;
 
@@ -34,7 +35,7 @@ namespace Staffer.OrgChart.Test
         /// <summary>
         /// Access to all data items.
         /// </summary>
-        public IEnumerable<string> AllDataItemIds => Items.Keys;
+        public IEnumerable<string> AllDataItemIds => Items.Keys.OrderBy(x => x);
 
         /// <summary>
         /// Delegate that provides information about parent-child relationship of boxes.

@@ -25,7 +25,7 @@ namespace Staffer.OrgChart.Layout
             {
                 var box = node.Element;
 
-                if (box.AffectsLayout && !box.IsSpecial)
+                if (!node.State.IsHidden && !box.IsSpecial)
                 {
                     if (initialized)
                     {
@@ -84,9 +84,9 @@ namespace Staffer.OrgChart.Layout
             tree.IterateParentFirst(
                 node =>
                 {
-                    node.Element.AffectsLayout =
-                        node.ParentNode == null ||
-                        node.ParentNode.Element.AffectsLayout && !node.ParentNode.Element.IsCollapsed;
+                    node.State.IsHidden =
+                        node.ParentNode != null &&
+                        (node.ParentNode.State.IsHidden || node.ParentNode.Element.IsCollapsed);
                     return true;
                 });
 
@@ -112,8 +112,13 @@ namespace Staffer.OrgChart.Layout
 
             visualTree.IterateParentFirst(node =>
             {
+                if (node.State.IsHidden)
+                {
+                    return false;
+                }
+
                 LayoutStrategyBase found = null;
-                if (node.ParentNode?.AssistantsRoot == node)
+                if (node.IsAssistantRoot)
                 {
                     // find and associate assistant layout strategy in effect for this node
                     var parent = node;
@@ -157,12 +162,12 @@ namespace Staffer.OrgChart.Layout
                 node.State.MoveTo(0, 0);
                 node.State.Size = node.Element.Size;
                 node.State.BranchExterior = new Rect(new Point(0, 0), node.Element.Size);
-
+  
                 // now let it pre-allocate special boxes etc
                 node.State.EffectiveLayoutStrategy = found;
                 node.State.RequireLayoutStrategy().PreProcessThisNode(state, node);
 
-                return !node.Element.IsCollapsed && node.ChildCount > 0 || node.AssistantsRoot != null;
+                return (!node.Element.IsCollapsed && node.ChildCount > 0) || node.AssistantsRoot != null;
             });
         }
 
@@ -171,7 +176,7 @@ namespace Staffer.OrgChart.Layout
         /// </summary>
         public static void HorizontalLayout([NotNull]LayoutState state, [NotNull]BoxTree.TreeNode branchRoot)
         {
-            if (!branchRoot.Element.AffectsLayout)
+            if (branchRoot.State.IsHidden)
             {
                 throw new InvalidOperationException($"Branch root {branchRoot.Element.Id} does not affect layout");
             }
@@ -197,7 +202,7 @@ namespace Staffer.OrgChart.Layout
         /// </summary>
         public static void VerticalLayout([NotNull]LayoutState state, [NotNull]BoxTree.TreeNode branchRoot)
         {
-            if (!branchRoot.Element.AffectsLayout)
+            if (branchRoot.State.IsHidden)
             {
                 throw new InvalidOperationException($"Branch root {branchRoot.Element.Id} does not affect layout");
             }
@@ -257,7 +262,7 @@ namespace Staffer.OrgChart.Layout
 
             Func<Tree<int, Box, NodeLayoutInfo>.TreeNode, bool> action = node =>
             {
-                if (node.Element.AffectsLayout)
+                if (!node.State.IsHidden)
                 {
                     node.State.TopLeft = node.State.TopLeft.MoveH(offset);
                     node.State.BranchExterior = node.State.BranchExterior.MoveH(offset);
@@ -280,12 +285,12 @@ namespace Staffer.OrgChart.Layout
         /// Unlike <see cref="MoveChildrenOnly"/> and <see cref="MoveBranch"/>, does NOT update the boundary.
         /// </summary>
         /// <remarks>DOES NOT update branch boundary! Must call <see cref="Boundary.ReloadFromBranch"/> after batch of updates is complete</remarks>
-        public static void MoveOneChild([NotNull]LayoutState state, [NotNull]BoxTree.TreeNode root, double offset)
+        private static void MoveOneChild([NotNull]LayoutState state, [NotNull]BoxTree.TreeNode root, double offset)
         {
             BoxTree.TreeNode.IterateChildFirst(root,
                 node =>
                 {
-                    if (node.Element.AffectsLayout)
+                    if (!node.State.IsHidden)
                     {
                         node.State.TopLeft = node.State.TopLeft.MoveH(offset);
                         node.State.BranchExterior = node.State.BranchExterior.MoveH(offset);

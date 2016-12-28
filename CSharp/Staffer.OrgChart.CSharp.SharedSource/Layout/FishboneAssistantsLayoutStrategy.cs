@@ -15,11 +15,6 @@ namespace Staffer.OrgChart.Layout
         /// </summary>
         public override void PreProcessThisNode([NotNull] LayoutState state, [NotNull] BoxTree.TreeNode node)
         {
-            if (ParentAlignment != BranchParentAlignment.Center)
-            {
-                throw new InvalidOperationException("Unsupported value for " + nameof(ParentAlignment));
-            }
-
             node.State.NumberOfSiblings = node.ChildCount;
 
             // only add spacers for non-collapsed boxes
@@ -133,7 +128,7 @@ namespace Staffer.OrgChart.Layout
 
                         // vertical spacer does not have to be extended to the bottom of the lowest branch,
                         // unless the lowest branch on the right side has some children and is expanded
-                        if (node.State.NumberOfSiblings%2 != 0)
+                        if (node.State.NumberOfSiblings % 2 != 0)
                         {
                             rightmost = Math.Max(rightmost, child.State.Right);
                         }
@@ -162,28 +157,20 @@ namespace Staffer.OrgChart.Layout
                         );
                         level.Boundary.MergeFrom(spacer);
                     }
-                    else
-                    {
-                        // horizontally align children in right pillar
-                        LayoutAlgorithm.AlignHorizontalCenters(state, level, EnumerateSiblings(node, maxOnLeft, node.State.NumberOfSiblings));
-                    }
                 }
             }
 
-            if (ParentAlignment == BranchParentAlignment.Center)
+            // horizontally align children in right pillar
+            LayoutAlgorithm.AlignHorizontalCenters(state, level, EnumerateSiblings(node, maxOnLeft, node.State.NumberOfSiblings));
+
+            // align children under parent
+            if (node.Level > 0 && node.State.NumberOfSiblings > 0)
             {
-                if (node.Level > 0)
-                {
-                    double diff;
-                    var carrier = node.Children[node.State.NumberOfSiblings].State.CenterH;
-                    var desiredCenter = node.State.CenterH;
-                    diff = desiredCenter - carrier;
-                    LayoutAlgorithm.MoveChildrenOnly(state, level, diff);
-                }
-            }
-            else
-            {
-                throw new InvalidOperationException("Invalid ParentAlignment setting");
+                double diff;
+                var carrier = node.Children[node.State.NumberOfSiblings].State.CenterH;
+                var desiredCenter = node.State.CenterH;
+                diff = desiredCenter - carrier;
+                LayoutAlgorithm.MoveChildrenOnly(state, level, diff);
             }
         }
 
@@ -193,6 +180,11 @@ namespace Staffer.OrgChart.Layout
         public override void RouteConnectors([NotNull] LayoutState state, [NotNull] BoxTree.TreeNode node)
         {
             var count = node.State.NumberOfSiblings;
+            if (count == 0)
+            {
+                return;
+            }
+
             if (NeedCarrierProtector(node))
             {
                 count++;
@@ -210,7 +202,7 @@ namespace Staffer.OrgChart.Layout
             var isLeft = true;
             var countOnThisSide = 0;
             var bottomMost = double.MinValue;
-            for (var i = 0; i < count; i++)
+            for (var i = 0; i < node.State.NumberOfSiblings; i++)
             {
                 var to = isLeft ? node.Children[i].State.Right : node.Children[i].State.Left;
                 var y = node.Children[i].State.CenterV;

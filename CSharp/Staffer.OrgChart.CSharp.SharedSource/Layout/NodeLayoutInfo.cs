@@ -32,6 +32,12 @@ namespace Staffer.OrgChart.Layout
         }
 
         /// <summary>
+        /// When <c>false</c>, this node and its children will participate in the layout.
+        /// Is automatically set to <c>true</c> when any parent upwards is collapsed.
+        /// </summary>
+        public bool IsHidden;
+
+        /// <summary>
         /// Number of visible regular children in this node's immediate children list
         /// that are affecting each other as siblings during layout.
         /// Some special auto-generated spacer boxes may not be included into this number,

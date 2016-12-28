@@ -1,6 +1,6 @@
 {
   "output": "Bridge/output",
-  "preserveMemberCase": false,
+  "preserveMemberCase": true,
   "cleanOutputFolderBeforeBuild": true,
   "outputBy": "module",
   "fileNameCasing": "Lowercase"

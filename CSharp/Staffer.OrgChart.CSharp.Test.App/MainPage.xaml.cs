@@ -67,6 +67,14 @@ namespace Staffer.OrgChart.CSharp.Test.App
                 TestDataGen.GenerateBoxSizes(boxContainer);
                 //await ((DebugDataSource)m_dataSource).ApplyState(boxContainer);
 
+                foreach (var box in boxContainer.BoxesById.Values)
+                {
+                    if (!box.IsSpecial)
+                    {
+                        box.IsCollapsed = true;
+                    }
+                }
+
                 m_diagram = new Diagram {Boxes = boxContainer};
 
                 m_diagram.LayoutSettings.LayoutStrategies.Add("linear",
@@ -86,7 +94,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
                 m_diagram.LayoutSettings.LayoutStrategies.Add("assistants",
                     new FishboneAssistantsLayoutStrategy { ParentAlignment = BranchParentAlignment.Center });
 
-                m_diagram.LayoutSettings.DefaultLayoutStrategyId = "hanger";
+                m_diagram.LayoutSettings.DefaultLayoutStrategyId = "fishbone2";
                 m_diagram.LayoutSettings.DefaultAssistantLayoutStrategyId = "assistants";
             }
 
@@ -253,12 +261,13 @@ namespace Staffer.OrgChart.CSharp.Test.App
                     return true;
                 }
 
-                var box = node.Element;
-                if (!box.AffectsLayout)
+                if (node.State.IsHidden)
                 {
                     return true;
                 }
 
+
+                var box = node.Element;
                 var frame = node.State;
 
                 var branchFrameRectangle = new Rectangle
@@ -278,7 +287,7 @@ namespace Staffer.OrgChart.CSharp.Test.App
                         new TranslateTransform {X = frame.Left, Y = frame.Top},
                     Width = frame.Size.Width,
                     Height = frame.Size.Height,
-                    Fill = new SolidColorBrush(GetBoxFillColor(box))
+                    Fill = new SolidColorBrush(GetBoxFillColor(node))
                     {
                         Opacity = box.IsSpecial ? 0.1 : 1
                     },
@@ -309,8 +318,6 @@ namespace Staffer.OrgChart.CSharp.Test.App
                 if (!box.IsCollapsed && node.State.Connector != null)
                 {
                     var solidBrush = new SolidColorBrush(Colors.Black);
-                    var nodashes = new DoubleCollection();
-                    var dashes = new DoubleCollection {3, 5};
                     foreach (var edge in node.State.Connector.Segments)
                     {
                         var line = new Line
@@ -347,9 +354,17 @@ namespace Staffer.OrgChart.CSharp.Test.App
             return box.IsSpecial ? Colors.DarkGray : Colors.Black;
         }
 
-        private static Color GetBoxFillColor(Box box)
+        private static Color GetBoxFillColor(BoxTree.TreeNode node)
         {
-            return box.IsSpecial ? Colors.DarkGray : box.IsCollapsed ? Colors.BurlyWood : Colors.Beige;
+            var box = node.Element;
+            return box.IsSpecial
+                ? Colors.DarkGray
+                : box.IsCollapsed && (
+                    node.ChildCount > 0
+                    || node.AssistantsRoot != null
+                    && node.AssistantsRoot.ChildCount > 0)
+                    ? Colors.BurlyWood
+                    : Colors.Beige;
         }
 
         private string TrimText(string text)

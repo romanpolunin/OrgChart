@@ -71,13 +71,14 @@ namespace Staffer.OrgChart.Layout
         /// </summary>
         public override void ApplyVerticalLayout([NotNull]LayoutState state, [NotNull]LayoutState.LayoutLevel level)
         {
-            if (level.BranchRoot.State.NumberOfSiblings <= MaxGroups * 2)
+            var node = level.BranchRoot;
+
+            if (node.State.NumberOfSiblings <= MaxGroups * 2)
             {
                 base.ApplyVerticalLayout(state, level);
                 return;
             }
 
-            var node = level.BranchRoot;
             if (node.Level == 0)
             {
                 node.State.SiblingsRowV = new Dimensions(node.State.Top, node.State.Bottom);
@@ -102,13 +103,14 @@ namespace Staffer.OrgChart.Layout
         /// </summary>
         public override void ApplyHorizontalLayout([NotNull]LayoutState state, [NotNull]LayoutState.LayoutLevel level)
         {
-            if (level.BranchRoot.State.NumberOfSiblings <= MaxGroups*2)
+            var node = level.BranchRoot;
+
+            if (node.State.NumberOfSiblings <= MaxGroups*2)
             {
                 base.ApplyHorizontalLayout(state, level);
                 return;
             }
 
-            var node = level.BranchRoot;
             if (node.Level == 0)
             {
                 node.State.SiblingsRowV = new Dimensions(node.State.Top, node.State.Bottom);
@@ -490,13 +492,10 @@ namespace Staffer.OrgChart.Layout
                                 SiblingSpacing, child.State.SiblingsRowV.To - SpecialRoot.Children[0].State.SiblingsRowV.From);
                             level.Boundary.MergeFrom(spacer);
                         }
-                        else
-                        {
-                            // horizontally align children in right pillar
-                            LayoutAlgorithm.AlignHorizontalCenters(state, level, EnumerateSiblings(Iterator.MaxOnLeft, Iterator.Count));
-                        }
                     }
                 }
+                // horizontally align children in right pillar
+                LayoutAlgorithm.AlignHorizontalCenters(state, level, EnumerateSiblings(Iterator.MaxOnLeft, Iterator.Count));
             }
 
             private IEnumerable<BoxTree.TreeNode> EnumerateSiblings(int from, int to)
