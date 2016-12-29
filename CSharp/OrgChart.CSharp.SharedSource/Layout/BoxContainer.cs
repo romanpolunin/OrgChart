@@ -1,4 +1,8 @@
-﻿using System.Collections.Generic;
+﻿/*
+ * Copyright (c) Roman Polunin 2016. 
+ * MIT license, see https://opensource.org/licenses/MIT. 
+*/
+using System.Collections.Generic;
 using OrgChart.Annotations;
 
 namespace OrgChart.Layout

@@ -1,8 +1,11 @@
-﻿using System;
+﻿/*
+ * Copyright (c) Roman Polunin 2016. 
+ * MIT license, see https://opensource.org/licenses/MIT. 
+*/
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Windows.Devices.AllJoyn;
 using Windows.Storage;
 using Newtonsoft.Json.Linq;
 using OrgChart.Layout;
@@ -46,7 +49,7 @@ namespace OrgChart.CSharp.Test.App
         public async Task ApplyState(BoxContainer boxContainer)
         {
             var text = await FileIO.ReadTextAsync(await StorageFile.GetFileFromPathAsync(
-                @"C:\Users\poluninr\Videos\Data2.json"));
+                @"C:\Users\roman.roman-PC\Videos\Data2.json"));
             var data = JObject.Parse(text);
 
             foreach (JProperty prop in ((JObject)data["entries"]).Properties())

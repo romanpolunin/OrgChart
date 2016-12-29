@@ -8,7 +8,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>OrgChart</RootNamespace>
-    <AssemblyName>OrgChart.Layout.CSharp.Windows</AssemblyName>
+    <AssemblyName>OrgChart.Layout</AssemblyName>
     <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile>
@@ -23,7 +23,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <DocumentationFile>bin\Debug\OrgChart.Layout.CSharp.Windows.xml</DocumentationFile>
+    <DocumentationFile>bin\Debug\OrgChart.Layout.XML</DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -34,7 +34,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <DocumentationFile>bin\Release\OrgChart.Layout.CSharp.Windows.XML</DocumentationFile>
+    <DocumentationFile>bin\Release\OrgChart.Layout.XML</DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
@@ -125,6 +125,9 @@
     </Compile>
     <Compile Include="..\orgchart.csharp.sharedsource\misc\Tree.cs">
       <Link>Misc\Tree.cs</Link>
+    </Compile>
+    <Compile Include="..\OrgChart.CSharp.SharedSource\SharedAssemblyInfo.cs">
+      <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="..\OrgChart.CSharp.SharedSource\Test\TestDataGen.cs">
       <Link>Test\TestDataGen.cs</Link>

@@ -1,4 +1,8 @@
-﻿namespace OrgChart.Layout
+﻿/*
+ * Copyright (c) Roman Polunin 2016. 
+ * MIT license, see https://opensource.org/licenses/MIT. 
+*/
+namespace OrgChart.Layout
 {
     /// <summary>
     /// A point in the diagram logical coordinate space.

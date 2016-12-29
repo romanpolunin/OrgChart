@@ -1,4 +1,8 @@
-﻿using OrgChart.Annotations;
+﻿/*
+ * Copyright (c) Roman Polunin 2016. 
+ * MIT license, see https://opensource.org/licenses/MIT. 
+*/
+using OrgChart.Annotations;
 
 namespace OrgChart.Layout
 {

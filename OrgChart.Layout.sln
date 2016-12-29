@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrgChart.Layout.CSharp.Wind
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrgChart.Layout.JScript.Bridge", "JScript\OrgChart.Layout.JScript.Bridge\OrgChart.Layout.JScript.Bridge.csproj", "{25056F19-92AC-4CBC-9C80-5B933D1109B6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrgChart.Layout.CSharp.Windows.Net4Client", "CSharp\OrgChart.Layout.CSharp.Windows.Net4Client\OrgChart.Layout.CSharp.Windows.Net4Client.csproj", "{2A0CE2EB-0799-4B23-BCE9-CA750D84505B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -113,6 +115,22 @@ Global
 		{25056F19-92AC-4CBC-9C80-5B933D1109B6}.Release|x64.Build.0 = Release|Any CPU
 		{25056F19-92AC-4CBC-9C80-5B933D1109B6}.Release|x86.ActiveCfg = Release|Any CPU
 		{25056F19-92AC-4CBC-9C80-5B933D1109B6}.Release|x86.Build.0 = Release|Any CPU
+		{2A0CE2EB-0799-4B23-BCE9-CA750D84505B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A0CE2EB-0799-4B23-BCE9-CA750D84505B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A0CE2EB-0799-4B23-BCE9-CA750D84505B}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{2A0CE2EB-0799-4B23-BCE9-CA750D84505B}.Debug|ARM.Build.0 = Debug|Any CPU
+		{2A0CE2EB-0799-4B23-BCE9-CA750D84505B}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{2A0CE2EB-0799-4B23-BCE9-CA750D84505B}.Debug|x64.Build.0 = Debug|Any CPU
+		{2A0CE2EB-0799-4B23-BCE9-CA750D84505B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{2A0CE2EB-0799-4B23-BCE9-CA750D84505B}.Debug|x86.Build.0 = Debug|Any CPU
+		{2A0CE2EB-0799-4B23-BCE9-CA750D84505B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A0CE2EB-0799-4B23-BCE9-CA750D84505B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2A0CE2EB-0799-4B23-BCE9-CA750D84505B}.Release|ARM.ActiveCfg = Release|Any CPU
+		{2A0CE2EB-0799-4B23-BCE9-CA750D84505B}.Release|ARM.Build.0 = Release|Any CPU
+		{2A0CE2EB-0799-4B23-BCE9-CA750D84505B}.Release|x64.ActiveCfg = Release|Any CPU
+		{2A0CE2EB-0799-4B23-BCE9-CA750D84505B}.Release|x64.Build.0 = Release|Any CPU
+		{2A0CE2EB-0799-4B23-BCE9-CA750D84505B}.Release|x86.ActiveCfg = Release|Any CPU
+		{2A0CE2EB-0799-4B23-BCE9-CA750D84505B}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,27 +1,15 @@
 ﻿namespace System.Diagnostics
 {
+    /// <summary>
+    /// Stub.
+    /// </summary>
     public class DebuggerDisplayAttribute : Attribute
     {
+        /// <summary>
+        /// Stub.
+        /// </summary>
         public DebuggerDisplayAttribute(string template)
         {
         }
-    }
-}
-
-namespace System.Runtime.CompilerServices
-{
-    public class MethodImplAttribute : Attribute
-    {
-        private MethodImplOptions m_options;
-
-        public MethodImplAttribute(MethodImplOptions aggressiveInlining)
-        {
-            this.m_options = aggressiveInlining;
-        }
-    }
-
-    public enum MethodImplOptions
-    {
-        AggressiveInlining
     }
 }

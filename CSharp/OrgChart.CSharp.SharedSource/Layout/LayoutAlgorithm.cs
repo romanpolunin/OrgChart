@@ -1,7 +1,10 @@
-﻿using System;
+﻿/*
+ * Copyright (c) Roman Polunin 2016. 
+ * MIT license, see https://opensource.org/licenses/MIT. 
+*/
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using OrgChart.Annotations;
 using OrgChart.Misc;
 
@@ -353,18 +356,6 @@ namespace OrgChart.Layout
 
             return new Dimensions(leftmost, rightmost);
         }
-        
-        /// <summary>
-        /// Resets content to start a fresh layout.
-        /// Does not modify size of the <see cref="NodeLayoutInfo.TopLeft"/>.
-        /// </summary>
-        public static void ResetLayout([NotNull]this NodeLayoutInfo state)
-        {
-            state.MoveTo(0, 0);
-            state.BranchExterior = new Rect(state.TopLeft, state.Size);
-            state.Connector = null;
-            state.SiblingsRowV = Dimensions.MinMax();
-        }
 
         /// <summary>
         /// Copies vertical and horionztal measurement data from <paramref name="other"/> frame.
@@ -381,7 +372,6 @@ namespace OrgChart.Layout
         /// <summary>
         /// <c>true</c> if specified <paramref name="value"/> is equal to <see cref="double.MinValue"/>.
         /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsMinValue(this double value)
         {
             return value <= double.MinValue + double.Epsilon;
@@ -390,7 +380,6 @@ namespace OrgChart.Layout
         /// <summary>
         /// <c>true</c> if specified <paramref name="value"/> is equal to <see cref="double.MinValue"/>.
         /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsMaxValue(this double value)
         {
             return value >= double.MaxValue - double.Epsilon;
@@ -399,7 +388,6 @@ namespace OrgChart.Layout
         /// <summary>
         /// <c>true</c> if specified <paramref name="value"/> is equal to <see cref="double.MinValue"/>.
         /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsZero(this double value)
         {
             return value <= double.Epsilon && value >= -double.Epsilon;
@@ -408,7 +396,6 @@ namespace OrgChart.Layout
         /// <summary>
         /// <c>true</c> if specified <paramref name="value"/> is equal to <see cref="double.MinValue"/>.
         /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsEqual(this double value, double other)
         {
             return Math.Abs(value - other) <= double.Epsilon;
@@ -417,7 +404,6 @@ namespace OrgChart.Layout
         /// <summary>
         /// Changes <see cref="NodeLayoutInfo.TopLeft"/>.
         /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void MoveTo([NotNull] this NodeLayoutInfo state, double x, double y)
         {
             state.TopLeft = new Point(x, y);
@@ -427,7 +413,6 @@ namespace OrgChart.Layout
         /// Uitility for special boxes, spacers etc. 
         /// Adjusts exterior and resets branch exterior to size.
         /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void AdjustSpacer([NotNull] this NodeLayoutInfo state, double x, double y, double w, double h)
         {
             state.TopLeft = new Point(x, y);

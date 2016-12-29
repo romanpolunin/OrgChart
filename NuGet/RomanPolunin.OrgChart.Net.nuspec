@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package>
+  <metadata>
+    <id>RomanPolunin.OrgChart.Net</id>
+    <version>1.0.0</version>
+    <title>Organizational charting library for .NET and JavaScript</title>
+    <authors>Roman Polunin</authors>
+    <owners>Roman Polunin</owners>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+	<description>A fast, robust and easily extensible organization chart layout library without any 3-rd party dependencies.
+Designed specifically to compute arrangement of rectangular boxes and connectors, 
+for use by applications which represent hierarchical organizational structures in a user-friendly manner.
+MIT License.
+	</description>
+    <summary>A fast, robust and easily extensible organization chart layout library without any 3-rd party dependencies.</summary>
+    <language>en-US</language>
+    <tags>orgchart chart organizational diagram wpf universal html5 javascript js html</tags>
+	<licenseUrl>https://github.com/romanpolunin/OrgChart/blob/master/license.txt</licenseUrl>
+	<projectUrl>https://github.com/romanpolunin/OrgChart</projectUrl>
+    <contentFiles>
+      <files include=".\NuGet.exe" buildAction="None" />
+    </contentFiles>
+  </metadata>
+  <files>
+    <file src="..\CSharp\OrgChart.Layout.CSharp.Windows\bin\Release\OrgChart.Layout.*" exclude="..\**\*.pssym;" target="lib\net462" />
+    <file src="..\CSharp\OrgChart.Layout.CSharp.Windows.Net4Client\bin\Release\OrgChart.Layout.*" exclude="..\**\*.pssym;" target="lib\net40" />
+  </files>
+</package>
