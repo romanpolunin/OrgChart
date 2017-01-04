@@ -119,6 +119,13 @@ namespace OrgChart.Layout
         public Func<string, Size> BoxSizeFunc { get; set; }
 
         /// <summary>
+        /// Delegate that provides a layout strategy id for a node.
+        /// Use this to implement branch optimization algorithms.
+        /// </summary>
+        [CanBeNull]
+        public Func<BoxTree.TreeNode, string> LayoutOptimizerFunc { get; set; }
+
+        /// <summary>
         /// Gets fired when any <see cref="Boundary"/> is modified by methods of this object.
         /// </summary>
         [CanBeNull]

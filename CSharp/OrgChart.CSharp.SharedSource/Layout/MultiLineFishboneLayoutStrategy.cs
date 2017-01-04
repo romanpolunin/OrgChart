@@ -269,6 +269,12 @@ namespace OrgChart.Layout
         }
 
         /// <summary>
+        /// <c>true</c> if this strategy supports special layout for assistant boxes.
+        /// If not, assistants will be processed as part of normal children group.
+        /// </summary>
+        public override bool SupportsAssistants => true;
+
+        /// <summary>
         /// Implements layout for a single vertically stretched fishbone.
         /// Re-used by <see cref="MultiLineFishboneLayoutStrategy"/> to layout multiple groups of siblings.
         /// </summary>
@@ -514,6 +520,13 @@ namespace OrgChart.Layout
             {
                 throw new NotSupportedException();
             }
+
+
+            /// <summary>
+            /// <c>true</c> if this strategy supports special layout for assistant boxes.
+            /// If not, assistants will be processed as part of normal children group.
+            /// </summary>
+            public override bool SupportsAssistants => false;
         }
     }
 }

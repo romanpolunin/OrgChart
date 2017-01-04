@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using OrgChart.Annotations;
-using OrgChart.Misc;
 
 namespace OrgChart.Layout
 {
@@ -60,7 +59,7 @@ namespace OrgChart.Layout
 
             state.CurrentOperation = LayoutState.Operation.Preparing;
 
-            var tree = BoxTree.Build(state.Diagram.Boxes.BoxesById.Values, x => x.Id, x => x.ParentId);
+            var tree = BoxTree.Build(state);
 
             state.Diagram.VisualTree = tree;
 
@@ -83,6 +82,11 @@ namespace OrgChart.Layout
                 }
             }
 
+            foreach (var box in state.Diagram.Boxes.BoxesById.Values)
+            {
+                AssertBoxSize(box);
+            }
+
             // update visibility of boxes based on collapsed state
             tree.IterateParentFirst(
                 node =>
@@ -90,6 +94,11 @@ namespace OrgChart.Layout
                     node.State.IsHidden =
                         node.ParentNode != null &&
                         (node.ParentNode.State.IsHidden || node.ParentNode.Element.IsCollapsed);
+
+                    node.State.MoveTo(0, 0);
+                    node.State.Size = node.Element.Size;
+                    node.State.BranchExterior = new Rect(new Point(0, 0), node.Element.Size);
+
                     return true;
                 });
 
@@ -108,10 +117,33 @@ namespace OrgChart.Layout
             state.CurrentOperation = LayoutState.Operation.Completed;
         }
 
+        /// <summary>
+        /// Ths function helps catch "undefined" values when operating in JavaScript-converted version of this code.
+        /// Also, helps catch some bugs in C# version as well.
+        /// They way it's implemented has direct impact on how JavaScript validation code looks like, so don't "optimize".
+        /// </summary>
+        private static void AssertBoxSize(Box box)
+        {
+            if (box.Size.Width >= 0.0 && box.Size.Width <= 1000000000.0)
+            {
+                if (box.Size.Height >= 0.0 && box.Size.Width <= 1000000000.0)
+                {
+                    return;
+                }
+            }
+
+            throw new InvalidOperationException($"Box {box.Id} has invalid size: {box.Size.Width}x{box.Size.Height}");
+        }
+
         private static void PreprocessVisualTree([NotNull]LayoutState state, [NotNull]BoxTree visualTree)
         {
             var defaultStrategy = state.Diagram.LayoutSettings.RequireDefaultLayoutStrategy();
             var defaultAssistantsStrategy = state.Diagram.LayoutSettings.RequireDefaultAssistantLayoutStrategy();
+
+            var regular = new Stack<LayoutStrategyBase>();
+            regular.Push(defaultStrategy);
+            var assistants = new Stack<LayoutStrategyBase>();
+            assistants.Push(defaultAssistantsStrategy);
 
             visualTree.IterateParentFirst(node =>
             {
@@ -120,58 +152,64 @@ namespace OrgChart.Layout
                     return false;
                 }
 
-                LayoutStrategyBase found = null;
+                LayoutStrategyBase strategy = null;
+
+                if (state.LayoutOptimizerFunc != null)
+                {
+                    var suggestedStrategyId = state.LayoutOptimizerFunc(node);
+                    if (!string.IsNullOrEmpty(suggestedStrategyId))
+                    {
+                        strategy = state.Diagram.LayoutSettings.LayoutStrategies[suggestedStrategyId];
+                    }
+                }
+
                 if (node.IsAssistantRoot)
                 {
-                    // find and associate assistant layout strategy in effect for this node
-                    var parent = node;
-                    while (parent != null)
+                    if (strategy == null)
                     {
-                        if (parent.Element.AssistantLayoutStrategyId != null)
-                        {
-                            // can we inherit it from previous level?
-                            found = state.Diagram.LayoutSettings.LayoutStrategies[parent.Element.AssistantLayoutStrategyId];
-                            break;
-                        }
-                        parent = parent.ParentNode;
+                        strategy = node.ParentNode.Element.AssistantLayoutStrategyId != null
+                            ? state.Diagram.LayoutSettings.LayoutStrategies[
+                                node.ParentNode.Element.AssistantLayoutStrategyId]
+                            : assistants.Peek();
                     }
-
-                    if (found == null)
-                    {
-                        found = defaultAssistantsStrategy;
-                    }
+                    assistants.Push(strategy);
                 }
                 else
                 {
-                    // find and associate layout strategy in effect for this node
-                    var parent = node;
-                    while (parent != null)
+                    if (strategy == null)
                     {
-                        if (parent.Element.LayoutStrategyId != null)
-                        {
-                            // can we inherit it from previous level?
-                            found = state.Diagram.LayoutSettings.LayoutStrategies[parent.Element.LayoutStrategyId];
-                            break;
-                        }
-                        parent = parent.ParentNode;
+                        strategy = node.Element.LayoutStrategyId != null
+                            ? state.Diagram.LayoutSettings.LayoutStrategies[node.Element.LayoutStrategyId]
+                            : regular.Peek();
                     }
+                    regular.Push(strategy);
 
-                    if (found == null)
+                    if (!strategy.SupportsAssistants)
                     {
-                        found = defaultStrategy;
+                        node.SuppressAssistants();
                     }
                 }
 
-                node.State.MoveTo(0, 0);
-                node.State.Size = node.Element.Size;
-                node.State.BranchExterior = new Rect(new Point(0, 0), node.Element.Size);
-  
                 // now let it pre-allocate special boxes etc
-                node.State.EffectiveLayoutStrategy = found;
+                node.State.EffectiveLayoutStrategy = strategy;
                 node.State.RequireLayoutStrategy().PreProcessThisNode(state, node);
 
                 return (!node.Element.IsCollapsed && node.ChildCount > 0) || node.AssistantsRoot != null;
-            });
+            },
+                node =>
+                {
+                    if (!node.State.IsHidden)
+                    {
+                        if (node.IsAssistantRoot)
+                        {
+                            assistants.Pop();
+                        }
+                        else
+                        {
+                            regular.Pop();
+                        }
+                    }
+                });
         }
 
         /// <summary>
@@ -263,7 +301,7 @@ namespace OrgChart.Layout
                 throw new InvalidOperationException("Should never be invoked when children not set");
             }
 
-            Func<Tree<int, Box, NodeLayoutInfo>.TreeNode, bool> action = node =>
+            Func<BoxTree.TreeNode, bool> action = node =>
             {
                 if (!node.State.IsHidden)
                 {

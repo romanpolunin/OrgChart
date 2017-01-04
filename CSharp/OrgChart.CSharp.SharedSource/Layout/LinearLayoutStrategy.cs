@@ -202,5 +202,11 @@ namespace OrgChart.Layout
 
             node.State.Connector = new Connector(segments);
         }
+
+        /// <summary>
+        /// <c>true</c> if this strategy supports special layout for assistant boxes.
+        /// If not, assistants will be processed as part of normal children group.
+        /// </summary>
+        public override bool SupportsAssistants => true;
     }
 }

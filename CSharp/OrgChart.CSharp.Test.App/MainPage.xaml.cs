@@ -78,7 +78,7 @@ namespace OrgChart.CSharp.Test.App
                         box.IsCollapsed = true;
                     }
                 }
-
+                
                 m_diagram = new Diagram {Boxes = boxContainer};
 
                 m_diagram.LayoutSettings.LayoutStrategies.Add("linear",
@@ -94,12 +94,23 @@ namespace OrgChart.CSharp.Test.App
                     new MultiLineFishboneLayoutStrategy {ParentAlignment = BranchParentAlignment.Center, MaxGroups = 1});
                 m_diagram.LayoutSettings.LayoutStrategies.Add("fishbone2",
                     new MultiLineFishboneLayoutStrategy {ParentAlignment = BranchParentAlignment.Center, MaxGroups = 2});
+                m_diagram.LayoutSettings.LayoutStrategies.Add("hstack1",
+                    new StackingLayoutStrategy
+                    {
+                        Orientation = StackOrientation.SingleRowHorizontal
+                    });
+                m_diagram.LayoutSettings.LayoutStrategies.Add("vstack1",
+                    new StackingLayoutStrategy
+                    {
+                        Orientation = StackOrientation.SingleColumnVertical
+                    });
 
                 m_diagram.LayoutSettings.LayoutStrategies.Add("assistants",
                     new FishboneAssistantsLayoutStrategy { ParentAlignment = BranchParentAlignment.Center });
 
-                m_diagram.LayoutSettings.DefaultLayoutStrategyId = "fishbone2";
+                m_diagram.LayoutSettings.DefaultLayoutStrategyId = "hanger";
                 m_diagram.LayoutSettings.DefaultAssistantLayoutStrategyId = "assistants";
+                m_diagram.LayoutSettings.BranchSpacing = 5;
             }
 
             var state = new LayoutState(m_diagram);
@@ -110,6 +121,7 @@ namespace OrgChart.CSharp.Test.App
             }
 
             state.OperationChanged += StateOperationChanged;
+            state.LayoutOptimizerFunc = LayoutOptimizer;
 
             Task.Factory.StartNew(() =>
                 {
@@ -135,10 +147,20 @@ namespace OrgChart.CSharp.Test.App
         {
             var state = new LayoutState(m_diagram);
             state.BoxSizeFunc = dataId => m_diagram.Boxes.BoxesByDataId[dataId].Size;
+            state.LayoutOptimizerFunc = LayoutOptimizer;
 
             LayoutAlgorithm.Apply(state);
 
             RenderBoxes(m_diagram.VisualTree, DrawCanvas);
+        }
+
+        private string LayoutOptimizer(BoxTree.TreeNode node)
+        {
+            if (node.IsAssistantRoot)
+            {
+                return null;
+            }
+            return node.Level % 2 == 1 ? "vstack1" : "hstack1";
         }
 
         private void BoxOnDoubleTapped(object sender, DoubleTappedRoutedEventArgs doubleTappedRoutedEventArgs)
@@ -153,7 +175,7 @@ namespace OrgChart.CSharp.Test.App
 
         private void StateOperationChanged(object sender, LayoutStateOperationChangedEventArgs args)
         {
-            if (args.State.CurrentOperation > LayoutState.Operation.Preparing)
+            if (args.State.CurrentOperation > LayoutState.Operation.PreprocessVisualTree)
             {
                 Dispatcher.RunAsync(CoreDispatcherPriority.High, () => UpdateListView(m_diagram.VisualTree));
             }

@@ -123,8 +123,11 @@
     <Compile Include="..\OrgChart.CSharp.SharedSource\Layout\SingleColumnLayoutStrategy.cs">
       <Link>Layout\SingleColumnLayoutStrategy.cs</Link>
     </Compile>
-    <Compile Include="..\orgchart.csharp.sharedsource\misc\Tree.cs">
-      <Link>Misc\Tree.cs</Link>
+    <Compile Include="..\OrgChart.CSharp.SharedSource\Layout\StackingLayoutStrategy.cs">
+      <Link>Layout\StackingLayoutStrategy.cs</Link>
+    </Compile>
+    <Compile Include="..\OrgChart.CSharp.SharedSource\Layout\StackOrientation.cs">
+      <Link>Layout\StackOrientation.cs</Link>
     </Compile>
     <Compile Include="..\OrgChart.CSharp.SharedSource\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>

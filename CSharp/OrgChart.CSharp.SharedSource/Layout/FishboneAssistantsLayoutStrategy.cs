@@ -156,7 +156,7 @@ namespace OrgChart.Layout
                         spacer.State.AdjustSpacer(
                             rightmost,
                             node.State.Bottom,
-                            state.Diagram.LayoutSettings.BranchSpacing,
+                            ParentConnectorShield,
                             node.State.BranchExterior.Bottom - node.State.Bottom
                         );
                         level.Boundary.MergeFrom(spacer);
@@ -230,6 +230,12 @@ namespace OrgChart.Layout
 
             node.State.Connector = new Connector(segments);
         }
+
+        /// <summary>
+        /// <c>true</c> if this strategy supports special layout for assistant boxes.
+        /// If not, assistants will be processed as part of normal children group.
+        /// </summary>
+        public override bool SupportsAssistants => false;
 
         private int MaxOnLeft(BoxTree.TreeNode node) => node.State.NumberOfSiblings/2 + node.State.NumberOfSiblings % 2;
         private bool NeedCarrierProtector(BoxTree.TreeNode node) => node.ParentNode.ChildCount == 0;
