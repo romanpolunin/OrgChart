@@ -27,7 +27,6 @@ namespace OrgChart.Layout
         {
             Orientation = StackOrientation.SingleRowHorizontal;
             ParentAlignment = BranchParentAlignment.InvalidValue;
-            ParentChildSpacing = 5;
             ChildConnectorHookLength = 0;
             ParentConnectorShield = 0;
             SiblingSpacing = 5;
@@ -114,7 +113,7 @@ namespace OrgChart.Layout
                     var child = node.Children[row];
                     var rect = child.State;
 
-                    var top = prevRowExterior.To + ParentChildSpacing;
+                    var top = prevRowExterior.To + (row == 0 ? ParentChildSpacing : SiblingSpacing);
                     child.State.MoveTo(rect.Left, top);
                     child.State.BranchExterior = new Rect(child.State.TopLeft, child.State.Size);
 

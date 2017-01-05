@@ -119,6 +119,8 @@ namespace OrgChart.Layout
             {
                 var siblingsRowExterior = Dimensions.MinMax();
 
+                var spacing = row == 0 ? ParentChildSpacing : SiblingSpacing;
+
                 // first, compute
                 var from = row* node.State.NumberOfSiblingColumns;
                 var to = Math.Min(from + node.State.NumberOfSiblingColumns, node.State.NumberOfSiblings);
@@ -133,7 +135,7 @@ namespace OrgChart.Layout
 
                     var rect = child.State;
 
-                    var top = prevRowExterior.To + ParentChildSpacing;
+                    var top = prevRowExterior.To + spacing;
                     child.State.MoveTo(rect.Left, top);
                     child.State.BranchExterior = new Rect(child.State.TopLeft, child.State.Size);
 
@@ -228,6 +230,7 @@ namespace OrgChart.Layout
             state.MergeSpacer(verticalSpacer);
 
             // horizontal row carrier protectors
+            var spacing = ParentChildSpacing;
             for (var firstInRowIndex = 0; firstInRowIndex < node.State.NumberOfSiblings; firstInRowIndex += node.State.NumberOfSiblingColumns)
             {
                 var firstInRow = node.Children[firstInRowIndex].State;
@@ -241,9 +244,11 @@ namespace OrgChart.Layout
                     verticalSpacer.State.Right - firstInRow.Left;
 
                 horizontalSpacer.State.AdjustSpacer(
-                    firstInRow.Left, firstInRow.SiblingsRowV.From - ParentChildSpacing,
-                    width, ParentChildSpacing);
+                    firstInRow.Left, firstInRow.SiblingsRowV.From - spacing,
+                    width, spacing);
                 state.MergeSpacer(horizontalSpacer);
+
+                spacing = SiblingSpacing;
             }
         }
 

@@ -422,9 +422,11 @@ namespace OrgChart.Layout
                 
                 for (var i = 0; i < Iterator.MaxOnLeft; i++)
                 {
+                    var spacing = i == 0 ? ParentChildSpacing : SiblingSpacing;
+
                     var child = SpecialRoot.Children[i];
                     var frame = child.State;
-                    frame.MoveTo(frame.Left, prevRowBottom + ParentChildSpacing);
+                    frame.MoveTo(frame.Left, prevRowBottom + spacing);
 
                     var rowExterior = new Dimensions(frame.Top, frame.Bottom);
 
@@ -433,7 +435,7 @@ namespace OrgChart.Layout
                     {
                         var child2 = SpecialRoot.Children[i2];
                         var frame2 = child2.State;
-                        frame2.MoveTo(frame2.Left, prevRowBottom + ParentChildSpacing);
+                        frame2.MoveTo(frame2.Left, prevRowBottom + spacing);
 
                         if (frame2.Bottom > frame.Bottom)
                         {

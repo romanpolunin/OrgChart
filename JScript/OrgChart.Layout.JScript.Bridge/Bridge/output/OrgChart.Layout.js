@@ -4301,9 +4301,11 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
 
             var maxOnLeft = this.MaxOnLeft(node);
             for (var i = 0; i < maxOnLeft; i = (i + 1) | 0) {
+                var spacing = i === 0 ? this.ParentChildSpacing : this.SiblingSpacing;
+
                 var child = System.Array.getItem(node.getChildren(), i, OrgChart.Layout.BoxTree.TreeNode);
                 var frame = child.getState();
-                OrgChart.Layout.LayoutAlgorithm.MoveTo(frame, frame.getLeft(), prevRowBottom + this.ParentChildSpacing);
+                OrgChart.Layout.LayoutAlgorithm.MoveTo(frame, frame.getLeft(), prevRowBottom + spacing);
 
                 var rowExterior = new OrgChart.Layout.Dimensions.$ctor1(frame.getTop(), frame.getBottom());
 
@@ -4311,7 +4313,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
                 if (i2 < node.getState().NumberOfSiblings) {
                     var child2 = System.Array.getItem(node.getChildren(), i2, OrgChart.Layout.BoxTree.TreeNode);
                     var frame2 = child2.getState();
-                    OrgChart.Layout.LayoutAlgorithm.MoveTo(frame2, frame2.getLeft(), prevRowBottom + this.ParentChildSpacing);
+                    OrgChart.Layout.LayoutAlgorithm.MoveTo(frame2, frame2.getLeft(), prevRowBottom + spacing);
 
                     if (frame2.getBottom() > frame.getBottom()) {
                         OrgChart.Layout.LayoutAlgorithm.MoveTo(frame, frame.getLeft(), frame2.getCenterV() - frame.Size.Height / 2);
@@ -4771,9 +4773,11 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
             var prevRowBottom = ($t = this.RealRoot.getAssistantsRoot()) != null ? $t.getState().BranchExterior.getBottom() : ($t1 = null, $t1 != null ? $t1 : this.SpecialRoot.getState().SiblingsRowV.To);
 
             for (var i = 0; i < this.Iterator.MaxOnLeft; i = (i + 1) | 0) {
+                var spacing = i === 0 ? this.ParentChildSpacing : this.SiblingSpacing;
+
                 var child = System.Array.getItem(this.SpecialRoot.getChildren(), i, OrgChart.Layout.BoxTree.TreeNode);
                 var frame = child.getState();
-                OrgChart.Layout.LayoutAlgorithm.MoveTo(frame, frame.getLeft(), prevRowBottom + this.ParentChildSpacing);
+                OrgChart.Layout.LayoutAlgorithm.MoveTo(frame, frame.getLeft(), prevRowBottom + spacing);
 
                 var rowExterior = new OrgChart.Layout.Dimensions.$ctor1(frame.getTop(), frame.getBottom());
 
@@ -4781,7 +4785,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
                 if (i2 < this.Iterator.Count) {
                     var child2 = System.Array.getItem(this.SpecialRoot.getChildren(), i2, OrgChart.Layout.BoxTree.TreeNode);
                     var frame2 = child2.getState();
-                    OrgChart.Layout.LayoutAlgorithm.MoveTo(frame2, frame2.getLeft(), prevRowBottom + this.ParentChildSpacing);
+                    OrgChart.Layout.LayoutAlgorithm.MoveTo(frame2, frame2.getLeft(), prevRowBottom + spacing);
 
                     if (frame2.getBottom() > frame.getBottom()) {
                         OrgChart.Layout.LayoutAlgorithm.MoveTo(frame, frame.getLeft(), frame2.getCenterV() - frame.Size.Height / 2);
@@ -4969,7 +4973,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
                 var child = System.Array.getItem(node.getChildren(), row, OrgChart.Layout.BoxTree.TreeNode);
                 var rect = child.getState();
 
-                var top = prevRowExterior.To + this.ParentChildSpacing;
+                var top = prevRowExterior.To + (row === 0 ? this.ParentChildSpacing : this.SiblingSpacing);
                 OrgChart.Layout.LayoutAlgorithm.MoveTo(child.getState(), rect.getLeft(), top);
                 child.getState().BranchExterior = new OrgChart.Layout.Rect.$ctor1(child.getState().TopLeft, child.getState().Size);
 
@@ -5125,7 +5129,6 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
             OrgChart.Layout.LayoutStrategyBase.ctor.call(this);
             this.Orientation = OrgChart.Layout.StackOrientation.SingleRowHorizontal;
             this.ParentAlignment = OrgChart.Layout.BranchParentAlignment.InvalidValue;
-            this.ParentChildSpacing = 5;
             this.ChildConnectorHookLength = 0;
             this.ParentConnectorShield = 0;
             this.SiblingSpacing = 5;
@@ -5231,7 +5234,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
                     var child2 = System.Array.getItem(node.getChildren(), row, OrgChart.Layout.BoxTree.TreeNode);
                     var rect1 = child2.getState();
 
-                    var top1 = prevRowExterior.To + this.ParentChildSpacing;
+                    var top1 = prevRowExterior.To + (row === 0 ? this.ParentChildSpacing : this.SiblingSpacing);
                     OrgChart.Layout.LayoutAlgorithm.MoveTo(child2.getState(), rect1.getLeft(), top1);
                     child2.getState().BranchExterior = new OrgChart.Layout.Rect.$ctor1(child2.getState().TopLeft, child2.getState().Size);
 
@@ -6009,6 +6012,8 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
             for (var row = 0; row < node.getState().NumberOfSiblingRows; row = (row + 1) | 0) {
                 var siblingsRowExterior = OrgChart.Layout.Dimensions.MinMax();
 
+                var spacing = row === 0 ? this.ParentChildSpacing : this.SiblingSpacing;
+
                 // first, compute
                 var from = (row * node.getState().NumberOfSiblingColumns) | 0;
                 var to = Math.min(((from + node.getState().NumberOfSiblingColumns) | 0), node.getState().NumberOfSiblings);
@@ -6021,7 +6026,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
 
                     var rect = child.getState();
 
-                    var top = prevRowExterior.To + this.ParentChildSpacing;
+                    var top = prevRowExterior.To + spacing;
                     OrgChart.Layout.LayoutAlgorithm.MoveTo(child.getState(), rect.getLeft(), top);
                     child.getState().BranchExterior = new OrgChart.Layout.Rect.$ctor1(child.getState().TopLeft, child.getState().Size);
 
@@ -6110,6 +6115,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
             state.MergeSpacer(verticalSpacer);
 
             // horizontal row carrier protectors
+            var spacing = this.ParentChildSpacing;
             for (var firstInRowIndex = 0; firstInRowIndex < node.getState().NumberOfSiblings; firstInRowIndex = (firstInRowIndex + node.getState().NumberOfSiblingColumns) | 0) {
                 var firstInRow = System.Array.getItem(node.getChildren(), firstInRowIndex, OrgChart.Layout.BoxTree.TreeNode).getState();
                 var lastInRow = System.Array.getItem(node.getChildren(), Math.min(((((firstInRowIndex + node.getState().NumberOfSiblingColumns) | 0) - 1) | 0), ((node.getState().NumberOfSiblings - 1) | 0)), OrgChart.Layout.BoxTree.TreeNode).getState();
@@ -6118,8 +6124,10 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
 
                 var width = lastInRow.getRight() >= verticalSpacer.getState().getRight() ? lastInRow.getRight() - firstInRow.getLeft() : verticalSpacer.getState().getRight() - firstInRow.getLeft();
 
-                OrgChart.Layout.LayoutAlgorithm.AdjustSpacer(horizontalSpacer.getState(), firstInRow.getLeft(), firstInRow.SiblingsRowV.From - this.ParentChildSpacing, width, this.ParentChildSpacing);
+                OrgChart.Layout.LayoutAlgorithm.AdjustSpacer(horizontalSpacer.getState(), firstInRow.getLeft(), firstInRow.SiblingsRowV.From - spacing, width, spacing);
                 state.MergeSpacer(horizontalSpacer);
+
+                spacing = this.SiblingSpacing;
             }
         },
         EnumerateColumn: function (branchRoot, col) {

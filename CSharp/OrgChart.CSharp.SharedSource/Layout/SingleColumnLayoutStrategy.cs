@@ -73,7 +73,7 @@ namespace OrgChart.Layout
                 var child = node.Children[row];
                 var rect = child.State;
 
-                var top = prevRowExterior.To + ParentChildSpacing;
+                var top = prevRowExterior.To + (row == 0 ? ParentChildSpacing : SiblingSpacing);
                 child.State.MoveTo(rect.Left, top);
                 child.State.BranchExterior = new Rect(child.State.TopLeft, child.State.Size);
 
