@@ -7,42 +7,79 @@
     <script src="../output/bridge.min.js"></script>
     <script src="../output/bridge.collections.min.js"></script>
     <script src="../output/orgchart.layout.js"></script>
-    <script src="../output/OrgStructureNodesDataItem.js"></script>
-    <script src="../output/OrgStructureNodesDataSource.js"></script>
 </head>
 <body>
 
     <style>
-        .chartBoxCollapsed {
+        .expander {
+            z-index: 2;
             position: absolute;
-            border: thin solid #000000;
-            background-color: #d68910;
-            font-size: x-small;
+            border: none;
+            background-color: none;
+            font-size: smaller;
+            width: 10px;
+            height: 10px;
+            text-align: center;
+            margin: 0px;
+            color: red;
         }
 
-        .chartBox {
+        .chartBoxTop {
+            z-index: 1;
             position: absolute;
             border: thin solid #000000;
-            background-color: #fdedec;
+            background-color: yellow;
             font-size: x-small;
+            text-align: center;
+        }
+
+        .chartBoxMiddle {
+            z-index: 1;
+            position: absolute;
+            border: thin solid #000000;
+            background-color: whitesmoke;
+            font-size: x-small;
+            text-align: center;
+        }
+
+        .chartBoxLower {
+            z-index: 1;
+            position: absolute;
+            border: thin solid #000000;
+            background-color: lemonchiffon;
+            font-size: x-small;
+            text-align: center;
+        }
+        
+        .chartBoxLowest {
+            z-index: 1;
+            position: absolute;
+            border: thin solid #000000;
+            background-color: white;
+            font-size: x-small;
+            text-align: center;
         }
 
         .chartHLine {
+            z-index: 0;
             position: absolute;
             border-top: thin solid #000000;
         }
 
         .chartVLine {
+            z-index: 0;
             position: absolute;
             border-left: thin solid #000000;
         }
         
         .chartHLineDotted {
+            z-index: 0;
             position: absolute;
             border-top: thin dotted #000000;
         }
 
         .chartVLineDotted {
+            z-index: 0;
             position: absolute;
             border-left: thin dotted #000000;
         }
@@ -51,213 +88,416 @@
     <div class="row">
 
         <div id="sample" style="position: relative;">
+            <p>
+                <input type="checkbox" id="SuppressRootBox" onchange="changedSuppressRootBox(this)" />
+                <label for="SuppressRootBox">Suppress root data item, to have multiple roots in the diagram</label>
+                <br/>
+                <input type="button" id="collapseAll" onclick="clickCollapseAll(this)" value="Collapse All" />
+                <input type="button" id="expandAll" onclick="clickExpandAll(this)" value="Expand All" />
+                <input type="radio" name="SelectBranchOptimizer" id="SelectBranchOptimizer" value="AllHanger" onclick="clickOptimizer(this)" checked/>Hanger
+                <input type="radio" name="SelectBranchOptimizer" id="SelectBranchOptimizer" value="AllFishbone1" onclick="clickOptimizer(this)"/>Fishbone 1
+                <input type="radio" name="SelectBranchOptimizer" id="SelectBranchOptimizer" value="AllFishbone2" onclick="clickOptimizer(this)"/>Fishbone 2
+                <input type="radio" name="SelectBranchOptimizer" id="SelectBranchOptimizer" value="Stackers" onclick="clickOptimizer(this)"/>Stackers
+            </p>
             <div id="myDiagramDiv" style="background-color: white; border: dotted 1px black; width: 10px; height: 10px">
 
             </div>
         </div>
     </div>
 
-    <script>
-        Bridge.define('ChartApp',
-        {
-            statics: {
-                config: {
-                    init: function() {
+<script>
+    Bridge.define('ChartApp',
+    {
+        statics: {
+            config: {
+                init: function() {
 
+                }
+            },
+            main: function () {
+                Bridge.Console.log = console.log;
+                Bridge.Console.error = console.error;
+                Bridge.Console.debug = console.debug;
+
+                ChartApp.buildChart(true);
+            },
+
+            diagram: {},
+            dataSource: {},
+            suppressRootBox: false,
+
+            boxClick: function(boxId) {
+                var box = ChartApp.diagram.getBoxes().getBoxesById().getItem(boxId);
+                box.IsCollapsed = !box.IsCollapsed;
+                ChartApp.renderBoxes();
+                ChartApp.positionBoxes();
+            },
+
+            buildChart: function (initData) {
+                if (initData) {
+                    ChartApp.initDiagram();
+                }
+                ChartApp.renderBoxes();
+                ChartApp.positionBoxes();
+            },
+
+            collapseAllBoxes: function(boxContainer, isCollapsed) {
+                var en = boxContainer.getBoxesById().getValues().getEnumerator();
+                while (en.moveNext()) {
+                    var box = en.getCurrent();
+                    if (!box.IsSpecial) {
+                        box.IsCollapsed = isCollapsed;
                     }
-                },
-                main: function() {
-                    ChartApp.buildChart(null);
-                },
+                }
+            },
 
-                diagram: {},
-                dataSource: {},
+            generateData: function(count) {
+                var dataSource = new OrgChart.Test.TestDataSource();
+                (new OrgChart.Test.TestDataGen()).GenerateDataItems(dataSource, count);
 
-                boxClick: function(boxId) {
-                    var box = ChartApp.diagram.getBoxes().getBoxesById().getItem(boxId);
-                    box.IsCollapsed = !box.IsCollapsed;
-                    ChartApp.renderBoxes();
-                },
-
-                buildChart: function(data) {
-                    ChartApp.initDiagram(data);
-                    ChartApp.renderBoxes();
-                },
-
-                collapseAllBoxes: function(boxContainer) {
-                    var en = boxContainer.getBoxesById().getValues().getEnumerator();
+                if (ChartApp.suppressRootBox) {
+                    dataSource.Items.remove('0');
+                    var en = dataSource.Items.getValues().getEnumerator();
                     while (en.moveNext()) {
-                        var box = en.getCurrent();
-                        if (!box.IsSpecial) {
-                            box.IsCollapsed = true;
+                        var dataItem = en.getCurrent();
+                        if (dataItem.ParentId === "0") {
+                            dataItem.ParentId = null;
                         }
                     }
-                },
+                }
 
-                initDiagram: function(data) {
-                    var dataSource = new OrgChart.Test.TestDataSource();
-                    (new OrgChart.Test.TestDataGen()).GenerateDataItems(dataSource, 200);
-					ChartApp.dataSource = dataSource;
+                return dataSource;
+            },
 
-                    var boxContainer = new OrgChart.Layout.BoxContainer.$ctor1(dataSource);
-                    OrgChart.Test.TestDataGen.GenerateBoxSizes(boxContainer);
+            initDiagram: function() {
+                var dataSource = ChartApp.generateData(20);
 
-                    ChartApp.collapseAllBoxes(boxContainer);
-                    
-                    ChartApp.diagram = new OrgChart.Layout.Diagram();
+                ChartApp.dataSource = dataSource;
 
-                    var diagram = ChartApp.diagram;
-                    diagram.setBoxes(boxContainer);
+                var boxContainer = new OrgChart.Layout.BoxContainer.$ctor1(dataSource);
+                OrgChart.Test.TestDataGen.GenerateBoxSizes(boxContainer);
 
-                    var linearLayoutStrategy = new OrgChart.Layout.LinearLayoutStrategy();
-                    linearLayoutStrategy.ParentAlignment = OrgChart.Layout.BranchParentAlignment.Center;
-                    diagram.LayoutSettings.LayoutStrategies.add("linear", linearLayoutStrategy);
+                ChartApp.diagram = new OrgChart.Layout.Diagram();
 
-                    var multiLineHangerLayoutStrategy = new OrgChart.Layout.MultiLineHangerLayoutStrategy();
-                    multiLineHangerLayoutStrategy
-                        .ParentAlignment = OrgChart.Layout.BranchParentAlignment.Center;
-                    diagram.LayoutSettings.LayoutStrategies.add("hanger", multiLineHangerLayoutStrategy);
+                var diagram = ChartApp.diagram;
+                diagram.setBoxes(boxContainer);
 
-                    var singleColumnLayoutStrategy = new OrgChart.Layout.SingleColumnLayoutStrategy();
-                    singleColumnLayoutStrategy.ParentAlignment = OrgChart.Layout.BranchParentAlignment.Right;
-                    diagram.LayoutSettings.LayoutStrategies.add("singleColumn", singleColumnLayoutStrategy);
+                var multiLineHangerLayoutStrategy = new OrgChart.Layout.MultiLineHangerLayoutStrategy();
+                multiLineHangerLayoutStrategy
+                    .ParentAlignment = OrgChart.Layout.BranchParentAlignment.Center;
+                diagram.LayoutSettings.LayoutStrategies.add("hanger", multiLineHangerLayoutStrategy);
 
-                    var fishboneLayoutStrategy = new OrgChart.Layout.MultiLineFishboneLayoutStrategy();
-                    fishboneLayoutStrategy.ParentAlignment = OrgChart.Layout.BranchParentAlignment.Center;
-                    fishboneLayoutStrategy.MaxGroups = 1;
-                    diagram.LayoutSettings.LayoutStrategies.add("fishbone1", fishboneLayoutStrategy);
+                var singleColumnLayoutStrategy = new OrgChart.Layout.SingleColumnLayoutStrategy();
+                singleColumnLayoutStrategy.ParentAlignment = OrgChart.Layout.BranchParentAlignment.Right;
+                diagram.LayoutSettings.LayoutStrategies.add("singleColumn", singleColumnLayoutStrategy);
 
-                    fishboneLayoutStrategy = new OrgChart.Layout.MultiLineFishboneLayoutStrategy();
-                    fishboneLayoutStrategy.ParentAlignment = OrgChart.Layout.BranchParentAlignment.Center;
-                    fishboneLayoutStrategy.MaxGroups = 2;
-                    diagram.LayoutSettings.LayoutStrategies.add("fishbone2", fishboneLayoutStrategy);
+                var fishboneLayoutStrategy = new OrgChart.Layout.MultiLineFishboneLayoutStrategy();
+                fishboneLayoutStrategy.ParentAlignment = OrgChart.Layout.BranchParentAlignment.Center;
+                fishboneLayoutStrategy.MaxGroups = 1;
+                diagram.LayoutSettings.LayoutStrategies.add("fishbone1", fishboneLayoutStrategy);
 
-                    var assistantsLayoutStrategy = new OrgChart.Layout.FishboneAssistantsLayoutStrategy();
-                    assistantsLayoutStrategy.ParentAlignment = OrgChart.Layout.BranchParentAlignment.Center;
-                    diagram.LayoutSettings.LayoutStrategies.add("assistants", assistantsLayoutStrategy);
+                fishboneLayoutStrategy = new OrgChart.Layout.MultiLineFishboneLayoutStrategy();
+                fishboneLayoutStrategy.ParentAlignment = OrgChart.Layout.BranchParentAlignment.Center;
+                fishboneLayoutStrategy.MaxGroups = 2;
+                diagram.LayoutSettings.LayoutStrategies.add("fishbone2", fishboneLayoutStrategy);
 
-                    diagram.LayoutSettings.DefaultLayoutStrategyId = "fishbone2";
-                    diagram.LayoutSettings.DefaultAssistantLayoutStrategyId = "assistants";
-                },
+                var hstackLayoutStrategy = new OrgChart.Layout.StackingLayoutStrategy();
+                hstackLayoutStrategy.ParentAlignment = OrgChart.Layout.BranchParentAlignment.InvalidValue;
+                hstackLayoutStrategy.Orientation = OrgChart.Layout.StackOrientation.SingleRowHorizontal;
+                hstackLayoutStrategy.ParentChildSpacing = 10;
+                diagram.LayoutSettings.LayoutStrategies.add("hstack", hstackLayoutStrategy);
 
-                renderBoxes: function() {
-                    $("#myDiagramDiv").html('');
+                var vstackLayoutStrategy = new OrgChart.Layout.StackingLayoutStrategy();
+                vstackLayoutStrategy.ParentAlignment = OrgChart.Layout.BranchParentAlignment.InvalidValue;
+                vstackLayoutStrategy.Orientation = OrgChart.Layout.StackOrientation.SingleColumnVertical;
+                vstackLayoutStrategy.ParentChildSpacing = 10;
+                diagram.LayoutSettings.LayoutStrategies.add("vstack", vstackLayoutStrategy);
 
-                    var boxContainer = ChartApp.diagram.getBoxes();
-                    var dataSource = ChartApp.dataSource;
-                    var diagram = ChartApp.diagram;
+                vstackLayoutStrategy = new OrgChart.Layout.StackingLayoutStrategy();
+                vstackLayoutStrategy.ParentAlignment = OrgChart.Layout.BranchParentAlignment.InvalidValue;
+                vstackLayoutStrategy.Orientation = OrgChart.Layout.StackOrientation.SingleColumnVertical;
+                vstackLayoutStrategy.SiblingSpacing = 20;
+                diagram.LayoutSettings.LayoutStrategies.add("vstackMiddle", vstackLayoutStrategy);
 
-                    var state = new OrgChart.Layout.LayoutState(diagram);
+                vstackLayoutStrategy = new OrgChart.Layout.StackingLayoutStrategy();
+                vstackLayoutStrategy.ParentAlignment = OrgChart.Layout.BranchParentAlignment.InvalidValue;
+                vstackLayoutStrategy.Orientation = OrgChart.Layout.StackOrientation.SingleColumnVertical;
+                vstackLayoutStrategy.SiblingSpacing = 50;
+                diagram.LayoutSettings.LayoutStrategies.add("vstackTop", vstackLayoutStrategy);
 
-                    OrgChart.Layout.LayoutAlgorithm.Apply(state);
+                var assistantsLayoutStrategy = new OrgChart.Layout.MultiLineFishboneLayoutStrategy();
+                assistantsLayoutStrategy.ParentAlignment = OrgChart.Layout.BranchParentAlignment.Center;
+                diagram.LayoutSettings.LayoutStrategies.add("assistants", assistantsLayoutStrategy);
 
-                    var rect = OrgChart.Layout.LayoutAlgorithm
-                        .ComputeBranchVisualBoundingRect(diagram.getVisualTree());
-                    var margin = 10;
-                    var offsetx = -rect.getLeft() + margin;
-                    var offsety = -rect.getTop() + margin;
-                    $("#myDiagramDiv").width(rect.Size.Width + margin*2);
-                    $("#myDiagramDiv").height(rect.Size.Height + margin*2);
+                diagram.LayoutSettings.DefaultLayoutStrategyId = "vstack";
+                diagram.LayoutSettings.DefaultAssistantLayoutStrategyId = "assistants";
+                diagram.LayoutSettings.setBranchSpacing(5);
+            },
 
-                    var visitorFunc = function (node) {
-                        if (node.Level == 0) {
-                            return true;
+            getBoxLevel: function(boxContainer, box) {
+                var level = 0;
+                var obj = {};
+                while (box.ParentId > 0) {
+                    if (!boxContainer.getBoxesById().tryGetValue(box.ParentId, obj)) {
+                        break;
+                    }
+                    box = obj.v;
+                    level++;
+                }
+
+                return level;
+            },
+
+            renderBoxes: function () {
+                $("#myDiagramDiv").html('');
+
+                var boxContainer = ChartApp.diagram.getBoxes();
+                var dataSource = ChartApp.dataSource;
+                
+                var expanderHtml = '<div id="exp{0}" class="expander" onclick="ChartApp.boxClick({0})">?</div>';
+                var boxHtml = '<div id="box{0}" class="{2}" style="width: 150px; height: auto;" onclick="ChartApp.boxClick({0})"><p><b>{3}</b></p>Box #{0}, Data #{1}, Asst: {4}</div>';
+
+                var en = boxContainer.getBoxesById().getValues().getEnumerator();
+                while (en.moveNext()) {
+                    var box = en.getCurrent();
+
+                    if (box.DataId != null) {
+                        var level = ChartApp.getBoxLevel(boxContainer, box);
+                        var dataItem = dataSource.GetDataItem(box.DataId);
+
+                        if (level === 1) {
+                            $("#myDiagramDiv")
+                                .append(boxHtml.format(box.Id, box.DataId, "chartBoxTop", "Top", box.IsAssistant));
+                        } else if (level === 2) {
+                            $("#myDiagramDiv")
+                                .append(boxHtml.format(box.Id, box.DataId, "chartBoxMiddle", "Middle", box.IsAssistant));
+                        } else if (level === 3) {
+                            $("#myDiagramDiv")
+                                .append(boxHtml.format(box.Id, box.DataId, "chartBoxLower", "Lower", box.IsAssistant));
+                        } else {
+                            $("#myDiagramDiv")
+                                .append(boxHtml.format(box.Id, box.DataId, "chartBoxLowest", "Lowest", box.IsAssistant));
                         }
 
-                        if (node.State.IsHidden) {
-                            return true;
+                        $("#myDiagramDiv")
+                            .append(expanderHtml.format(box.Id));
+                    }
+                }
+            },
+
+            getBranchOptimizerFunc: function () {
+                var value = $("input[name='SelectBranchOptimizer']:checked").val();
+                var func = ChartApp['branchOptimizer' + value];
+                return func;
+            },
+
+            branchOptimizerAllHanger: function(node) {
+                return "hanger";
+            },
+            
+            branchOptimizerAllFishbone1: function(node) {
+                return "fishbone1";
+            },
+
+            branchOptimizerAllFishbone2: function (node) {
+                return "fishbone2";
+            },
+
+            branchOptimizerAllSingleColumn: function (node) {
+                return "singleColumn";
+            },
+
+            branchOptimizerStackers: function(node) {
+                if (node.getIsAssistantRoot()) {
+                    return null;
+                }
+                return node.Level === 0 // this is Node for boxContainer.SystemRoot, which is not visible itself
+                    ? "vstackTop"
+                    : node.Level === 1 // this is children of SystemRoot - they appear as roots in the diagram
+                    ? "vstackMiddle"
+                    : node.Level === 2
+                    ? "hstack"
+                    : "vstack";
+
+            },
+
+            branchOptimizerTricky: function(node) {
+                
+            },
+
+            positionBoxes: function () {
+                var boxContainer = ChartApp.diagram.getBoxes();
+                var dataSource = ChartApp.dataSource;
+                var diagram = ChartApp.diagram;
+
+                var state = new OrgChart.Layout.LayoutState(diagram);
+
+                state.BoxSizeFunc = Bridge.fn.bind(
+                    this,
+                    function (dataId) {
+                        var boxId = boxContainer.getBoxesByDataId().getItem(dataId).Id;
+                        var div = $('#box' + boxId);
+                        if (div.length > 0) {
+                            return new OrgChart.Layout.Size.$ctor1(div.outerWidth(), div.outerHeight());
+                        } else {
+                            return new OrgChart.Layout.Size.$ctor1(5, 5);
                         }
+                    },
+                    dataSource,
+                    true);
 
-                        var box = node.Element;
+                state.LayoutOptimizerFunc = Bridge.fn.bind(
+                    this,
+                    ChartApp.getBranchOptimizerFunc(),
+                    null,
+                    true);
 
-                        if (box.getIsDataBound())
-                        {
-                            var boxClass;
-                            boxClass = "chartBox";
+                OrgChart.Layout.LayoutAlgorithm.Apply(state);
 
-                            if (box.IsCollapsed && (
-                                node.getChildCount() > 0
-                                || node.AssistantsRoot != null
-                                && node.AssistantsRoot.getChildCount() > 0)) {
-                                boxClass = boxClass + "Collapsed";
+                var rect = OrgChart.Layout.LayoutAlgorithm
+                    .ComputeBranchVisualBoundingRect(diagram.getVisualTree());
+
+                $("#myDiagramDiv").width(rect.Size.Width);
+                $("#myDiagramDiv").height(rect.Size.Height);
+
+                var view = $("#myDiagramDiv").offset();
+                var offsetx = -rect.getLeft() + view.left;
+                var offsety = -rect.getTop() + view.top;
+
+                var visitorFunc = function (node) {
+                    var box = node.Element;
+
+                    if (box.getIsDataBound()) {
+
+                        var div = $('#box' + box.Id);
+                        if (div.length > 0) {
+
+                            var exp = $('#exp' + box.Id);
+
+                            if (node.Level === 0 || node.State.IsHidden) {
+                                div.hide();
+                                exp.hide();
+                            } else {
+                                var x = node.State.TopLeft.X + offsetx;
+                                var y = node.State.TopLeft.Y + offsety;
+
+                                div.offset({ left: x, top: y });
+                                div.css("width", node.State.Size.Width);
+                                div.css("height", node.State.Size.Height);
+
+                                if (node.getChildCount() === 0) {
+                                    exp.hide();
+                                } else {
+                                    x = node.State.getRight() + offsetx - 15;
+                                    y = node.State.getBottom() + offsety - 15;
+                                    exp.offset({ left: x, top: y });
+
+                                    if (box.IsCollapsed &&
+                                    (
+                                        node.getChildCount() > 0 ||
+                                            node
+                                            .AssistantsRoot !=
+                                            null &&
+                                            node.AssistantsRoot.getChildCount() > 0)) {
+                                        exp.text('▼');
+                                    } else {
+                                        exp.text('△');
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (node.State.Connector != null) {
+                        for (var ix = 0; ix < node.State.Connector.Segments.length; ix++) {
+                            var edge = node.State.Connector.Segments[ix];
+                            var edgeType;
+                            var topLeft;
+                            var width;
+                            var height;
+                            if (edge.From.Y === edge.To.Y) {
+                                edgeType = "chartHLine";
+                                height = 1;
+                                if (edge.From.X < edge.To.X) {
+                                    topLeft = edge.From;
+                                    width = edge.To.X - edge.From.X;
+                                } else {
+                                    topLeft = edge.To;
+                                    width = edge.From.X - edge.To.X;
+                                }
+                            } else {
+                                edgeType = "chartVLine";
+                                if (edge.From.Y < edge.To.Y) {
+                                    topLeft = edge.From;
+                                    height = edge.To.Y - edge.From.Y;
+                                } else {
+                                    topLeft = edge.To;
+                                    height = edge.From.Y - edge.To.Y;
+                                }
+                            }
+
+                            if (node.getIsAssistantRoot()) {
+                                edgeType = edgeType + "Dotted";
                             }
 
                             $("#myDiagramDiv")
                                 .append('<div class="' +
-                                    boxClass +
+                                    edgeType +
                                     '" style="top:' +
-                                    (node.State.TopLeft.Y + offsety) +
+                                    (topLeft.Y + offsety) +
                                     'px; left:' +
-                                    (node.State.TopLeft.X + offsetx) +
+                                    (topLeft.X + offsetx) +
                                     'px; width:' +
-                                    node.State.Size.Width +
+                                    width +
                                     'px; height:' +
-                                    node.State.Size.Height +
-                                    'px" onclick="ChartApp.boxClick(' +
-                                    box.Id +
-                                    ')">' +
-                                    box.DataId +
-                                    '</div>');
+                                    height +
+                                    'px;"/>');
                         }
-
-                        if (node.State.Connector != null) {
-                            for (var ix = 0; ix < node.State.Connector.Segments.length; ix++) {
-                                var edge = node.State.Connector.Segments[ix];
-                                var edgeType;
-                                var topLeft;
-                                var width;
-                                var height;
-                                if (edge.From.Y == edge.To.Y) {
-                                    edgeType = "chartHLine";
-                                    height = 1;
-                                    if (edge.From.X < edge.To.X) {
-                                        topLeft = edge.From;
-                                        width = edge.To.X - edge.From.X;
-                                    } else {
-                                        topLeft = edge.To;
-                                        width = edge.From.X - edge.To.X;
-                                    }
-                                } else {
-                                    edgeType = "chartVLine";
-                                    if (edge.From.Y < edge.To.Y) {
-                                        topLeft = edge.From;
-                                        height = edge.To.Y - edge.From.Y;
-                                    } else {
-                                        topLeft = edge.To;
-                                        height = edge.From.Y - edge.To.Y;
-                                    }
-                                }
-
-                                if (node.getIsAssistantRoot()) {
-                                    edgeType = edgeType + "Dotted";
-                                }
-
-                                $("#myDiagramDiv")
-                                    .append('<div class="' +
-                                        edgeType +
-                                        '" style="top:' +
-                                        (topLeft.Y + offsety) +
-                                        'px; left:' +
-                                        (topLeft.X + offsetx) +
-                                        'px; width:' +
-                                        width +
-                                        'px; height:' +
-                                        height +
-                                        'px;"/>');
-                            }
-                        }
-
-                        return true;
                     }
 
-                    diagram.getVisualTree().IterateChildFirst(visitorFunc);
+                    return true;
                 }
+
+                diagram.getVisualTree().IterateChildFirst(visitorFunc);
             }
-        });
 
-        Bridge.init();
-        ChartApp.main();
+        }
+    });
 
-    </script>
+    // First, checks if it isn't implemented yet.
+    if (!String.prototype.format) {
+        String.prototype.format = String.prototype.f = function () {
+            var s = this,
+                i = arguments.length;
+
+            while (i--) {
+                s = s.replace(new RegExp('\\{' + i + '\\}', 'gm'), arguments[i]);
+            }
+            return s;
+        };
+    }
+
+    Bridge.init();
+    ChartApp.main();
+
+    function changedSuppressRootBox(cb) {
+        ChartApp.suppressRootBox = cb.checked;
+        ChartApp.buildChart(true);
+    }
+
+    function clickCollapseAll(bt) {
+        ChartApp.collapseAllBoxes(ChartApp.diagram.getBoxes(), true);
+        ChartApp.buildChart(false);
+    }
+
+    function clickExpandAll(bt) {
+        ChartApp.collapseAllBoxes(ChartApp.diagram.getBoxes(), false);
+        ChartApp.buildChart(false);
+    }
+
+    function clickOptimizer(rd) {
+        ChartApp.buildChart(false);
+    }
+</script>
 </body>
 </html>

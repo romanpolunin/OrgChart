@@ -148,9 +148,9 @@ namespace OrgChart.Layout
         /// <summary>
         /// Initializes the visual tree and pool of boundary objects.
         /// </summary>
-        public void AttachVisualTree(BoxTree tree)
+        public void AttachVisualTree([NotNull] BoxTree tree)
         {
-            for (var i = 0; i < tree.Depth; i++)
+            while (m_pooledBoundaries.Count < tree.Depth)
             {
                 m_pooledBoundaries.Push(new Boundary());
             }

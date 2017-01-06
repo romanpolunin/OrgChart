@@ -160,7 +160,7 @@ namespace OrgChart.CSharp.Test.App
             {
                 return null;
             }
-            return node.Level % 2 == 1 ? "vstack1" : "hstack1";
+            return node.Level % 2 == 1 ? "hstack1" : "vstack1";
         }
 
         private void BoxOnDoubleTapped(object sender, DoubleTappedRoutedEventArgs doubleTappedRoutedEventArgs)
