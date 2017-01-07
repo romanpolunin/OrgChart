@@ -140,31 +140,30 @@ namespace OrgChart.Layout
             /// Goes through all elements depth-first. Applies <paramref name="func"/> to all children recursively, then to the parent.
             /// If <paramref name="func"/> returns <c>false</c>, it will stop entire processing.
             /// </summary>
-            /// <param name="root">Current node</param>
-            /// <param name="func">A func to evaluate on <paramref name="root"/> and its children. Whenever it returns false, iteration stops</param>
+            /// <param name="func">A func to evaluate on this node and its children. Whenever it returns false, iteration stops</param>
             /// <returns>True if <paramref name="func"/> never returned <c>false</c></returns>
-            public static bool IterateChildFirst([NotNull]TreeNode root, [NotNull] Func<TreeNode, bool> func)
+            public bool IterateChildFirst([NotNull] Func<TreeNode, bool> func)
             {
-                if (root.AssistantsRoot != null)
+                if (AssistantsRoot != null)
                 {
-                    if (!IterateChildFirst(root.AssistantsRoot, func))
+                    if (!AssistantsRoot.IterateChildFirst(func))
                     {
                         return false;
                     }
                 }
 
-                if (root.Children != null)
+                if (Children != null)
                 {
-                    foreach (var child in root.Children)
+                    foreach (var child in Children)
                     {
-                        if (!IterateChildFirst(child, func))
+                        if (!child.IterateChildFirst(func))
                         {
                             return false;
                         }
                     }
                 }
 
-                return func(root);
+                return func(this);
             }
 
             /// <summary>
@@ -172,33 +171,29 @@ namespace OrgChart.Layout
             /// In this mode, children at each level decide for themselves whether they want to iterate further down, 
             /// e.g. <paramref name="enter"/> can cut-off a branch.
             /// </summary>
-            /// <param name="root">Current node</param>
-            /// <param name="enter">A predicate to allow iteration of branch under <paramref name="root"/></param>
+            /// <param name="enter">A predicate to allow iteration of branch under this node</param>
             /// <param name="exit">An optional action to run afer iteration of some branch is complete</param>
-            public static bool IterateParentFirst([NotNull]TreeNode root, [NotNull] Predicate<TreeNode> enter, [CanBeNull] Action<TreeNode> exit = null)
+            public bool IterateParentFirst([NotNull] Predicate<TreeNode> enter, [CanBeNull] Action<TreeNode> exit = null)
             {
-                if (!enter(root))
+                if (!enter(this))
                 {
-                    exit?.Invoke(root);
+                    exit?.Invoke(this);
                     return false;
                 }
 
-                if (root.AssistantsRoot != null)
-                {
-                    IterateParentFirst(root.AssistantsRoot, enter, exit);
-                }
+                AssistantsRoot?.IterateParentFirst(enter, exit);
 
-                if (root.Children != null)
+                if (Children != null)
                 {
-                    foreach (var child in root.Children)
+                    foreach (var child in Children)
                     {
                         // Ignore returned value, in this mode children at each level 
                         // decide for themselves whether they want to iterate further down.
-                        IterateParentFirst(child, enter, exit);
+                        child.IterateParentFirst(enter, exit);
                     }
                 }
 
-                exit?.Invoke(root);
+                exit?.Invoke(this);
 
                 return true;
             }
@@ -224,9 +219,10 @@ namespace OrgChart.Layout
         }
 
         /// <summary>
-        /// Root node wrappers.
+        /// Root node, as detected from data.
+        /// Corresponds to <see cref="BoxContainer.SystemRoot"/> box.
         /// </summary>
-        public List<TreeNode> Roots { get; }
+        public TreeNode Root { get; private set; }
 
         /// <summary>
         /// Dictionary of all node wrappers.
@@ -243,19 +239,11 @@ namespace OrgChart.Layout
         /// Goes through all elements depth-first. Applies <paramref name="func"/> to all children recursively, then to the parent.
         /// If <paramref name="func"/> returns <c>false</c>, it will stop entire processing.
         /// </summary>
-        /// <param name="func">A func to evaluate on items of <see cref="Roots"/> and their children. Whenever it returns false, iteration stops</param>
+        /// <param name="func">A func to evaluate on <see cref="Root"/> and its children. Whenever it returns false, iteration stops</param>
         /// <returns>True if <paramref name="func"/> never returned <c>false</c></returns>
         public bool IterateChildFirst([NotNull] Func<TreeNode, bool> func)
         {
-            foreach (var root in Roots)
-            {
-                if (!TreeNode.IterateChildFirst(root, func))
-                {
-                    return false;
-                }
-            }
-
-            return true;
+            return Root.IterateChildFirst(func);
         }
 
         /// <summary>
@@ -265,14 +253,11 @@ namespace OrgChart.Layout
         /// </summary>
         /// <param name="enter">A predicate to allow iteration of a specific branch</param>
         /// <param name="exit">An optional action to run after iteration of some branch is complete or canceled</param>
-        public void IterateParentFirst([NotNull] Predicate<TreeNode> enter, [CanBeNull]Action<TreeNode> exit = null)
+        public void IterateParentFirst([NotNull] Predicate<TreeNode> enter, [CanBeNull] Action<TreeNode> exit = null)
         {
-            foreach (var root in Roots)
-            {
-                // Ignore returned value, in this mode children at each level 
-                // decide for themselves whether they want to iterate further down.
-                TreeNode.IterateParentFirst(root, enter, exit);
-            }
+            // Ignore returned value, in this mode children at each level 
+            // decide for themselves whether they want to iterate further down.
+            Root.IterateParentFirst(enter, exit);
         }
 
         /// <summary>
@@ -307,7 +292,6 @@ namespace OrgChart.Layout
         /// </summary>
         public BoxTree()
         {
-            Roots = new List<TreeNode>();
             Nodes = new Dictionary<int, TreeNode>();
         }
 
@@ -344,9 +328,13 @@ namespace OrgChart.Layout
                 }
                 else
                 {
+                    if (result.Root != null)
+                    {
+                        throw new InvalidOperationException("More then one root found: " + node.Element.Id);
+                    }
                     // In case of data errors, parent key may be not null, but parent node is not there.
                     // Just add the node to roots.
-                    result.Roots.Add(node);
+                    result.Root = node;
                 }
             }
 

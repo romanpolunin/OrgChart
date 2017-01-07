@@ -18,15 +18,15 @@ namespace OrgChart.Test
         /// <summary>
         /// Adds some data items into supplied <paramref name="dataSource"/>.
         /// </summary>
-        public void GenerateDataItems([NotNull] TestDataSource dataSource, int count)
+        public void GenerateDataItems([NotNull] TestDataSource dataSource, int count, int percentAssistants)
         {
-            foreach (var item in GenerateRandomDataItems(count))
+            foreach (var item in GenerateRandomDataItems(count, percentAssistants))
             {
                 dataSource.Items.Add(item.Id, item);
             }
         }
 
-        private IEnumerable<TestDataItem> GenerateRandomDataItems(int itemCount)
+        private List<TestDataItem> GenerateRandomDataItems(int itemCount, int percentAssistants)
         {
             if (itemCount < 0)
             {
@@ -70,15 +70,16 @@ namespace OrgChart.Test
             }
 
             // now mark first five boxes 
-            for (var i = 0; i < Math.Max(1, items.Count/2); i++)
+            if (percentAssistants > 0)
             {
-                items[random.Next(items.Count)].IsAssistant = true;
+                var assistantCount = Math.Min(items.Count, (int) Math.Ceiling(items.Count * percentAssistants / 100.0));
+                for (var i = 0; i < assistantCount; i++)
+                {
+                    items[random.Next(items.Count)].IsAssistant = true;
+                }
             }
 
-            foreach (var item in items)
-            {
-                yield return item;
-            }
+            return items;
         }
 
         /// <summary>

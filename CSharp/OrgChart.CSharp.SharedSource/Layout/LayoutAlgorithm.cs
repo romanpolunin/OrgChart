@@ -23,7 +23,7 @@ namespace OrgChart.Layout
             var result = new Rect();
             var initialized = false;
 
-            BoxTree.TreeNode.IterateParentFirst(visualTree.Roots[0], node =>
+            visualTree.Root.IterateParentFirst(node =>
             {
                 var box = node.Element;
 
@@ -63,8 +63,9 @@ namespace OrgChart.Layout
 
             state.Diagram.VisualTree = tree;
 
-            // verify the root
-            if (tree.Roots.Count != 1 || tree.Roots[0].Element.Id != state.Diagram.Boxes.SystemRoot.Id)
+            // verify the root: regardless of data items, there must be a system root box on top of everything
+            // the corresponding node is not supposed to be rendered, it only serves as layout algorithm's starting point
+            if (tree.Root == null || tree.Root.Element.Id != state.Diagram.Boxes.SystemRoot.Id)
             {
                 throw new Exception("SystemRoot is not on the top of the visual tree");
             }
@@ -73,6 +74,24 @@ namespace OrgChart.Layout
             tree.UpdateHierarchyStats();
             state.AttachVisualTree(tree);
 
+            // update visibility of boxes based on collapsed state
+            tree.IterateParentFirst(
+                node =>
+                {
+                    node.State.IsHidden =
+                        node.ParentNode != null &&
+                        (node.ParentNode.State.IsHidden || node.ParentNode.Element.IsCollapsed);
+
+                    return true;
+                });
+
+            // In this phase, we will figure out layout strategy
+            // and initialize layout state for each node.
+            // Event listener may perform initial rendering /measuring of boxes when this event fires,
+            // to determine box sizes and be ready to supply them via BoxSizeFunc delegate.
+            state.CurrentOperation = LayoutState.Operation.PreprocessVisualTree;
+
+            // initialize box sizes
             if (state.BoxSizeFunc != null)
             {
                 // apply box sizes
@@ -87,14 +106,10 @@ namespace OrgChart.Layout
                 AssertBoxSize(box);
             }
 
-            // update visibility of boxes based on collapsed state
+            // initialize layout state on each node
             tree.IterateParentFirst(
                 node =>
                 {
-                    node.State.IsHidden =
-                        node.ParentNode != null &&
-                        (node.ParentNode.State.IsHidden || node.ParentNode.Element.IsCollapsed);
-
                     node.State.MoveTo(0, 0);
                     node.State.Size = node.Element.Size;
                     node.State.BranchExterior = new Rect(new Point(0, 0), node.Element.Size);
@@ -102,14 +117,14 @@ namespace OrgChart.Layout
                     return true;
                 });
 
-            state.CurrentOperation = LayoutState.Operation.PreprocessVisualTree;
             PreprocessVisualTree(state, tree);
+            tree.UpdateHierarchyStats();
 
             state.CurrentOperation = LayoutState.Operation.VerticalLayout;
-            VerticalLayout(state, tree.Roots[0]);
+            VerticalLayout(state, tree.Root);
 
             state.CurrentOperation = LayoutState.Operation.HorizontalLayout;
-            HorizontalLayout(state, tree.Roots[0]);
+            HorizontalLayout(state, tree.Root);
 
             state.CurrentOperation = LayoutState.Operation.ConnectorsLayout;
             RouteConnectors(state, tree);
@@ -313,7 +328,7 @@ namespace OrgChart.Layout
             
             foreach (var child in children)
             {
-                BoxTree.TreeNode.IterateChildFirst(child, action);
+                child.IterateChildFirst(action);
             }
 
             layoutLevel.Boundary.ReloadFromBranch(layoutLevel.BranchRoot);
@@ -328,8 +343,7 @@ namespace OrgChart.Layout
         /// <remarks>DOES NOT update branch boundary! Must call <see cref="Boundary.ReloadFromBranch"/> after batch of updates is complete</remarks>
         private static void MoveOneChild([NotNull]LayoutState state, [NotNull]BoxTree.TreeNode root, double offset)
         {
-            BoxTree.TreeNode.IterateChildFirst(root,
-                node =>
+            root.IterateChildFirst(node =>
                 {
                     if (!node.State.IsHidden)
                     {

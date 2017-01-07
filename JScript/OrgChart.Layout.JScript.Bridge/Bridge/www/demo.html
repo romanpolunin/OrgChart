@@ -60,6 +60,10 @@
             text-align: center;
         }
 
+        .chartConnectorsPlane {
+            z-index: 0;
+        }
+
         .chartHLine {
             z-index: 0;
             position: absolute;
@@ -87,17 +91,31 @@
 
     <div class="row">
 
-        <div id="sample" style="position: relative;">
+        <div id="sample" style="">
             <p>
                 <input type="checkbox" id="SuppressRootBox" onchange="changedSuppressRootBox(this)" />
                 <label for="SuppressRootBox">Suppress root data item, to have multiple roots in the diagram</label>
                 <br/>
+                <input type="checkbox" id="CollapseAllOnRebuild" checked />
+                <label for="CollapseAllOnRebuild">Collapse all boxes on data change</label>
+                <br />
+                <input type="radio" name="DataCounts" id="DataCounts" value="small" onclick="clickDataCounts(this)"/>Small
+                <input type="radio" name="DataCounts" id="DataCounts" value="small-a" checked onclick="clickDataCounts(this)"/>Small with asst
+                <input type="radio" name="DataCounts" id="DataCounts" value="large" onclick="clickDataCounts(this)"/>Large
+                <input type="radio" name="DataCounts" id="DataCounts" value="large-a" onclick="clickDataCounts(this)"/>Large with asst
+                <input type="radio" name="DataCounts" id="DataCounts" value="huge-a" onclick="clickDataCounts(this)"/>Huge with asst
+                <br />
                 <input type="button" id="collapseAll" onclick="clickCollapseAll(this)" value="Collapse All" />
                 <input type="button" id="expandAll" onclick="clickExpandAll(this)" value="Expand All" />
-                <input type="radio" name="SelectBranchOptimizer" id="SelectBranchOptimizer" value="AllHanger" onclick="clickOptimizer(this)" checked/>Hanger
-                <input type="radio" name="SelectBranchOptimizer" id="SelectBranchOptimizer" value="AllFishbone1" onclick="clickOptimizer(this)"/>Fishbone 1
-                <input type="radio" name="SelectBranchOptimizer" id="SelectBranchOptimizer" value="AllFishbone2" onclick="clickOptimizer(this)"/>Fishbone 2
-                <input type="radio" name="SelectBranchOptimizer" id="SelectBranchOptimizer" value="Stackers" onclick="clickOptimizer(this)"/>Stackers
+                <input type="radio" name="SelectBranchOptimizer" id="SelectBranchOptimizer" value="AllLinear" onclick="clickOptimizer(this)" />Linear
+                <input type="radio" name="SelectBranchOptimizer" id="SelectBranchOptimizer" value="AllHanger2" onclick="clickOptimizer(this)" />Hanger2
+                <input type="radio" name="SelectBranchOptimizer" id="SelectBranchOptimizer" value="AllHanger4" onclick="clickOptimizer(this)" checked />Hanger4
+                <input type="radio" name="SelectBranchOptimizer" id="SelectBranchOptimizer" value="AllFishbone1" onclick="clickOptimizer(this)" />Fishbone 1
+                <input type="radio" name="SelectBranchOptimizer" id="SelectBranchOptimizer" value="AllFishbone2" onclick="clickOptimizer(this)" />Fishbone 2
+                <input type="radio" name="SelectBranchOptimizer" id="SelectBranchOptimizer" value="AllSingleColumnLeft" onclick="clickOptimizer(this)" />1 Column L
+                <input type="radio" name="SelectBranchOptimizer" id="SelectBranchOptimizer" value="AllSingleColumnRight" onclick="clickOptimizer(this)" />1 Column R
+                <input type="radio" name="SelectBranchOptimizer" id="SelectBranchOptimizer" value="Smart" onclick="clickOptimizer(this)" />Smart
+                <input type="radio" name="SelectBranchOptimizer" id="SelectBranchOptimizer" value="Stackers" onclick="clickOptimizer(this)" />Stackers
             </p>
             <div id="myDiagramDiv" style="background-color: white; border: dotted 1px black; width: 10px; height: 10px">
 
@@ -125,11 +143,12 @@
             diagram: {},
             dataSource: {},
             suppressRootBox: false,
+            totalBoxCount: 20,
+            percentAssistants: 10,
 
             boxClick: function(boxId) {
                 var box = ChartApp.diagram.getBoxes().getBoxesById().getItem(boxId);
                 box.IsCollapsed = !box.IsCollapsed;
-                ChartApp.renderBoxes();
                 ChartApp.positionBoxes();
             },
 
@@ -137,7 +156,6 @@
                 if (initData) {
                     ChartApp.initDiagram();
                 }
-                ChartApp.renderBoxes();
                 ChartApp.positionBoxes();
             },
 
@@ -151,9 +169,12 @@
                 }
             },
 
-            generateData: function(count) {
+            generateData: function () {
+                var count = ChartApp.totalBoxCount;
+                var percentAssistants = ChartApp.percentAssistants;
+
                 var dataSource = new OrgChart.Test.TestDataSource();
-                (new OrgChart.Test.TestDataGen()).GenerateDataItems(dataSource, count);
+                (new OrgChart.Test.TestDataGen()).GenerateDataItems(dataSource, count, percentAssistants);
 
                 if (ChartApp.suppressRootBox) {
                     dataSource.Items.remove('0');
@@ -169,27 +190,47 @@
                 return dataSource;
             },
 
-            initDiagram: function() {
-                var dataSource = ChartApp.generateData(20);
+            initDiagram: function () {
+                $("#myDiagramDiv").html('');
+                $("#myDiagramDiv").append('<div id="myConnectors" class="chartConnectorsPlane"/>')
+
+                var dataSource = ChartApp.generateData();
 
                 ChartApp.dataSource = dataSource;
 
                 var boxContainer = new OrgChart.Layout.BoxContainer.$ctor1(dataSource);
                 OrgChart.Test.TestDataGen.GenerateBoxSizes(boxContainer);
 
+                if ($("#CollapseAllOnRebuild")[0].checked) {
+                    ChartApp.collapseAllBoxes(boxContainer, true);
+                }
+
                 ChartApp.diagram = new OrgChart.Layout.Diagram();
 
                 var diagram = ChartApp.diagram;
                 diagram.setBoxes(boxContainer);
 
+                var linearLayoutStrategy = new OrgChart.Layout.LinearLayoutStrategy();
+                linearLayoutStrategy.ParentAlignment = OrgChart.Layout.BranchParentAlignment.Center;
+                diagram.LayoutSettings.LayoutStrategies.add("linear", linearLayoutStrategy);
+
                 var multiLineHangerLayoutStrategy = new OrgChart.Layout.MultiLineHangerLayoutStrategy();
-                multiLineHangerLayoutStrategy
-                    .ParentAlignment = OrgChart.Layout.BranchParentAlignment.Center;
-                diagram.LayoutSettings.LayoutStrategies.add("hanger", multiLineHangerLayoutStrategy);
+                multiLineHangerLayoutStrategy.ParentAlignment = OrgChart.Layout.BranchParentAlignment.Center;
+                multiLineHangerLayoutStrategy.MaxSiblingsPerRow = 2;
+                diagram.LayoutSettings.LayoutStrategies.add("hanger2", multiLineHangerLayoutStrategy);
+
+                multiLineHangerLayoutStrategy = new OrgChart.Layout.MultiLineHangerLayoutStrategy();
+                multiLineHangerLayoutStrategy.ParentAlignment = OrgChart.Layout.BranchParentAlignment.Center;
+                multiLineHangerLayoutStrategy.MaxSiblingsPerRow = 4;
+                diagram.LayoutSettings.LayoutStrategies.add("hanger4", multiLineHangerLayoutStrategy);
 
                 var singleColumnLayoutStrategy = new OrgChart.Layout.SingleColumnLayoutStrategy();
                 singleColumnLayoutStrategy.ParentAlignment = OrgChart.Layout.BranchParentAlignment.Right;
-                diagram.LayoutSettings.LayoutStrategies.add("singleColumn", singleColumnLayoutStrategy);
+                diagram.LayoutSettings.LayoutStrategies.add("singleColumnRight", singleColumnLayoutStrategy);
+
+                singleColumnLayoutStrategy = new OrgChart.Layout.SingleColumnLayoutStrategy();
+                singleColumnLayoutStrategy.ParentAlignment = OrgChart.Layout.BranchParentAlignment.Left;
+                diagram.LayoutSettings.LayoutStrategies.add("singleColumnLeft", singleColumnLayoutStrategy);
 
                 var fishboneLayoutStrategy = new OrgChart.Layout.MultiLineFishboneLayoutStrategy();
                 fishboneLayoutStrategy.ParentAlignment = OrgChart.Layout.BranchParentAlignment.Center;
@@ -225,13 +266,13 @@
                 vstackLayoutStrategy.SiblingSpacing = 50;
                 diagram.LayoutSettings.LayoutStrategies.add("vstackTop", vstackLayoutStrategy);
 
-                var assistantsLayoutStrategy = new OrgChart.Layout.MultiLineFishboneLayoutStrategy();
+                var assistantsLayoutStrategy = new OrgChart.Layout.FishboneAssistantsLayoutStrategy();
                 assistantsLayoutStrategy.ParentAlignment = OrgChart.Layout.BranchParentAlignment.Center;
                 diagram.LayoutSettings.LayoutStrategies.add("assistants", assistantsLayoutStrategy);
 
                 diagram.LayoutSettings.DefaultLayoutStrategyId = "vstack";
                 diagram.LayoutSettings.DefaultAssistantLayoutStrategyId = "assistants";
-                diagram.LayoutSettings.setBranchSpacing(5);
+                //diagram.LayoutSettings.setBranchSpacing(5);
             },
 
             getBoxLevel: function(boxContainer, box) {
@@ -248,23 +289,51 @@
                 return level;
             },
 
-            renderBoxes: function () {
-                $("#myDiagramDiv").html('');
+            onLayoutStateChanged: function (sender, args) {
 
+                if (args.State.getCurrentOperation() === OrgChart.Layout.LayoutState.Operation.PreprocessVisualTree) {
+                    // When layout algorithm is ready to preprocess the tree,
+                    // we need to have box sizes ready -> hence have to render visible boxes in HTML.
+                    // Rendering can happen at earlier time, but it's just more convenient to do it here,
+                    // to utilize some readily available information about visual tree.
+                    ChartApp.renderBoxes();
+                }
+            },
+            
+            renderBoxes: function () {
                 var boxContainer = ChartApp.diagram.getBoxes();
                 var dataSource = ChartApp.dataSource;
                 
                 var expanderHtml = '<div id="exp{0}" class="expander" onclick="ChartApp.boxClick({0})">?</div>';
                 var boxHtml = '<div id="box{0}" class="{2}" style="width: 150px; height: auto;" onclick="ChartApp.boxClick({0})"><p><b>{3}</b></p>Box #{0}, Data #{1}, Asst: {4}</div>';
 
-                var en = boxContainer.getBoxesById().getValues().getEnumerator();
-                while (en.moveNext()) {
-                    var box = en.getCurrent();
+                var visitorFunc = function (node) {
+                    var box = node.Element;
 
-                    if (box.DataId != null) {
+                    if (box.getIsDataBound()) {
+                        // we're being run when nodes have already been marked as visible or hidden,
+                        // based on IsCollapsed attribute of each Box
+                        // so use this knowledge to prevent unnecessary rendering of invisible branches
+                        var existing = $('#box' + box.Id);
+                        if (existing.length > 0) {
+                            var exp = $('#exp' + box.Id);
+                            if (node.State.IsHidden) {
+                                existing.hide();
+                                if (exp.length > 0) exp.hide();
+                            } else {
+                                existing.show();
+                                if (exp.length > 0) exp.show();
+                            }
+                            return true;
+                        } else if (node.State.IsHidden) {
+                            return true;
+                        }
+
                         var level = ChartApp.getBoxLevel(boxContainer, box);
                         var dataItem = dataSource.GetDataItem(box.DataId);
 
+                        // level 0 is always for the BoxContainer.SystemRoot
+                        // normal boxes are under it, so they start at level 1
                         if (level === 1) {
                             $("#myDiagramDiv")
                                 .append(boxHtml.format(box.Id, box.DataId, "chartBoxTop", "Top", box.IsAssistant));
@@ -276,13 +345,22 @@
                                 .append(boxHtml.format(box.Id, box.DataId, "chartBoxLower", "Lower", box.IsAssistant));
                         } else {
                             $("#myDiagramDiv")
-                                .append(boxHtml.format(box.Id, box.DataId, "chartBoxLowest", "Lowest", box.IsAssistant));
+                                .append(boxHtml.format(box.Id, box.DataId, "chartBoxLowest", "Lowest ({0})".format(level), box.IsAssistant));
                         }
 
-                        $("#myDiagramDiv")
-                            .append(expanderHtml.format(box.Id));
+                        if (node.getChildCount() > 0 || node.AssistantsRoot != null) {
+                            $("#myDiagramDiv")
+                                .append(expanderHtml.format(box.Id));
+                        }
+
+                        // now store element size, as rendered by browser
+                        box.Size = ChartApp.getBoxElementSize(box.Id);
                     }
+
+                    return true;
                 }
+
+                ChartApp.diagram.getVisualTree().IterateParentFirst(visitorFunc);
             },
 
             getBranchOptimizerFunc: function () {
@@ -291,20 +369,32 @@
                 return func;
             },
 
-            branchOptimizerAllHanger: function(node) {
-                return "hanger";
+            branchOptimizerAllLinear: function(node) {
+                return node.getIsAssistantRoot() ? null : "linear";
+            },
+            
+            branchOptimizerAllHanger2: function(node) {
+                return node.getIsAssistantRoot() ? null : "hanger2";
+            },
+            
+            branchOptimizerAllHanger4: function(node) {
+                return node.getIsAssistantRoot() ? null : "hanger4";
             },
             
             branchOptimizerAllFishbone1: function(node) {
-                return "fishbone1";
+                return node.getIsAssistantRoot() ? null : "fishbone1";
             },
 
             branchOptimizerAllFishbone2: function (node) {
-                return "fishbone2";
+                return node.getIsAssistantRoot() ? null : "fishbone2";
             },
 
-            branchOptimizerAllSingleColumn: function (node) {
-                return "singleColumn";
+            branchOptimizerAllSingleColumnLeft: function (node) {
+                return node.getIsAssistantRoot() ? null : "singleColumnRight";
+            },
+
+            branchOptimizerAllSingleColumnRight: function (node) {
+                return node.getIsAssistantRoot() ? null : "singleColumnLeft";
             },
 
             branchOptimizerStackers: function(node) {
@@ -315,90 +405,113 @@
                     ? "vstackTop"
                     : node.Level === 1 // this is children of SystemRoot - they appear as roots in the diagram
                     ? "vstackMiddle"
-                    : node.Level === 2
-                    ? "hstack"
-                    : "vstack";
+                    : "hstack";
 
             },
 
-            branchOptimizerTricky: function(node) {
-                
+            branchOptimizerSmart: function(node) {
+                if (node.getIsAssistantRoot()) {
+                    return null;
+                }
+
+                var childCount = node.getChildCount();
+
+                if (childCount <= 1) {
+                    return "vstack";
+                }
+
+                var nonLeafChildren = 0;
+                for (var i = 0; i < childCount; i++) {
+                    if (node.Children.getItem(i).getChildCount() > 0) {
+                        nonLeafChildren++;
+                    }
+                }
+
+                if (nonLeafChildren <= 1) {
+                    if (childCount <= 4) {
+                        return "vstack";
+                    }
+                    if (childCount <= 8) {
+                        return "fishbone1";
+                    }
+                    return "fishbone2";
+                }
+
+                return "hanger4";
+            },
+
+            boxSizeFunc: function (dataId) {
+                // ChartLayoutAlgorithm requires this function to accept data ID
+                // so have to convert it to Box ID first, to get rendered visual element
+                var boxId = ChartApp.diagram.getBoxes().getBoxesByDataId().getItem(dataId).Id;
+                return ChartApp.diagram.getBoxes().getBoxesById().getItem(boxId).Size;
+            },
+
+            getBoxElementSize: function (boxId) {
+                var div = $('#box' + boxId);
+                if (div.length > 0) {
+                    return new OrgChart.Layout.Size.$ctor1(div.outerWidth(), div.outerHeight());
+                } else {
+                    return new OrgChart.Layout.Size.$ctor1(5, 5);
+                }
             },
 
             positionBoxes: function () {
+                $('#myConnectors').html('');
+
                 var boxContainer = ChartApp.diagram.getBoxes();
                 var dataSource = ChartApp.dataSource;
                 var diagram = ChartApp.diagram;
 
                 var state = new OrgChart.Layout.LayoutState(diagram);
 
-                state.BoxSizeFunc = Bridge.fn.bind(
-                    this,
-                    function (dataId) {
-                        var boxId = boxContainer.getBoxesByDataId().getItem(dataId).Id;
-                        var div = $('#box' + boxId);
-                        if (div.length > 0) {
-                            return new OrgChart.Layout.Size.$ctor1(div.outerWidth(), div.outerHeight());
-                        } else {
-                            return new OrgChart.Layout.Size.$ctor1(5, 5);
-                        }
-                    },
-                    dataSource,
-                    true);
-
-                state.LayoutOptimizerFunc = Bridge.fn.bind(
-                    this,
-                    ChartApp.getBranchOptimizerFunc(),
-                    null,
-                    true);
+                state.addOperationChanged(ChartApp.onLayoutStateChanged);
+                state.BoxSizeFunc = Bridge.fn.bind(this, ChartApp.boxSizeFunc, null, true);
+                state.LayoutOptimizerFunc = Bridge.fn.bind(this, ChartApp.getBranchOptimizerFunc(), null, true);
 
                 OrgChart.Layout.LayoutAlgorithm.Apply(state);
 
-                var rect = OrgChart.Layout.LayoutAlgorithm
-                    .ComputeBranchVisualBoundingRect(diagram.getVisualTree());
+                var diagramBoundary = OrgChart.Layout.LayoutAlgorithm.ComputeBranchVisualBoundingRect(diagram.getVisualTree());
 
-                $("#myDiagramDiv").width(rect.Size.Width);
-                $("#myDiagramDiv").height(rect.Size.Height);
+                $("#myDiagramDiv").width(diagramBoundary.Size.Width);
+                $("#myDiagramDiv").height(diagramBoundary.Size.Height);
 
-                var view = $("#myDiagramDiv").offset();
-                var offsetx = -rect.getLeft() + view.left;
-                var offsety = -rect.getTop() + view.top;
+                var viewPort = $("#myDiagramDiv").offset();
+                var offsetx = -diagramBoundary.getLeft() + viewPort.left;
+                var offsety = -diagramBoundary.getTop() + viewPort.top;
 
                 var visitorFunc = function (node) {
+                    if (node.State.IsHidden) {
+                        return false;
+                    }
+
                     var box = node.Element;
 
                     if (box.getIsDataBound()) {
 
+                        // All boxes have already been rendered before the chart layout,
+                        // to have all box sizes available before layout.
+                        // So now we only have to position them.
+                        // Connectors, however, are not rendered until layout is complete (see next block).
+
                         var div = $('#box' + box.Id);
                         if (div.length > 0) {
 
-                            var exp = $('#exp' + box.Id);
+                            var x = node.State.TopLeft.X + offsetx;
+                            var y = node.State.TopLeft.Y + offsety;
 
-                            if (node.Level === 0 || node.State.IsHidden) {
-                                div.hide();
-                                exp.hide();
-                            } else {
-                                var x = node.State.TopLeft.X + offsetx;
-                                var y = node.State.TopLeft.Y + offsety;
+                            div.offset({ left: x, top: y });
+                            div.css("width", node.State.Size.Width);
+                            div.css("height", node.State.Size.Height);
 
-                                div.offset({ left: x, top: y });
-                                div.css("width", node.State.Size.Width);
-                                div.css("height", node.State.Size.Height);
-
-                                if (node.getChildCount() === 0) {
-                                    exp.hide();
-                                } else {
+                            if (node.getChildCount() > 0 || node.AssistantsRoot != null) {
+                                var exp = $('#exp' + box.Id);
+                                if (exp.length > 0) {
                                     x = node.State.getRight() + offsetx - 15;
                                     y = node.State.getBottom() + offsety - 15;
                                     exp.offset({ left: x, top: y });
 
-                                    if (box.IsCollapsed &&
-                                    (
-                                        node.getChildCount() > 0 ||
-                                            node
-                                            .AssistantsRoot !=
-                                            null &&
-                                            node.AssistantsRoot.getChildCount() > 0)) {
+                                    if (box.IsCollapsed) {
                                         exp.text('▼');
                                     } else {
                                         exp.text('△');
@@ -408,6 +521,7 @@
                         }
                     }
 
+                    // Render connectors
                     if (node.State.Connector != null) {
                         for (var ix = 0; ix < node.State.Connector.Segments.length; ix++) {
                             var edge = node.State.Connector.Segments[ix];
@@ -440,7 +554,7 @@
                                 edgeType = edgeType + "Dotted";
                             }
 
-                            $("#myDiagramDiv")
+                            $("#myConnectors")
                                 .append('<div class="' +
                                     edgeType +
                                     '" style="top:' +
@@ -458,7 +572,7 @@
                     return true;
                 }
 
-                diagram.getVisualTree().IterateChildFirst(visitorFunc);
+                diagram.getVisualTree().IterateParentFirst(visitorFunc);
             }
 
         }
@@ -497,6 +611,27 @@
 
     function clickOptimizer(rd) {
         ChartApp.buildChart(false);
+    }
+
+    function clickDataCounts(rd) {
+        var value = rd.value;
+        if (value === "small") {
+            ChartApp.totalBoxCount = 20;
+            ChartApp.percentAssistants = 0;
+        } else if (value === "small-a") {
+            ChartApp.totalBoxCount = 20;
+            ChartApp.percentAssistants = 10;
+        }  else if (value === "large") {
+            ChartApp.totalBoxCount = 200;
+            ChartApp.percentAssistants = 0;
+        }  else if (value === "large-a") {
+            ChartApp.totalBoxCount = 200;
+            ChartApp.percentAssistants = 10;
+        }  else if (value === "huge-a") {
+            ChartApp.totalBoxCount = 1000;
+            ChartApp.percentAssistants = 5;
+        } 
+        ChartApp.buildChart(true);
     }
 </script>
 </body>

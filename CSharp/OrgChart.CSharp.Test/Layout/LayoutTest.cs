@@ -12,7 +12,7 @@ namespace OrgChart.CSharp.Test.Layout
         public void TestDataSource()
         {
             var dataSource = new TestDataSource();
-            new TestDataGen().GenerateDataItems(dataSource, 10);
+            new TestDataGen().GenerateDataItems(dataSource, 10, 0);
 
             var boxContainer = new BoxContainer(dataSource);
 
@@ -27,7 +27,7 @@ namespace OrgChart.CSharp.Test.Layout
         public void TestLayout()
         {
             var dataSource = new TestDataSource();
-            new TestDataGen().GenerateDataItems(dataSource, 10);
+            new TestDataGen().GenerateDataItems(dataSource, 10, 0);
 
             var boxContainer = new BoxContainer(dataSource);
             TestDataGen.GenerateBoxSizes(boxContainer);

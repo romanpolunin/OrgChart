@@ -62,7 +62,7 @@ namespace OrgChart.CSharp.Test.App
             if (resetBoxes || m_diagram == null)
             {
                 m_dataSource = new TestDataSource();
-                new TestDataGen().GenerateDataItems((TestDataSource)m_dataSource, 200);
+                new TestDataGen().GenerateDataItems((TestDataSource)m_dataSource, 200, 5);
                 //m_dataSource = new DebugDataSource();
                 //await ((DebugDataSource)m_dataSource).Load();
 
@@ -110,7 +110,7 @@ namespace OrgChart.CSharp.Test.App
 
                 m_diagram.LayoutSettings.DefaultLayoutStrategyId = "hanger";
                 m_diagram.LayoutSettings.DefaultAssistantLayoutStrategyId = "assistants";
-                m_diagram.LayoutSettings.BranchSpacing = 5;
+                //m_diagram.LayoutSettings.BranchSpacing = 5;
             }
 
             var state = new LayoutState(m_diagram);
@@ -156,6 +156,8 @@ namespace OrgChart.CSharp.Test.App
 
         private string LayoutOptimizer(BoxTree.TreeNode node)
         {
+            return null;
+
             if (node.IsAssistantRoot)
             {
                 return null;
@@ -221,7 +223,8 @@ namespace OrgChart.CSharp.Test.App
 
         private void UpdateListView(BoxTree visualTree)
         {
-            m_nodesForTreeCollection = new ObservableCollection<NodeViewModel>(visualTree.Roots.Select(x => new NodeViewModel {Node = x}));
+            m_nodesForTreeCollection = new ObservableCollection<NodeViewModel>();
+            m_nodesForTreeCollection.Add(new NodeViewModel { Node = visualTree.Root });
             LvBoxes.ItemsSource = m_nodesForTreeCollection;
         }
 
@@ -234,7 +237,8 @@ namespace OrgChart.CSharp.Test.App
                     item.Changed();
                 }
             }
-            m_nodesForTreeCollection = new ObservableCollection<NodeViewModel>(visualTree.Roots.Select(x => new NodeViewModel {Node = x}));
+            m_nodesForTreeCollection = new ObservableCollection<NodeViewModel>();
+            m_nodesForTreeCollection.Add(new NodeViewModel { Node = visualTree.Root });
             LvBoxes.ItemsSource = m_nodesForTreeCollection;
         }
 

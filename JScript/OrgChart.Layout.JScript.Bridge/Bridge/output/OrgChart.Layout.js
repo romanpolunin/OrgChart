@@ -1148,9 +1148,12 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
                             parentNode.v.AddRegularChild$1(node1);
                         }
                     } else {
+                        if (result.getRoot() != null) {
+                            throw new System.InvalidOperationException("More then one root found: " + node1.getElement().Id);
+                        }
                         // In case of data errors, parent key may be not null, but parent node is not there.
                         // Just add the node to roots.
-                        result.getRoots().add(node1);
+                        result.setRoot(node1);
                     }
                 }
 
@@ -1160,27 +1163,29 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
         config: {
             properties: {
                 /**
-                 * Root node wrappers.
+                 * Root node, as detected from data.
+                 Corresponds to {@link } box.
                  *
                  * @instance
                  * @public
                  * @this OrgChart.Layout.BoxTree
                  * @memberof OrgChart.Layout.BoxTree
-                 * @function getRoots
-                 * @return  {System.Collections.Generic.List$1}
+                 * @function getRoot
+                 * @return  {OrgChart.Layout.BoxTree.TreeNode}
                  */
                 /**
-                 * Root node wrappers.
+                 * Root node, as detected from data.
+                 Corresponds to {@link } box.
                  *
                  * @instance
                  * @private
                  * @this OrgChart.Layout.BoxTree
                  * @memberof OrgChart.Layout.BoxTree
-                 * @function setRoots
-                 * @param   {System.Collections.Generic.List$1}    value
+                 * @function setRoot
+                 * @param   {OrgChart.Layout.BoxTree.TreeNode}    value
                  * @return  {void}
                  */
-                Roots: null,
+                Root: null,
                 /**
                  * Dictionary of all node wrappers.
                  Nodes are always one-to-one with elements, so they are identified by element keys.
@@ -1240,7 +1245,6 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
          */
         ctor: function () {
             this.$initialize();
-            this.setRoots(new (System.Collections.Generic.List$1(OrgChart.Layout.BoxTree.TreeNode))());
             this.setNodes(new (System.Collections.Generic.Dictionary$2(System.Int32,OrgChart.Layout.BoxTree.TreeNode))());
         },
         /**
@@ -1251,20 +1255,11 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
          * @public
          * @this OrgChart.Layout.BoxTree
          * @memberof OrgChart.Layout.BoxTree
-         * @param   {System.Func}    func    A func to evaluate on items of {@link } and their children. Whenever it returns false, iteration stops
+         * @param   {System.Func}    func    A func to evaluate on {@link } and its children. Whenever it returns false, iteration stops
          * @return  {boolean}                True if <b /> never returned <pre><code>false</code></pre>
          */
         IterateChildFirst: function (func) {
-            var $t;
-            $t = Bridge.getEnumerator(this.getRoots());
-            while ($t.moveNext()) {
-                var root = $t.getCurrent();
-                if (!OrgChart.Layout.BoxTree.TreeNode.IterateChildFirst(root, func)) {
-                    return false;
-                }
-            }
-
-            return true;
+            return this.getRoot().IterateChildFirst(func);
         },
         /**
          * Goes through all elements depth-first. Applies <b /> to the parent first, then to all children recursively.
@@ -1280,15 +1275,10 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
          * @return  {void}
          */
         IterateParentFirst: function (enter, exit) {
-            var $t;
             if (exit === void 0) { exit = null; }
-            $t = Bridge.getEnumerator(this.getRoots());
-            while ($t.moveNext()) {
-                var root = $t.getCurrent();
-                // Ignore returned value, in this mode children at each level 
-                // decide for themselves whether they want to iterate further down.
-                OrgChart.Layout.BoxTree.TreeNode.IterateParentFirst(root, enter, exit);
-            }
+            // Ignore returned value, in this mode children at each level 
+            // decide for themselves whether they want to iterate further down.
+            this.getRoot().IterateParentFirst(enter, exit);
         },
         /**
          * Update every node's {@link } and {@link } of the tree.
@@ -1331,79 +1321,6 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
      * @class OrgChart.Layout.BoxTree.TreeNode
      */
     Bridge.define("OrgChart.Layout.BoxTree.TreeNode", {
-        statics: {
-            /**
-             * Goes through all elements depth-first. Applies <b /> to all children recursively, then to the parent.
-             If <b /> returns <pre><code>false</code></pre>, it will stop entire processing.
-             *
-             * @static
-             * @public
-             * @this OrgChart.Layout.BoxTree.TreeNode
-             * @memberof OrgChart.Layout.BoxTree.TreeNode
-             * @param   {OrgChart.Layout.BoxTree.TreeNode}    root    Current node
-             * @param   {System.Func}                         func    A func to evaluate on <b>func</b> and its children. Whenever it returns false, iteration stops
-             * @return  {boolean}                                     True if <b /> never returned <pre><code>false</code></pre>
-             */
-            IterateChildFirst: function (root, func) {
-                var $t;
-                if (root.getAssistantsRoot() != null) {
-                    if (!OrgChart.Layout.BoxTree.TreeNode.IterateChildFirst(root.getAssistantsRoot(), func)) {
-                        return false;
-                    }
-                }
-
-                if (root.getChildren() != null) {
-                    $t = Bridge.getEnumerator(root.getChildren(), OrgChart.Layout.BoxTree.TreeNode);
-                    while ($t.moveNext()) {
-                        var child = $t.getCurrent();
-                        if (!OrgChart.Layout.BoxTree.TreeNode.IterateChildFirst(child, func)) {
-                            return false;
-                        }
-                    }
-                }
-
-                return func(root);
-            },
-            /**
-             * Goes through all elements depth-first. Applies <b /> to the parent first, then to all children recursively.
-             In this mode, children at each level decide for themselves whether they want to iterate further down, 
-             e.g. <b /> can cut-off a branch.
-             *
-             * @static
-             * @public
-             * @this OrgChart.Layout.BoxTree.TreeNode
-             * @memberof OrgChart.Layout.BoxTree.TreeNode
-             * @param   {OrgChart.Layout.BoxTree.TreeNode}    root     Current node
-             * @param   {System.Predicate}                    enter    A predicate to allow iteration of branch under <b>enter</b>
-             * @param   {System.Action}                       exit     An optional action to run afer iteration of some branch is complete
-             * @return  {boolean}
-             */
-            IterateParentFirst: function (root, enter, exit) {
-                var $t;
-                if (exit === void 0) { exit = null; }
-                if (!enter(root)) {
-                    !Bridge.staticEquals(exit, null) ? exit(root) : null;
-                    return false;
-                }
-
-                if (root.getAssistantsRoot() != null) {
-                    OrgChart.Layout.BoxTree.TreeNode.IterateParentFirst(root.getAssistantsRoot(), enter, exit);
-                }
-
-                if (root.getChildren() != null) {
-                    $t = Bridge.getEnumerator(root.getChildren(), OrgChart.Layout.BoxTree.TreeNode);
-                    while ($t.moveNext()) {
-                        var child = $t.getCurrent();
-                        // Ignore returned value, in this mode children at each level 
-                        // decide for themselves whether they want to iterate further down.
-                        OrgChart.Layout.BoxTree.TreeNode.IterateParentFirst(child, enter, exit);
-                    }
-                }
-                !Bridge.staticEquals(exit, null) ? exit(root) : null;
-
-                return true;
-            }
-        },
         config: {
             properties: {
                 /**
@@ -1679,6 +1596,72 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
             child.setLevel((this.getLevel() + 1) | 0);
 
             return this;
+        },
+        /**
+         * Goes through all elements depth-first. Applies <b /> to all children recursively, then to the parent.
+         If <b /> returns <pre><code>false</code></pre>, it will stop entire processing.
+         *
+         * @instance
+         * @public
+         * @this OrgChart.Layout.BoxTree.TreeNode
+         * @memberof OrgChart.Layout.BoxTree.TreeNode
+         * @param   {System.Func}    func    A func to evaluate on this node and its children. Whenever it returns false, iteration stops
+         * @return  {boolean}                True if <b /> never returned <pre><code>false</code></pre>
+         */
+        IterateChildFirst: function (func) {
+            var $t;
+            if (this.getAssistantsRoot() != null) {
+                if (!this.getAssistantsRoot().IterateChildFirst(func)) {
+                    return false;
+                }
+            }
+
+            if (this.getChildren() != null) {
+                $t = Bridge.getEnumerator(this.getChildren(), OrgChart.Layout.BoxTree.TreeNode);
+                while ($t.moveNext()) {
+                    var child = $t.getCurrent();
+                    if (!child.IterateChildFirst(func)) {
+                        return false;
+                    }
+                }
+            }
+
+            return func(this);
+        },
+        /**
+         * Goes through all elements depth-first. Applies <b /> to the parent first, then to all children recursively.
+         In this mode, children at each level decide for themselves whether they want to iterate further down, 
+         e.g. <b /> can cut-off a branch.
+         *
+         * @instance
+         * @public
+         * @this OrgChart.Layout.BoxTree.TreeNode
+         * @memberof OrgChart.Layout.BoxTree.TreeNode
+         * @param   {System.Predicate}    enter    A predicate to allow iteration of branch under this node
+         * @param   {System.Action}       exit     An optional action to run afer iteration of some branch is complete
+         * @return  {boolean}
+         */
+        IterateParentFirst: function (enter, exit) {
+            var $t, $t1;
+            if (exit === void 0) { exit = null; }
+            if (!enter(this)) {
+                !Bridge.staticEquals(exit, null) ? exit(this) : null;
+                return false;
+            }
+            ($t = this.getAssistantsRoot()) != null ? $t.IterateParentFirst(enter, exit) : null;
+
+            if (this.getChildren() != null) {
+                $t1 = Bridge.getEnumerator(this.getChildren(), OrgChart.Layout.BoxTree.TreeNode);
+                while ($t1.moveNext()) {
+                    var child = $t1.getCurrent();
+                    // Ignore returned value, in this mode children at each level 
+                    // decide for themselves whether they want to iterate further down.
+                    child.IterateParentFirst(enter, exit);
+                }
+            }
+            !Bridge.staticEquals(exit, null) ? exit(this) : null;
+
+            return true;
         },
         /**
          * Transforms assistants into regular children, 
@@ -2404,7 +2387,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
                 var result = new OrgChart.Layout.Rect.ctor();
                 var initialized = false;
 
-                OrgChart.Layout.BoxTree.TreeNode.IterateParentFirst(visualTree.getRoots().getItem(0), function (node) {
+                visualTree.getRoot().IterateParentFirst(function (node) {
                     var box = node.getElement();
 
                     if (!node.getState().IsHidden && !box.IsSpecial) {
@@ -2444,8 +2427,9 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
 
                 state.getDiagram().setVisualTree(tree);
 
-                // verify the root
-                if (tree.getRoots().getCount() !== 1 || tree.getRoots().getItem(0).getElement().Id !== state.getDiagram().getBoxes().getSystemRoot().Id) {
+                // verify the root: regardless of data items, there must be a system root box on top of everything
+                // the corresponding node is not supposed to be rendered, it only serves as layout algorithm's starting point
+                if (tree.getRoot() == null || tree.getRoot().getElement().Id !== state.getDiagram().getBoxes().getSystemRoot().Id) {
                     throw new System.Exception("SystemRoot is not on the top of the visual tree");
                 }
 
@@ -2453,9 +2437,19 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
                 tree.UpdateHierarchyStats();
                 state.AttachVisualTree(tree);
 
+                // update visibility of boxes based on collapsed state
+                tree.IterateParentFirst($asm.$.OrgChart.Layout.LayoutAlgorithm.f1);
+
+                // In this phase, we will figure out layout strategy
+                // and initialize layout state for each node.
+                // Event listener may perform initial rendering /measuring of boxes when this event fires,
+                // to determine box sizes and be ready to supply them via BoxSizeFunc delegate.
+                state.setCurrentOperation(OrgChart.Layout.LayoutState.Operation.PreprocessVisualTree);
+
+                // initialize box sizes
                 if (!Bridge.staticEquals(state.getBoxSizeFunc(), null)) {
                     // apply box sizes
-                    $t = Bridge.getEnumerator(System.Linq.Enumerable.from(state.getDiagram().getBoxes().getBoxesById().System$Collections$Generic$IDictionary$2$System$Int32$OrgChart$Layout$Box$getValues()).where($asm.$.OrgChart.Layout.LayoutAlgorithm.f1));
+                    $t = Bridge.getEnumerator(System.Linq.Enumerable.from(state.getDiagram().getBoxes().getBoxesById().System$Collections$Generic$IDictionary$2$System$Int32$OrgChart$Layout$Box$getValues()).where($asm.$.OrgChart.Layout.LayoutAlgorithm.f2));
                     while ($t.moveNext()) {
                         var box = $t.getCurrent();
                         box.Size = state.getBoxSizeFunc()(box.DataId);
@@ -2468,17 +2462,17 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
                     OrgChart.Layout.LayoutAlgorithm.AssertBoxSize(box1);
                 }
 
-                // update visibility of boxes based on collapsed state
-                tree.IterateParentFirst($asm.$.OrgChart.Layout.LayoutAlgorithm.f2);
+                // initialize layout state on each node
+                tree.IterateParentFirst($asm.$.OrgChart.Layout.LayoutAlgorithm.f3);
 
-                state.setCurrentOperation(OrgChart.Layout.LayoutState.Operation.PreprocessVisualTree);
                 OrgChart.Layout.LayoutAlgorithm.PreprocessVisualTree(state, tree);
+                tree.UpdateHierarchyStats();
 
                 state.setCurrentOperation(OrgChart.Layout.LayoutState.Operation.VerticalLayout);
-                OrgChart.Layout.LayoutAlgorithm.VerticalLayout(state, tree.getRoots().getItem(0));
+                OrgChart.Layout.LayoutAlgorithm.VerticalLayout(state, tree.getRoot());
 
                 state.setCurrentOperation(OrgChart.Layout.LayoutState.Operation.HorizontalLayout);
-                OrgChart.Layout.LayoutAlgorithm.HorizontalLayout(state, tree.getRoots().getItem(0));
+                OrgChart.Layout.LayoutAlgorithm.HorizontalLayout(state, tree.getRoot());
 
                 state.setCurrentOperation(OrgChart.Layout.LayoutState.Operation.ConnectorsLayout);
                 OrgChart.Layout.LayoutAlgorithm.RouteConnectors(state, tree);
@@ -2662,7 +2656,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
                 $t = Bridge.getEnumerator(children, OrgChart.Layout.BoxTree.TreeNode);
                 while ($t.moveNext()) {
                     var child = $t.getCurrent();
-                    OrgChart.Layout.BoxTree.TreeNode.IterateChildFirst(child, action);
+                    child.IterateChildFirst(action);
                 }
 
                 layoutLevel.Boundary.ReloadFromBranch(layoutLevel.BranchRoot);
@@ -2683,7 +2677,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
              * @return  {void}
              */
             MoveOneChild: function (state, root, offset) {
-                OrgChart.Layout.BoxTree.TreeNode.IterateChildFirst(root, function (node) {
+                root.IterateChildFirst(function (node) {
                     if (!node.getState().IsHidden) {
                         node.getState().TopLeft = node.getState().TopLeft.MoveH(offset);
                         node.getState().BranchExterior = node.getState().BranchExterior.MoveH(offset);
@@ -2870,12 +2864,15 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
     Bridge.ns("OrgChart.Layout.LayoutAlgorithm", $asm.$);
 
     Bridge.apply($asm.$.OrgChart.Layout.LayoutAlgorithm, {
-        f1: function (x) {
-            return x.getIsDataBound();
-        },
-        f2: function (node) {
+        f1: function (node) {
             node.getState().IsHidden = node.getParentNode() != null && (node.getParentNode().getState().IsHidden || node.getParentNode().getElement().IsCollapsed);
 
+            return true;
+        },
+        f2: function (x) {
+            return x.getIsDataBound();
+        },
+        f3: function (node) {
             OrgChart.Layout.LayoutAlgorithm.MoveTo(node.getState(), 0, 0);
             node.getState().Size = node.getElement().Size;
             node.getState().BranchExterior = new OrgChart.Layout.Rect.$ctor1(new OrgChart.Layout.Point.$ctor1(0, 0), node.getElement().Size);
@@ -3118,7 +3115,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
          * @return  {void}
          */
         AttachVisualTree: function (tree) {
-            for (var i = 0; i < tree.getDepth(); i = (i + 1) | 0) {
+            while (this.m_pooledBoundaries.getCount() < tree.getDepth()) {
                 this.m_pooledBoundaries.push(new OrgChart.Layout.Boundary.ctor());
             }
         },
@@ -4126,21 +4123,20 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
          * @public
          * @this OrgChart.Test.TestDataGen
          * @memberof OrgChart.Test.TestDataGen
-         * @param   {OrgChart.Test.TestDataSource}    dataSource    
-         * @param   {number}                          count
+         * @param   {OrgChart.Test.TestDataSource}    dataSource           
+         * @param   {number}                          count                
+         * @param   {number}                          percentAssistants
          * @return  {void}
          */
-        GenerateDataItems: function (dataSource, count) {
+        GenerateDataItems: function (dataSource, count, percentAssistants) {
             var $t;
-            $t = Bridge.getEnumerator(this.GenerateRandomDataItems(count), OrgChart.Test.TestDataItem);
+            $t = Bridge.getEnumerator(this.GenerateRandomDataItems(count, percentAssistants));
             while ($t.moveNext()) {
                 var item = $t.getCurrent();
                 dataSource.Items.add(item.getId(), item);
             }
         },
-        GenerateRandomDataItems: function (itemCount) {
-            var $t;
-            var $yield = [];
+        GenerateRandomDataItems: function (itemCount, percentAssistants) {
             if (itemCount < 0) {
                 throw new System.ArgumentOutOfRangeException("itemCount", "Count must be zero or positive", null, itemCount);
             }
@@ -4177,16 +4173,14 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
             }
 
             // now mark first five boxes 
-            for (var i3 = 0; i3 < Math.max(1, ((Bridge.Int.div(items.getCount(), 2)) | 0)); i3 = (i3 + 1) | 0) {
-                items.getItem(random.next$1(items.getCount())).setIsAssistant(true);
+            if (percentAssistants > 0) {
+                var assistantCount = Math.min(items.getCount(), Bridge.Int.clip32(Math.ceil(((items.getCount() * percentAssistants) | 0) / 100.0)));
+                for (var i3 = 0; i3 < assistantCount; i3 = (i3 + 1) | 0) {
+                    items.getItem(random.next$1(items.getCount())).setIsAssistant(true);
+                }
             }
 
-            $t = Bridge.getEnumerator(items);
-            while ($t.moveNext()) {
-                var item = $t.getCurrent();
-                $yield.push(item);
-            }
-            return System.Array.toEnumerable($yield);
+            return items;
         }
     });
 
