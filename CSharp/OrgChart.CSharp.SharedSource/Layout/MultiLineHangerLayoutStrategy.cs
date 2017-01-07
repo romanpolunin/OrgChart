@@ -24,7 +24,7 @@ namespace OrgChart.Layout
         /// <summary>
         /// A chance for layout strategy to append special auto-generated boxes into the visual tree. 
         /// </summary>
-        public override void PreProcessThisNode([NotNull]LayoutState state, [NotNull] BoxTree.TreeNode node)
+        public override void PreProcessThisNode([NotNull]LayoutState state, [NotNull] BoxTree.Node node)
         {
             if (MaxSiblingsPerRow <= 0 || MaxSiblingsPerRow%2 != 0)
             {
@@ -252,7 +252,7 @@ namespace OrgChart.Layout
             }
         }
 
-        private IEnumerable<BoxTree.TreeNode> EnumerateColumn(BoxTree.TreeNode branchRoot, int col)
+        private IEnumerable<BoxTree.Node> EnumerateColumn(BoxTree.Node branchRoot, int col)
         {
             for (var row = 0; row < branchRoot.State.NumberOfSiblingRows; row++)
             {
@@ -269,7 +269,7 @@ namespace OrgChart.Layout
         /// <summary>
         /// Allocates and routes connectors.
         /// </summary>
-        public override void RouteConnectors([NotNull] LayoutState state, [NotNull] BoxTree.TreeNode node)
+        public override void RouteConnectors([NotNull] LayoutState state, [NotNull] BoxTree.Node node)
         {
             if (node.State.NumberOfSiblings <= MaxSiblingsPerRow)
             {

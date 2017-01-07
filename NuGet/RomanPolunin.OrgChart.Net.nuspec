@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>RomanPolunin.OrgChart.Net</id>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <title>Organizational charting library for .NET and JavaScript</title>
     <authors>Roman Polunin</authors>
     <owners>Roman Polunin</owners>
@@ -15,12 +15,13 @@ MIT License.
     <summary>A fast, robust and easily extensible organization chart layout library without any 3-rd party dependencies.</summary>
     <language>en-US</language>
     <tags>orgchart chart organizational diagram wpf universal html5 javascript js html</tags>
-	<licenseUrl>https://github.com/romanpolunin/OrgChart/blob/master/LICENSE.txt</licenseUrl>
+	<licenseUrl>https://github.com/romanpolunin/OrgChart/blob/master/LICENSE</licenseUrl>
 	<projectUrl>https://github.com/romanpolunin/OrgChart</projectUrl>
     <contentFiles>
       <files include=".\NuGet.exe" buildAction="None" />
     </contentFiles>
 	<copyright>(c) Roman Polunin 2016</copyright>
+	<releaseNotes>January 2017. Implemented new stacking strategy, fixed some issues, improved support for rendering, updated readme and demo apps, especially JavaScript. See https://romanpolunin.github.io/OrgChart/www/demo.html</releaseNotes>
   </metadata>
   <files>
     <file src="..\CSharp\OrgChart.Layout.CSharp.Windows\bin\Release\OrgChart.Layout.*" exclude="..\**\*.pssym;" target="lib\net462" />

@@ -16,7 +16,7 @@ namespace OrgChart.Layout
         /// <summary>
         /// Node wrapper.
         /// </summary>
-        public class TreeNode
+        public class Node
         {
             /// <summary>
             /// Hierarchy level.
@@ -39,13 +39,13 @@ namespace OrgChart.Layout
             /// Reference to parent node wrapper.
             /// </summary>
             [CanBeNull]
-            public TreeNode ParentNode { get; set; }
+            public Node ParentNode { get; set; }
 
             /// <summary>
             /// References to child node wrappers.
             /// </summary>
             [CanBeNull]
-            public IList<TreeNode> Children { get; protected set; }
+            public IList<Node> Children { get; protected set; }
 
             /// <summary>
             /// Special child used as root for assistants.
@@ -53,7 +53,7 @@ namespace OrgChart.Layout
             /// otherwise this would not be possible due to mixing of assistants and regulars into shared collection.
             /// </summary>
             [CanBeNull]
-            public TreeNode AssistantsRoot { get; protected set; }
+            public Node AssistantsRoot { get; protected set; }
 
             /// <summary>
             /// Number of children nodes.
@@ -72,11 +72,11 @@ namespace OrgChart.Layout
             /// Adds a new assistant child to the list, under <see cref="AssistantsRoot"/>. 
             /// Returns reference to self.
             /// </summary>
-            public TreeNode AddAssistantChild([NotNull] TreeNode child)
+            public Node AddAssistantChild([NotNull] Node child)
             {
                 if (AssistantsRoot == null)
                 {
-                    AssistantsRoot = new TreeNode(Box.Special(Box.None, Element.Id, true))
+                    AssistantsRoot = new Node(Box.Special(Box.None, Element.Id, true))
                     {
                         ParentNode = this,
                         Level = Level + 1
@@ -89,7 +89,7 @@ namespace OrgChart.Layout
             /// <summary>
             /// Adds a new child to the list. Returns reference to self.
             /// </summary>
-            public TreeNode AddRegularChild([NotNull] TreeNode child)
+            public Node AddRegularChild([NotNull] Node child)
             {
                 return InsertRegularChild(ChildCount, child);
             }
@@ -97,7 +97,7 @@ namespace OrgChart.Layout
             /// <summary>
             /// Adds a new child to the list. Returns reference to self.
             /// </summary>
-            public TreeNode AddRegularChild([NotNull] Box child)
+            public Node AddRegularChild([NotNull] Box child)
             {
                 return InsertRegularChild(ChildCount, child);
             }
@@ -105,19 +105,19 @@ namespace OrgChart.Layout
             /// <summary>
             /// Adds a new child to the list. Returns reference to self.
             /// </summary>
-            public TreeNode InsertRegularChild(int index, [NotNull] Box child)
+            public Node InsertRegularChild(int index, [NotNull] Box child)
             {
-                return InsertRegularChild(index, new TreeNode(child));
+                return InsertRegularChild(index, new Node(child));
             }
 
             /// <summary>
             /// Adds a new child to the list. Returns reference to self.
             /// </summary>
-            public TreeNode InsertRegularChild(int index, [NotNull] TreeNode child)
+            public Node InsertRegularChild(int index, [NotNull] Node child)
             {
                 if (Children == null)
                 {
-                    Children = new List<TreeNode>();
+                    Children = new List<Node>();
                 }
 
                 Children.Insert(index, child);
@@ -130,7 +130,7 @@ namespace OrgChart.Layout
             /// <summary>
             /// Ctr.
             /// </summary>
-            public TreeNode([NotNull]Box element)
+            public Node([NotNull]Box element)
             {
                 Element = element;
                 State = new NodeLayoutInfo();
@@ -142,7 +142,7 @@ namespace OrgChart.Layout
             /// </summary>
             /// <param name="func">A func to evaluate on this node and its children. Whenever it returns false, iteration stops</param>
             /// <returns>True if <paramref name="func"/> never returned <c>false</c></returns>
-            public bool IterateChildFirst([NotNull] Func<TreeNode, bool> func)
+            public bool IterateChildFirst([NotNull] Func<Node, bool> func)
             {
                 if (AssistantsRoot != null)
                 {
@@ -173,7 +173,7 @@ namespace OrgChart.Layout
             /// </summary>
             /// <param name="enter">A predicate to allow iteration of branch under this node</param>
             /// <param name="exit">An optional action to run afer iteration of some branch is complete</param>
-            public bool IterateParentFirst([NotNull] Predicate<TreeNode> enter, [CanBeNull] Action<TreeNode> exit = null)
+            public bool IterateParentFirst([NotNull] Predicate<Node> enter, [CanBeNull] Action<Node> exit = null)
             {
                 if (!enter(this))
                 {
@@ -222,16 +222,16 @@ namespace OrgChart.Layout
         /// Root node, as detected from data.
         /// Corresponds to <see cref="BoxContainer.SystemRoot"/> box.
         /// </summary>
-        public TreeNode Root { get; private set; }
+        public Node Root { get; private set; }
 
         /// <summary>
         /// Dictionary of all node wrappers.
         /// Nodes are always one-to-one with elements, so they are identified by element keys.
         /// </summary>
-        public Dictionary<int, TreeNode> Nodes { get; }
+        public Dictionary<int, Node> Nodes { get; }
 
         /// <summary>
-        /// Max value of <see cref="TreeNode.Level"/> plus one (because root nodes are level zero).
+        /// Max value of <see cref="Node.Level"/> plus one (because root nodes are level zero).
         /// </summary>
         public int Depth { get; private set; }
 
@@ -241,7 +241,7 @@ namespace OrgChart.Layout
         /// </summary>
         /// <param name="func">A func to evaluate on <see cref="Root"/> and its children. Whenever it returns false, iteration stops</param>
         /// <returns>True if <paramref name="func"/> never returned <c>false</c></returns>
-        public bool IterateChildFirst([NotNull] Func<TreeNode, bool> func)
+        public bool IterateChildFirst([NotNull] Func<Node, bool> func)
         {
             return Root.IterateChildFirst(func);
         }
@@ -253,7 +253,7 @@ namespace OrgChart.Layout
         /// </summary>
         /// <param name="enter">A predicate to allow iteration of a specific branch</param>
         /// <param name="exit">An optional action to run after iteration of some branch is complete or canceled</param>
-        public void IterateParentFirst([NotNull] Predicate<TreeNode> enter, [CanBeNull] Action<TreeNode> exit = null)
+        public void IterateParentFirst([NotNull] Predicate<Node> enter, [CanBeNull] Action<Node> exit = null)
         {
             // Ignore returned value, in this mode children at each level 
             // decide for themselves whether they want to iterate further down.
@@ -261,7 +261,7 @@ namespace OrgChart.Layout
         }
 
         /// <summary>
-        /// Update every node's <see cref="TreeNode.Level"/> and <see cref="Depth"/> of the tree.
+        /// Update every node's <see cref="Node.Level"/> and <see cref="Depth"/> of the tree.
         /// </summary>
         public void UpdateHierarchyStats()
         {
@@ -292,7 +292,7 @@ namespace OrgChart.Layout
         /// </summary>
         public BoxTree()
         {
-            Nodes = new Dictionary<int, TreeNode>();
+            Nodes = new Dictionary<int, Node>();
         }
 
         /// <summary>
@@ -305,7 +305,7 @@ namespace OrgChart.Layout
             // build dictionary of nodes
             foreach (var box in state.Diagram.Boxes.BoxesById.Values)
             {
-                var node = new TreeNode(box);
+                var node = new Node(box);
                 result.Nodes.Add(box.Id, node);
             }
             
@@ -314,7 +314,7 @@ namespace OrgChart.Layout
             {
                 var parentKey = node.Element.ParentId;
 
-                TreeNode parentNode;
+                Node parentNode;
                 if (result.Nodes.TryGetValue(parentKey, out parentNode))
                 {
                     if (node.Element.IsAssistant && parentNode.Element.ParentId != Box.None)

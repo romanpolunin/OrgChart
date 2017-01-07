@@ -59,7 +59,7 @@ namespace OrgChart.Layout
             /// <summary>
             /// Root parent for this subtree.
             /// </summary>
-            public readonly BoxTree.TreeNode BranchRoot;
+            public readonly BoxTree.Node BranchRoot;
 
             /// <summary>
             /// Boundaries of this entire subtree.
@@ -69,7 +69,7 @@ namespace OrgChart.Layout
             /// <summary>
             /// Ctr.
             /// </summary>
-            public LayoutLevel([NotNull] BoxTree.TreeNode node, [NotNull] Boundary boundary)
+            public LayoutLevel([NotNull] BoxTree.Node node, [NotNull] Boundary boundary)
             {
                 BranchRoot = node;
                 Boundary = boundary;
@@ -123,7 +123,7 @@ namespace OrgChart.Layout
         /// Use this to implement branch optimization algorithms.
         /// </summary>
         [CanBeNull]
-        public Func<BoxTree.TreeNode, string> LayoutOptimizerFunc { get; set; }
+        public Func<BoxTree.Node, string> LayoutOptimizerFunc { get; set; }
 
         /// <summary>
         /// Gets fired when any <see cref="Boundary"/> is modified by methods of this object.
@@ -160,7 +160,7 @@ namespace OrgChart.Layout
         /// Push a new box onto the layout stack, thus getting deeper into layout hierarchy.
         /// Automatically allocates a Bondary object from pool.
         /// </summary>
-        public LayoutLevel PushLayoutLevel([NotNull] BoxTree.TreeNode node)
+        public LayoutLevel PushLayoutLevel([NotNull] BoxTree.Node node)
         {
             if (m_pooledBoundaries.Count == 0)
             {
@@ -193,7 +193,7 @@ namespace OrgChart.Layout
         /// <summary>
         /// Merges a provided spacer box into the current branch boundary.
         /// </summary>
-        public void MergeSpacer([NotNull]BoxTree.TreeNode spacer)
+        public void MergeSpacer([NotNull]BoxTree.Node spacer)
         {
             if (CurrentOperation != Operation.HorizontalLayout)
             {

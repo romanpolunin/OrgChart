@@ -230,7 +230,7 @@ namespace OrgChart.Layout
         /// <summary>
         /// Re-entrant layout algorithm,
         /// </summary>
-        public static void HorizontalLayout([NotNull]LayoutState state, [NotNull]BoxTree.TreeNode branchRoot)
+        public static void HorizontalLayout([NotNull]LayoutState state, [NotNull]BoxTree.Node branchRoot)
         {
             if (branchRoot.State.IsHidden)
             {
@@ -256,7 +256,7 @@ namespace OrgChart.Layout
         /// <summary>
         /// Re-entrant layout algorithm.
         /// </summary>
-        public static void VerticalLayout([NotNull]LayoutState state, [NotNull]BoxTree.TreeNode branchRoot)
+        public static void VerticalLayout([NotNull]LayoutState state, [NotNull]BoxTree.Node branchRoot)
         {
             if (branchRoot.State.IsHidden)
             {
@@ -316,7 +316,7 @@ namespace OrgChart.Layout
                 throw new InvalidOperationException("Should never be invoked when children not set");
             }
 
-            Func<BoxTree.TreeNode, bool> action = node =>
+            Func<BoxTree.Node, bool> action = node =>
             {
                 if (!node.State.IsHidden)
                 {
@@ -341,7 +341,7 @@ namespace OrgChart.Layout
         /// Unlike <see cref="MoveChildrenOnly"/> and <see cref="MoveBranch"/>, does NOT update the boundary.
         /// </summary>
         /// <remarks>DOES NOT update branch boundary! Must call <see cref="Boundary.ReloadFromBranch"/> after batch of updates is complete</remarks>
-        private static void MoveOneChild([NotNull]LayoutState state, [NotNull]BoxTree.TreeNode root, double offset)
+        private static void MoveOneChild([NotNull]LayoutState state, [NotNull]BoxTree.Node root, double offset)
         {
             root.IterateChildFirst(node =>
                 {
@@ -374,7 +374,7 @@ namespace OrgChart.Layout
         public static Dimensions AlignHorizontalCenters(
             [NotNull]LayoutState state, 
             [NotNull]LayoutState.LayoutLevel level,
-            [NotNull]IEnumerable<BoxTree.TreeNode> subset)
+            [NotNull]IEnumerable<BoxTree.Node> subset)
         {
             // compute the rightmost center in the column
             var center = double.MinValue;

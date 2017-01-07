@@ -227,7 +227,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
          * @public
          * @this OrgChart.Layout.Boundary
          * @memberof OrgChart.Layout.Boundary
-         * @param   {OrgChart.Layout.BoxTree.TreeNode}    node
+         * @param   {OrgChart.Layout.BoxTree.Node}    node
          * @return  {void}
          */
         PrepareForHorizontalLayout: function (node) {
@@ -249,7 +249,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
          * @public
          * @this OrgChart.Layout.Boundary
          * @memberof OrgChart.Layout.Boundary
-         * @param   {OrgChart.Layout.BoxTree.TreeNode}    node
+         * @param   {OrgChart.Layout.BoxTree.Node}    node
          * @return  {void}
          */
         Prepare: function (node) {
@@ -460,7 +460,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
          * @public
          * @this OrgChart.Layout.Boundary
          * @memberof OrgChart.Layout.Boundary
-         * @param   {OrgChart.Layout.BoxTree.TreeNode}    node
+         * @param   {OrgChart.Layout.BoxTree.Node}    node
          * @return  {void}
          */
         MergeFrom$1: function (node) {
@@ -539,7 +539,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
          * @public
          * @this OrgChart.Layout.Boundary
          * @memberof OrgChart.Layout.Boundary
-         * @param   {OrgChart.Layout.BoxTree.TreeNode}    branchRoot
+         * @param   {OrgChart.Layout.BoxTree.Node}    branchRoot
          * @return  {void}
          */
         ReloadFromBranch: function (branchRoot) {
@@ -610,10 +610,10 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
          * @public
          * @this OrgChart.Layout.Boundary.Step
          * @memberof OrgChart.Layout.Boundary.Step
-         * @param   {OrgChart.Layout.BoxTree.TreeNode}    node      
-         * @param   {number}                              x         
-         * @param   {number}                              top       
-         * @param   {number}                              bottom
+         * @param   {OrgChart.Layout.BoxTree.Node}    node      
+         * @param   {number}                          x         
+         * @param   {number}                          top       
+         * @param   {number}                          bottom
          * @return  {void}
          */
         $ctor1: function (node, x, top, bottom) {
@@ -659,8 +659,8 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
          * @public
          * @this OrgChart.Layout.Boundary.Step
          * @memberof OrgChart.Layout.Boundary.Step
-         * @param   {OrgChart.Layout.BoxTree.TreeNode}    newNode    
-         * @param   {number}                              newX
+         * @param   {OrgChart.Layout.BoxTree.Node}     newNode    
+         * @param   {number}                           newX
          * @return  {OrgChart.Layout.Boundary.Step}
          */
         ChangeOwner: function (newNode, newX) {
@@ -1084,14 +1084,14 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
     /**
      * @memberof System
      * @callback System.Action
-     * @param   {OrgChart.Layout.BoxTree.TreeNode}    arg
+     * @param   {OrgChart.Layout.BoxTree.Node}    arg
      * @return  {void}
      */
 
     /**
      * @memberof System
      * @callback System.Predicate
-     * @param   {OrgChart.Layout.BoxTree.TreeNode}    obj
+     * @param   {OrgChart.Layout.BoxTree.Node}    obj
      * @return  {boolean}
      */
 
@@ -1100,7 +1100,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
     /**
      * @memberof System
      * @callback System.Func
-     * @param   {OrgChart.Layout.BoxTree.TreeNode}    arg
+     * @param   {OrgChart.Layout.BoxTree.Node}    arg
      * @return  {boolean}
      */
 
@@ -1130,12 +1130,12 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
                 $t = Bridge.getEnumerator(state.getDiagram().getBoxes().getBoxesById().System$Collections$Generic$IDictionary$2$System$Int32$OrgChart$Layout$Box$getValues(), OrgChart.Layout.Box);
                 while ($t.moveNext()) {
                     var box = $t.getCurrent();
-                    var node = new OrgChart.Layout.BoxTree.TreeNode(box);
+                    var node = new OrgChart.Layout.BoxTree.Node(box);
                     result.getNodes().add(box.Id, node);
                 }
 
                 // build the tree
-                $t1 = Bridge.getEnumerator(result.getNodes().getValues(), OrgChart.Layout.BoxTree.TreeNode);
+                $t1 = Bridge.getEnumerator(result.getNodes().getValues(), OrgChart.Layout.BoxTree.Node);
                 while ($t1.moveNext()) {
                     var node1 = $t1.getCurrent();
                     var parentKey = node1.getElement().ParentId;
@@ -1171,7 +1171,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
                  * @this OrgChart.Layout.BoxTree
                  * @memberof OrgChart.Layout.BoxTree
                  * @function getRoot
-                 * @return  {OrgChart.Layout.BoxTree.TreeNode}
+                 * @return  {OrgChart.Layout.BoxTree.Node}
                  */
                 /**
                  * Root node, as detected from data.
@@ -1182,7 +1182,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
                  * @this OrgChart.Layout.BoxTree
                  * @memberof OrgChart.Layout.BoxTree
                  * @function setRoot
-                 * @param   {OrgChart.Layout.BoxTree.TreeNode}    value
+                 * @param   {OrgChart.Layout.BoxTree.Node}    value
                  * @return  {void}
                  */
                 Root: null,
@@ -1245,7 +1245,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
          */
         ctor: function () {
             this.$initialize();
-            this.setNodes(new (System.Collections.Generic.Dictionary$2(System.Int32,OrgChart.Layout.BoxTree.TreeNode))());
+            this.setNodes(new (System.Collections.Generic.Dictionary$2(System.Int32,OrgChart.Layout.BoxTree.Node))());
         },
         /**
          * Goes through all elements depth-first. Applies <b /> to all children recursively, then to the parent.
@@ -1318,9 +1318,9 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
      * Node wrapper.
      *
      * @public
-     * @class OrgChart.Layout.BoxTree.TreeNode
+     * @class OrgChart.Layout.BoxTree.Node
      */
-    Bridge.define("OrgChart.Layout.BoxTree.TreeNode", {
+    Bridge.define("OrgChart.Layout.BoxTree.Node", {
         config: {
             properties: {
                 /**
@@ -1328,8 +1328,8 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
                  *
                  * @instance
                  * @public
-                 * @this OrgChart.Layout.BoxTree.TreeNode
-                 * @memberof OrgChart.Layout.BoxTree.TreeNode
+                 * @this OrgChart.Layout.BoxTree.Node
+                 * @memberof OrgChart.Layout.BoxTree.Node
                  * @function getLevel
                  * @return  {number}
                  */
@@ -1337,8 +1337,8 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
                  * Hierarchy level.
                  *
                  * @instance
-                 * @this OrgChart.Layout.BoxTree.TreeNode
-                 * @memberof OrgChart.Layout.BoxTree.TreeNode
+                 * @this OrgChart.Layout.BoxTree.Node
+                 * @memberof OrgChart.Layout.BoxTree.Node
                  * @function setLevel
                  * @param   {number}    value
                  * @return  {void}
@@ -1349,8 +1349,8 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
                  *
                  * @instance
                  * @public
-                 * @this OrgChart.Layout.BoxTree.TreeNode
-                 * @memberof OrgChart.Layout.BoxTree.TreeNode
+                 * @this OrgChart.Layout.BoxTree.Node
+                 * @memberof OrgChart.Layout.BoxTree.Node
                  * @function getElement
                  * @return  {OrgChart.Layout.Box}
                  */
@@ -1359,8 +1359,8 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
                  *
                  * @instance
                  * @private
-                 * @this OrgChart.Layout.BoxTree.TreeNode
-                 * @memberof OrgChart.Layout.BoxTree.TreeNode
+                 * @this OrgChart.Layout.BoxTree.Node
+                 * @memberof OrgChart.Layout.BoxTree.Node
                  * @function setElement
                  * @param   {OrgChart.Layout.Box}    value
                  * @return  {void}
@@ -1371,8 +1371,8 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
                  *
                  * @instance
                  * @public
-                 * @this OrgChart.Layout.BoxTree.TreeNode
-                 * @memberof OrgChart.Layout.BoxTree.TreeNode
+                 * @this OrgChart.Layout.BoxTree.Node
+                 * @memberof OrgChart.Layout.BoxTree.Node
                  * @function getState
                  * @return  {OrgChart.Layout.NodeLayoutInfo}
                  */
@@ -1381,8 +1381,8 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
                  *
                  * @instance
                  * @private
-                 * @this OrgChart.Layout.BoxTree.TreeNode
-                 * @memberof OrgChart.Layout.BoxTree.TreeNode
+                 * @this OrgChart.Layout.BoxTree.Node
+                 * @memberof OrgChart.Layout.BoxTree.Node
                  * @function setState
                  * @param   {OrgChart.Layout.NodeLayoutInfo}    value
                  * @return  {void}
@@ -1393,20 +1393,20 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
                  *
                  * @instance
                  * @public
-                 * @this OrgChart.Layout.BoxTree.TreeNode
-                 * @memberof OrgChart.Layout.BoxTree.TreeNode
+                 * @this OrgChart.Layout.BoxTree.Node
+                 * @memberof OrgChart.Layout.BoxTree.Node
                  * @function getParentNode
-                 * @return  {OrgChart.Layout.BoxTree.TreeNode}
+                 * @return  {OrgChart.Layout.BoxTree.Node}
                  */
                 /**
                  * Reference to parent node wrapper.
                  *
                  * @instance
                  * @public
-                 * @this OrgChart.Layout.BoxTree.TreeNode
-                 * @memberof OrgChart.Layout.BoxTree.TreeNode
+                 * @this OrgChart.Layout.BoxTree.Node
+                 * @memberof OrgChart.Layout.BoxTree.Node
                  * @function setParentNode
-                 * @param   {OrgChart.Layout.BoxTree.TreeNode}    value
+                 * @param   {OrgChart.Layout.BoxTree.Node}    value
                  * @return  {void}
                  */
                 ParentNode: null,
@@ -1415,8 +1415,8 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
                  *
                  * @instance
                  * @public
-                 * @this OrgChart.Layout.BoxTree.TreeNode
-                 * @memberof OrgChart.Layout.BoxTree.TreeNode
+                 * @this OrgChart.Layout.BoxTree.Node
+                 * @memberof OrgChart.Layout.BoxTree.Node
                  * @function getChildren
                  * @return  {System.Collections.Generic.IList$1}
                  */
@@ -1425,8 +1425,8 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
                  *
                  * @instance
                  * @protected
-                 * @this OrgChart.Layout.BoxTree.TreeNode
-                 * @memberof OrgChart.Layout.BoxTree.TreeNode
+                 * @this OrgChart.Layout.BoxTree.Node
+                 * @memberof OrgChart.Layout.BoxTree.Node
                  * @function setChildren
                  * @param   {System.Collections.Generic.IList$1}    value
                  * @return  {void}
@@ -1439,10 +1439,10 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
                  *
                  * @instance
                  * @public
-                 * @this OrgChart.Layout.BoxTree.TreeNode
-                 * @memberof OrgChart.Layout.BoxTree.TreeNode
+                 * @this OrgChart.Layout.BoxTree.Node
+                 * @memberof OrgChart.Layout.BoxTree.Node
                  * @function getAssistantsRoot
-                 * @return  {OrgChart.Layout.BoxTree.TreeNode}
+                 * @return  {OrgChart.Layout.BoxTree.Node}
                  */
                 /**
                  * Special child used as root for assistants.
@@ -1451,10 +1451,10 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
                  *
                  * @instance
                  * @protected
-                 * @this OrgChart.Layout.BoxTree.TreeNode
-                 * @memberof OrgChart.Layout.BoxTree.TreeNode
+                 * @this OrgChart.Layout.BoxTree.Node
+                 * @memberof OrgChart.Layout.BoxTree.Node
                  * @function setAssistantsRoot
-                 * @param   {OrgChart.Layout.BoxTree.TreeNode}    value
+                 * @param   {OrgChart.Layout.BoxTree.Node}    value
                  * @return  {void}
                  */
                 AssistantsRoot: null
@@ -1465,8 +1465,8 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
          *
          * @instance
          * @public
-         * @this OrgChart.Layout.BoxTree.TreeNode
-         * @memberof OrgChart.Layout.BoxTree.TreeNode
+         * @this OrgChart.Layout.BoxTree.Node
+         * @memberof OrgChart.Layout.BoxTree.Node
          * @param   {OrgChart.Layout.Box}    element
          * @return  {void}
          */
@@ -1480,8 +1480,8 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
          *
          * @instance
          * @public
-         * @this OrgChart.Layout.BoxTree.TreeNode
-         * @memberof OrgChart.Layout.BoxTree.TreeNode
+         * @this OrgChart.Layout.BoxTree.Node
+         * @memberof OrgChart.Layout.BoxTree.Node
          * @function getChildCount
          * @return  {number}
          */
@@ -1492,15 +1492,15 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
          * @function setChildCount
          */
         getChildCount: function () {
-            return this.getChildren() == null ? 0 : System.Array.getCount(this.getChildren(), OrgChart.Layout.BoxTree.TreeNode);
+            return this.getChildren() == null ? 0 : System.Array.getCount(this.getChildren(), OrgChart.Layout.BoxTree.Node);
         },
         /**
          * <pre><code>true</code></pre> if this node is set as {@link } on its {@link }.
          *
          * @instance
          * @public
-         * @this OrgChart.Layout.BoxTree.TreeNode
-         * @memberof OrgChart.Layout.BoxTree.TreeNode
+         * @this OrgChart.Layout.BoxTree.Node
+         * @memberof OrgChart.Layout.BoxTree.Node
          * @function getIsAssistantRoot
          * @return  {boolean}
          */
@@ -1520,14 +1520,14 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
          *
          * @instance
          * @public
-         * @this OrgChart.Layout.BoxTree.TreeNode
-         * @memberof OrgChart.Layout.BoxTree.TreeNode
-         * @param   {OrgChart.Layout.BoxTree.TreeNode}    child
-         * @return  {OrgChart.Layout.BoxTree.TreeNode}
+         * @this OrgChart.Layout.BoxTree.Node
+         * @memberof OrgChart.Layout.BoxTree.Node
+         * @param   {OrgChart.Layout.BoxTree.Node}    child
+         * @return  {OrgChart.Layout.BoxTree.Node}
          */
         AddAssistantChild: function (child) {
             if (this.getAssistantsRoot() == null) {
-                this.setAssistantsRoot(Bridge.merge(new OrgChart.Layout.BoxTree.TreeNode(OrgChart.Layout.Box.Special(OrgChart.Layout.Box.None, this.getElement().Id, true)), {
+                this.setAssistantsRoot(Bridge.merge(new OrgChart.Layout.BoxTree.Node(OrgChart.Layout.Box.Special(OrgChart.Layout.Box.None, this.getElement().Id, true)), {
                     setParentNode: this,
                     setLevel: ((this.getLevel() + 1) | 0)
                 } ));
@@ -1540,10 +1540,10 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
          *
          * @instance
          * @public
-         * @this OrgChart.Layout.BoxTree.TreeNode
-         * @memberof OrgChart.Layout.BoxTree.TreeNode
-         * @param   {OrgChart.Layout.BoxTree.TreeNode}    child
-         * @return  {OrgChart.Layout.BoxTree.TreeNode}
+         * @this OrgChart.Layout.BoxTree.Node
+         * @memberof OrgChart.Layout.BoxTree.Node
+         * @param   {OrgChart.Layout.BoxTree.Node}    child
+         * @return  {OrgChart.Layout.BoxTree.Node}
          */
         AddRegularChild$1: function (child) {
             return this.InsertRegularChild$1(this.getChildCount(), child);
@@ -1553,10 +1553,10 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
          *
          * @instance
          * @public
-         * @this OrgChart.Layout.BoxTree.TreeNode
-         * @memberof OrgChart.Layout.BoxTree.TreeNode
-         * @param   {OrgChart.Layout.Box}                 child
-         * @return  {OrgChart.Layout.BoxTree.TreeNode}
+         * @this OrgChart.Layout.BoxTree.Node
+         * @memberof OrgChart.Layout.BoxTree.Node
+         * @param   {OrgChart.Layout.Box}             child
+         * @return  {OrgChart.Layout.BoxTree.Node}
          */
         AddRegularChild: function (child) {
             return this.InsertRegularChild(this.getChildCount(), child);
@@ -1566,32 +1566,32 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
          *
          * @instance
          * @public
-         * @this OrgChart.Layout.BoxTree.TreeNode
-         * @memberof OrgChart.Layout.BoxTree.TreeNode
-         * @param   {number}                              index    
-         * @param   {OrgChart.Layout.Box}                 child
-         * @return  {OrgChart.Layout.BoxTree.TreeNode}
+         * @this OrgChart.Layout.BoxTree.Node
+         * @memberof OrgChart.Layout.BoxTree.Node
+         * @param   {number}                          index    
+         * @param   {OrgChart.Layout.Box}             child
+         * @return  {OrgChart.Layout.BoxTree.Node}
          */
         InsertRegularChild: function (index, child) {
-            return this.InsertRegularChild$1(index, new OrgChart.Layout.BoxTree.TreeNode(child));
+            return this.InsertRegularChild$1(index, new OrgChart.Layout.BoxTree.Node(child));
         },
         /**
          * Adds a new child to the list. Returns reference to self.
          *
          * @instance
          * @public
-         * @this OrgChart.Layout.BoxTree.TreeNode
-         * @memberof OrgChart.Layout.BoxTree.TreeNode
-         * @param   {number}                              index    
-         * @param   {OrgChart.Layout.BoxTree.TreeNode}    child
-         * @return  {OrgChart.Layout.BoxTree.TreeNode}
+         * @this OrgChart.Layout.BoxTree.Node
+         * @memberof OrgChart.Layout.BoxTree.Node
+         * @param   {number}                          index    
+         * @param   {OrgChart.Layout.BoxTree.Node}    child
+         * @return  {OrgChart.Layout.BoxTree.Node}
          */
         InsertRegularChild$1: function (index, child) {
             if (this.getChildren() == null) {
-                this.setChildren(new (System.Collections.Generic.List$1(OrgChart.Layout.BoxTree.TreeNode))());
+                this.setChildren(new (System.Collections.Generic.List$1(OrgChart.Layout.BoxTree.Node))());
             }
 
-            System.Array.insert(this.getChildren(), index, child, OrgChart.Layout.BoxTree.TreeNode);
+            System.Array.insert(this.getChildren(), index, child, OrgChart.Layout.BoxTree.Node);
             child.setParentNode(this);
             child.setLevel((this.getLevel() + 1) | 0);
 
@@ -1603,8 +1603,8 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
          *
          * @instance
          * @public
-         * @this OrgChart.Layout.BoxTree.TreeNode
-         * @memberof OrgChart.Layout.BoxTree.TreeNode
+         * @this OrgChart.Layout.BoxTree.Node
+         * @memberof OrgChart.Layout.BoxTree.Node
          * @param   {System.Func}    func    A func to evaluate on this node and its children. Whenever it returns false, iteration stops
          * @return  {boolean}                True if <b /> never returned <pre><code>false</code></pre>
          */
@@ -1617,7 +1617,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
             }
 
             if (this.getChildren() != null) {
-                $t = Bridge.getEnumerator(this.getChildren(), OrgChart.Layout.BoxTree.TreeNode);
+                $t = Bridge.getEnumerator(this.getChildren(), OrgChart.Layout.BoxTree.Node);
                 while ($t.moveNext()) {
                     var child = $t.getCurrent();
                     if (!child.IterateChildFirst(func)) {
@@ -1635,8 +1635,8 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
          *
          * @instance
          * @public
-         * @this OrgChart.Layout.BoxTree.TreeNode
-         * @memberof OrgChart.Layout.BoxTree.TreeNode
+         * @this OrgChart.Layout.BoxTree.Node
+         * @memberof OrgChart.Layout.BoxTree.Node
          * @param   {System.Predicate}    enter    A predicate to allow iteration of branch under this node
          * @param   {System.Action}       exit     An optional action to run afer iteration of some branch is complete
          * @return  {boolean}
@@ -1651,7 +1651,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
             ($t = this.getAssistantsRoot()) != null ? $t.IterateParentFirst(enter, exit) : null;
 
             if (this.getChildren() != null) {
-                $t1 = Bridge.getEnumerator(this.getChildren(), OrgChart.Layout.BoxTree.TreeNode);
+                $t1 = Bridge.getEnumerator(this.getChildren(), OrgChart.Layout.BoxTree.Node);
                 while ($t1.moveNext()) {
                     var child = $t1.getCurrent();
                     // Ignore returned value, in this mode children at each level 
@@ -1672,14 +1672,14 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
          *
          * @instance
          * @public
-         * @this OrgChart.Layout.BoxTree.TreeNode
-         * @memberof OrgChart.Layout.BoxTree.TreeNode
+         * @this OrgChart.Layout.BoxTree.Node
+         * @memberof OrgChart.Layout.BoxTree.Node
          * @return  {void}
          */
         SuppressAssistants: function () {
             var $t;
             if (this.getAssistantsRoot() != null) {
-                $t = Bridge.getEnumerator(this.getAssistantsRoot().getChildren(), OrgChart.Layout.BoxTree.TreeNode);
+                $t = Bridge.getEnumerator(this.getAssistantsRoot().getChildren(), OrgChart.Layout.BoxTree.Node);
                 while ($t.moveNext()) {
                     var child = $t.getCurrent();
                     this.AddRegularChild$1(child);
@@ -2561,8 +2561,8 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
              * @public
              * @this OrgChart.Layout.LayoutAlgorithm
              * @memberof OrgChart.Layout.LayoutAlgorithm
-             * @param   {OrgChart.Layout.LayoutState}         state         
-             * @param   {OrgChart.Layout.BoxTree.TreeNode}    branchRoot
+             * @param   {OrgChart.Layout.LayoutState}     state         
+             * @param   {OrgChart.Layout.BoxTree.Node}    branchRoot
              * @return  {void}
              */
             HorizontalLayout: function (state, branchRoot) {
@@ -2587,8 +2587,8 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
              * @public
              * @this OrgChart.Layout.LayoutAlgorithm
              * @memberof OrgChart.Layout.LayoutAlgorithm
-             * @param   {OrgChart.Layout.LayoutState}         state         
-             * @param   {OrgChart.Layout.BoxTree.TreeNode}    branchRoot
+             * @param   {OrgChart.Layout.LayoutState}     state         
+             * @param   {OrgChart.Layout.BoxTree.Node}    branchRoot
              * @return  {void}
              */
             VerticalLayout: function (state, branchRoot) {
@@ -2641,7 +2641,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
             MoveChildrenOnly: function (state, layoutLevel, offset) {
                 var $t;
                 var children = layoutLevel.BranchRoot.getChildren();
-                if (children == null || System.Array.getCount(children, OrgChart.Layout.BoxTree.TreeNode) === 0) {
+                if (children == null || System.Array.getCount(children, OrgChart.Layout.BoxTree.Node) === 0) {
                     throw new System.InvalidOperationException("Should never be invoked when children not set");
                 }
 
@@ -2653,7 +2653,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
                     return true;
                 };
 
-                $t = Bridge.getEnumerator(children, OrgChart.Layout.BoxTree.TreeNode);
+                $t = Bridge.getEnumerator(children, OrgChart.Layout.BoxTree.Node);
                 while ($t.moveNext()) {
                     var child = $t.getCurrent();
                     child.IterateChildFirst(action);
@@ -2671,9 +2671,9 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
              * @private
              * @this OrgChart.Layout.LayoutAlgorithm
              * @memberof OrgChart.Layout.LayoutAlgorithm
-             * @param   {OrgChart.Layout.LayoutState}         state     
-             * @param   {OrgChart.Layout.BoxTree.TreeNode}    root      
-             * @param   {number}                              offset
+             * @param   {OrgChart.Layout.LayoutState}     state     
+             * @param   {OrgChart.Layout.BoxTree.Node}    root      
+             * @param   {number}                          offset
              * @return  {void}
              */
             MoveOneChild: function (state, root, offset) {
@@ -2722,7 +2722,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
                 var $t, $t1;
                 // compute the rightmost center in the column
                 var center = System.Double.min;
-                $t = Bridge.getEnumerator(subset, OrgChart.Layout.BoxTree.TreeNode);
+                $t = Bridge.getEnumerator(subset, OrgChart.Layout.BoxTree.Node);
                 while ($t.moveNext()) {
                     var child = $t.getCurrent();
                     var c = child.getState().getCenterH();
@@ -2734,7 +2734,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
                 // move those boxes in the column that are not aligned with the rightmost center
                 var leftmost = System.Double.max;
                 var rightmost = System.Double.min;
-                $t1 = Bridge.getEnumerator(subset, OrgChart.Layout.BoxTree.TreeNode);
+                $t1 = Bridge.getEnumerator(subset, OrgChart.Layout.BoxTree.Node);
                 while ($t1.moveNext()) {
                     var child1 = $t1.getCurrent();
                     var frame = child1.getState();
@@ -3127,7 +3127,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
          * @public
          * @this OrgChart.Layout.LayoutState
          * @memberof OrgChart.Layout.LayoutState
-         * @param   {OrgChart.Layout.BoxTree.TreeNode}           node
+         * @param   {OrgChart.Layout.BoxTree.Node}               node
          * @return  {OrgChart.Layout.LayoutState.LayoutLevel}
          */
         PushLayoutLevel: function (node) {
@@ -3161,7 +3161,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
          * @public
          * @this OrgChart.Layout.LayoutState
          * @memberof OrgChart.Layout.LayoutState
-         * @param   {OrgChart.Layout.BoxTree.TreeNode}    spacer
+         * @param   {OrgChart.Layout.BoxTree.Node}    spacer
          * @return  {void}
          */
         MergeSpacer: function (spacer) {
@@ -3258,8 +3258,8 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
          * @public
          * @this OrgChart.Layout.LayoutState.LayoutLevel
          * @memberof OrgChart.Layout.LayoutState.LayoutLevel
-         * @param   {OrgChart.Layout.BoxTree.TreeNode}    node        
-         * @param   {OrgChart.Layout.Boundary}            boundary
+         * @param   {OrgChart.Layout.BoxTree.Node}    node        
+         * @param   {OrgChart.Layout.Boundary}        boundary
          * @return  {void}
          */
         ctor: function (node, boundary) {
@@ -4251,8 +4251,8 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
          * @override
          * @this OrgChart.Layout.FishboneAssistantsLayoutStrategy
          * @memberof OrgChart.Layout.FishboneAssistantsLayoutStrategy
-         * @param   {OrgChart.Layout.LayoutState}         state    
-         * @param   {OrgChart.Layout.BoxTree.TreeNode}    node
+         * @param   {OrgChart.Layout.LayoutState}     state    
+         * @param   {OrgChart.Layout.BoxTree.Node}    node
          * @return  {void}
          */
         PreProcessThisNode: function (state, node) {
@@ -4297,7 +4297,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
             for (var i = 0; i < maxOnLeft; i = (i + 1) | 0) {
                 var spacing = i === 0 ? this.ParentChildSpacing : this.SiblingSpacing;
 
-                var child = System.Array.getItem(node.getChildren(), i, OrgChart.Layout.BoxTree.TreeNode);
+                var child = System.Array.getItem(node.getChildren(), i, OrgChart.Layout.BoxTree.Node);
                 var frame = child.getState();
                 OrgChart.Layout.LayoutAlgorithm.MoveTo(frame, frame.getLeft(), prevRowBottom + spacing);
 
@@ -4305,7 +4305,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
 
                 var i2 = (i + maxOnLeft) | 0;
                 if (i2 < node.getState().NumberOfSiblings) {
-                    var child2 = System.Array.getItem(node.getChildren(), i2, OrgChart.Layout.BoxTree.TreeNode);
+                    var child2 = System.Array.getItem(node.getChildren(), i2, OrgChart.Layout.BoxTree.Node);
                     var frame2 = child2.getState();
                     OrgChart.Layout.LayoutAlgorithm.MoveTo(frame2, frame2.getLeft(), prevRowBottom + spacing);
 
@@ -4351,7 +4351,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
             var countOnThisSide = 0;
             var maxOnLeft = this.MaxOnLeft(node);
             for (var i = 0; i < node.getState().NumberOfSiblings; i = (i + 1) | 0) {
-                var child = System.Array.getItem(node.getChildren(), i, OrgChart.Layout.BoxTree.TreeNode);
+                var child = System.Array.getItem(node.getChildren(), i, OrgChart.Layout.BoxTree.Node);
                 OrgChart.Layout.LayoutAlgorithm.HorizontalLayout(state, child);
 
                 // we go top-bottom to layout left side of the group,
@@ -4367,7 +4367,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
 
                         var rightmost = System.Double.min;
                         for (var k = 0; k <= i; k = (k + 1) | 0) {
-                            rightmost = Math.max(rightmost, System.Array.getItem(node.getChildren(), k, OrgChart.Layout.BoxTree.TreeNode).getState().BranchExterior.getRight());
+                            rightmost = Math.max(rightmost, System.Array.getItem(node.getChildren(), k, OrgChart.Layout.BoxTree.Node).getState().BranchExterior.getRight());
                         }
 
                         // vertical spacer does not have to be extended to the bottom of the lowest branch,
@@ -4375,7 +4375,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
                         if (node.getState().NumberOfSiblings % 2 !== 0) {
                             rightmost = Math.max(rightmost, child.getState().getRight());
                         } else {
-                            var opposite = System.Array.getItem(node.getChildren(), ((node.getState().NumberOfSiblings - 1) | 0), OrgChart.Layout.BoxTree.TreeNode);
+                            var opposite = System.Array.getItem(node.getChildren(), ((node.getState().NumberOfSiblings - 1) | 0), OrgChart.Layout.BoxTree.Node);
                             if (opposite.getElement().IsCollapsed || opposite.getChildCount() === 0) {
                                 rightmost = Math.max(rightmost, child.getState().getRight());
                             } else {
@@ -4386,7 +4386,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
                         // integrate protector for group's vertical carrier 
                         // it must prevent boxes on the right side from overlapping the middle vertical connector,
                         // so protector's height must be set to height of this entire assistant branch
-                        var spacer = System.Array.getItem(node.getChildren(), node.getState().NumberOfSiblings, OrgChart.Layout.BoxTree.TreeNode);
+                        var spacer = System.Array.getItem(node.getChildren(), node.getState().NumberOfSiblings, OrgChart.Layout.BoxTree.Node);
                         OrgChart.Layout.LayoutAlgorithm.AdjustSpacer(spacer.getState(), rightmost, node.getState().getBottom(), this.ParentConnectorShield, node.getState().BranchExterior.getBottom() - node.getState().getBottom());
                         level.Boundary.MergeFrom$1(spacer);
                     }
@@ -4399,7 +4399,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
             // align children under parent
             if (node.getLevel() > 0 && node.getState().NumberOfSiblings > 0) {
                 var diff;
-                var carrier = System.Array.getItem(node.getChildren(), node.getState().NumberOfSiblings, OrgChart.Layout.BoxTree.TreeNode).getState().getCenterH();
+                var carrier = System.Array.getItem(node.getChildren(), node.getState().NumberOfSiblings, OrgChart.Layout.BoxTree.Node).getState().getCenterH();
                 var desiredCenter = node.getState().getCenterH();
                 diff = desiredCenter - carrier;
                 OrgChart.Layout.LayoutAlgorithm.MoveChildrenOnly(state, level, diff);
@@ -4413,8 +4413,8 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
          * @override
          * @this OrgChart.Layout.FishboneAssistantsLayoutStrategy
          * @memberof OrgChart.Layout.FishboneAssistantsLayoutStrategy
-         * @param   {OrgChart.Layout.LayoutState}         state    
-         * @param   {OrgChart.Layout.BoxTree.TreeNode}    node
+         * @param   {OrgChart.Layout.LayoutState}     state    
+         * @param   {OrgChart.Layout.BoxTree.Node}    node
          * @return  {void}
          */
         RouteConnectors: function (state, node) {
@@ -4435,15 +4435,15 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
 
             // one hook for each child
             var maxOnLeft = this.MaxOnLeft(node);
-            var carrier = System.Array.getItem(node.getChildren(), node.getState().NumberOfSiblings, OrgChart.Layout.BoxTree.TreeNode).getState();
+            var carrier = System.Array.getItem(node.getChildren(), node.getState().NumberOfSiblings, OrgChart.Layout.BoxTree.Node).getState();
             var from = carrier.getCenterH();
 
             var isLeft = true;
             var countOnThisSide = 0;
             var bottomMost = System.Double.min;
             for (var i = 0; i < node.getState().NumberOfSiblings; i = (i + 1) | 0) {
-                var to = isLeft ? System.Array.getItem(node.getChildren(), i, OrgChart.Layout.BoxTree.TreeNode).getState().getRight() : System.Array.getItem(node.getChildren(), i, OrgChart.Layout.BoxTree.TreeNode).getState().getLeft();
-                var y = System.Array.getItem(node.getChildren(), i, OrgChart.Layout.BoxTree.TreeNode).getState().getCenterV();
+                var to = isLeft ? System.Array.getItem(node.getChildren(), i, OrgChart.Layout.BoxTree.Node).getState().getRight() : System.Array.getItem(node.getChildren(), i, OrgChart.Layout.BoxTree.Node).getState().getLeft();
+                var y = System.Array.getItem(node.getChildren(), i, OrgChart.Layout.BoxTree.Node).getState().getCenterV();
                 bottomMost = Math.max(bottomMost, y);
                 segments[Bridge.identity(ix, (ix = (ix + 1) | 0))] = new OrgChart.Layout.Edge.$ctor1(new OrgChart.Layout.Point.$ctor1(from, y), new OrgChart.Layout.Point.$ctor1(to, y));
 
@@ -4469,7 +4469,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
         EnumerateSiblings: function (node, from, to) {
             var $yield = [];
             for (var i = from; i < to; i = (i + 1) | 0) {
-                $yield.push(System.Array.getItem(node.getChildren(), i, OrgChart.Layout.BoxTree.TreeNode));
+                $yield.push(System.Array.getItem(node.getChildren(), i, OrgChart.Layout.BoxTree.Node));
             }
             return System.Array.toEnumerable($yield);
         }
@@ -4515,8 +4515,8 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
          * @override
          * @this OrgChart.Layout.LinearLayoutStrategy
          * @memberof OrgChart.Layout.LinearLayoutStrategy
-         * @param   {OrgChart.Layout.LayoutState}         state    
-         * @param   {OrgChart.Layout.BoxTree.TreeNode}    node
+         * @param   {OrgChart.Layout.LayoutState}     state    
+         * @param   {OrgChart.Layout.BoxTree.Node}    node
          * @return  {void}
          */
         PreProcessThisNode: function (state, node) {
@@ -4567,7 +4567,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
             var top = node.getAssistantsRoot() == null ? node.getState().SiblingsRowV.To + this.ParentChildSpacing : node.getState().BranchExterior.getBottom() + this.ParentChildSpacing;
 
             for (var i = 0; i < node.getState().NumberOfSiblings; i = (i + 1) | 0) {
-                var child = System.Array.getItem(node.getChildren(), i, OrgChart.Layout.BoxTree.TreeNode);
+                var child = System.Array.getItem(node.getChildren(), i, OrgChart.Layout.BoxTree.Node);
                 var rect = child.getState();
 
                 OrgChart.Layout.LayoutAlgorithm.MoveTo(child.getState(), 0, top);
@@ -4579,7 +4579,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
             siblingsRowExterior = new OrgChart.Layout.Dimensions.$ctor1(siblingsRowExterior.From, siblingsRowExterior.To);
 
             for (var i1 = 0; i1 < node.getState().NumberOfSiblings; i1 = (i1 + 1) | 0) {
-                var child1 = System.Array.getItem(node.getChildren(), i1, OrgChart.Layout.BoxTree.TreeNode);
+                var child1 = System.Array.getItem(node.getChildren(), i1, OrgChart.Layout.BoxTree.Node);
                 child1.getState().SiblingsRowV = siblingsRowExterior;
 
                 // re-enter layout algorithm for child branch
@@ -4606,31 +4606,31 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
             }
 
             for (var i = 0; i < node.getState().NumberOfSiblings; i = (i + 1) | 0) {
-                var child = System.Array.getItem(node.getChildren(), i, OrgChart.Layout.BoxTree.TreeNode);
+                var child = System.Array.getItem(node.getChildren(), i, OrgChart.Layout.BoxTree.Node);
                 // re-enter layout algorithm for child branch
                 OrgChart.Layout.LayoutAlgorithm.HorizontalLayout(state, child);
             }
 
             if (node.getLevel() > 0 && node.getChildCount() > 0) {
                 var rect = node.getState();
-                var leftmost = System.Array.getItem(node.getChildren(), 0, OrgChart.Layout.BoxTree.TreeNode).getState().getCenterH();
-                var rightmost = System.Array.getItem(node.getChildren(), ((node.getState().NumberOfSiblings - 1) | 0), OrgChart.Layout.BoxTree.TreeNode).getState().getCenterH();
+                var leftmost = System.Array.getItem(node.getChildren(), 0, OrgChart.Layout.BoxTree.Node).getState().getCenterH();
+                var rightmost = System.Array.getItem(node.getChildren(), ((node.getState().NumberOfSiblings - 1) | 0), OrgChart.Layout.BoxTree.Node).getState().getCenterH();
                 var desiredCenter = node.getState().NumberOfSiblings === 1 || this.ParentAlignment === OrgChart.Layout.BranchParentAlignment.Center ? leftmost + (rightmost - leftmost) / 2 : this.ParentAlignment === OrgChart.Layout.BranchParentAlignment.Left ? leftmost + this.ChildConnectorHookLength : rightmost - this.ChildConnectorHookLength;
                 var center = rect.getCenterH();
                 var diff = center - desiredCenter;
                 OrgChart.Layout.LayoutAlgorithm.MoveChildrenOnly(state, level, diff);
 
                 // vertical connector from parent 
-                var verticalSpacer = System.Array.getItem(node.getChildren(), node.getState().NumberOfSiblings, OrgChart.Layout.BoxTree.TreeNode);
-                OrgChart.Layout.LayoutAlgorithm.AdjustSpacer(verticalSpacer.getState(), center - this.ParentConnectorShield / 2, rect.getBottom(), this.ParentConnectorShield, System.Array.getItem(node.getChildren(), 0, OrgChart.Layout.BoxTree.TreeNode).getState().SiblingsRowV.From - rect.getBottom());
+                var verticalSpacer = System.Array.getItem(node.getChildren(), node.getState().NumberOfSiblings, OrgChart.Layout.BoxTree.Node);
+                OrgChart.Layout.LayoutAlgorithm.AdjustSpacer(verticalSpacer.getState(), center - this.ParentConnectorShield / 2, rect.getBottom(), this.ParentConnectorShield, System.Array.getItem(node.getChildren(), 0, OrgChart.Layout.BoxTree.Node).getState().SiblingsRowV.From - rect.getBottom());
 
                 state.MergeSpacer(verticalSpacer);
 
                 // horizontal protector
-                var firstInRow = System.Array.getItem(node.getChildren(), 0, OrgChart.Layout.BoxTree.TreeNode).getState();
+                var firstInRow = System.Array.getItem(node.getChildren(), 0, OrgChart.Layout.BoxTree.Node).getState();
 
-                var horizontalSpacer = System.Array.getItem(node.getChildren(), ((node.getState().NumberOfSiblings + 1) | 0), OrgChart.Layout.BoxTree.TreeNode);
-                OrgChart.Layout.LayoutAlgorithm.AdjustSpacer(horizontalSpacer.getState(), firstInRow.getLeft(), firstInRow.SiblingsRowV.From - this.ParentChildSpacing, System.Array.getItem(node.getChildren(), ((node.getState().NumberOfSiblings - 1) | 0), OrgChart.Layout.BoxTree.TreeNode).getState().getRight() - firstInRow.getLeft(), this.ParentChildSpacing);
+                var horizontalSpacer = System.Array.getItem(node.getChildren(), ((node.getState().NumberOfSiblings + 1) | 0), OrgChart.Layout.BoxTree.Node);
+                OrgChart.Layout.LayoutAlgorithm.AdjustSpacer(horizontalSpacer.getState(), firstInRow.getLeft(), firstInRow.SiblingsRowV.From - this.ParentChildSpacing, System.Array.getItem(node.getChildren(), ((node.getState().NumberOfSiblings - 1) | 0), OrgChart.Layout.BoxTree.Node).getState().getRight() - firstInRow.getLeft(), this.ParentChildSpacing);
                 state.MergeSpacer(horizontalSpacer);
             }
         },
@@ -4642,8 +4642,8 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
          * @override
          * @this OrgChart.Layout.LinearLayoutStrategy
          * @memberof OrgChart.Layout.LinearLayoutStrategy
-         * @param   {OrgChart.Layout.LayoutState}         state    
-         * @param   {OrgChart.Layout.BoxTree.TreeNode}    node
+         * @param   {OrgChart.Layout.LayoutState}     state    
+         * @param   {OrgChart.Layout.BoxTree.Node}    node
          * @return  {void}
          */
         RouteConnectors: function (state, node) {
@@ -4668,14 +4668,14 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
             }
 
             if (count === 1) {
-                segments[0] = new OrgChart.Layout.Edge.$ctor1(new OrgChart.Layout.Point.$ctor1(center, rootRect.getBottom()), new OrgChart.Layout.Point.$ctor1(center, System.Array.getItem(node.getChildren(), 0, OrgChart.Layout.BoxTree.TreeNode).getState().getTop()));
+                segments[0] = new OrgChart.Layout.Edge.$ctor1(new OrgChart.Layout.Point.$ctor1(center, rootRect.getBottom()), new OrgChart.Layout.Point.$ctor1(center, System.Array.getItem(node.getChildren(), 0, OrgChart.Layout.BoxTree.Node).getState().getTop()));
             } else {
-                var space = System.Array.getItem(node.getChildren(), 0, OrgChart.Layout.BoxTree.TreeNode).getState().SiblingsRowV.From - rootRect.getBottom();
+                var space = System.Array.getItem(node.getChildren(), 0, OrgChart.Layout.BoxTree.Node).getState().SiblingsRowV.From - rootRect.getBottom();
 
                 segments[0] = new OrgChart.Layout.Edge.$ctor1(new OrgChart.Layout.Point.$ctor1(center, rootRect.getBottom()), new OrgChart.Layout.Point.$ctor1(center, rootRect.getBottom() + space - this.ChildConnectorHookLength));
 
                 for (var i = 0; i < normalChildCount; i = (i + 1) | 0) {
-                    var childRect = System.Array.getItem(node.getChildren(), i, OrgChart.Layout.BoxTree.TreeNode).getState();
+                    var childRect = System.Array.getItem(node.getChildren(), i, OrgChart.Layout.BoxTree.Node).getState();
                     var childCenter = childRect.getCenterH();
                     segments[((1 + i) | 0)] = new OrgChart.Layout.Edge.$ctor1(new OrgChart.Layout.Point.$ctor1(childCenter, childRect.getTop()), new OrgChart.Layout.Point.$ctor1(childCenter, childRect.getTop() - this.ChildConnectorHookLength));
                 }
@@ -4751,9 +4751,9 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
             this.SpecialRoot.Prepare(((this.RealRoot.getState().NumberOfSiblingRows * 2) | 0));
 
             for (var i = 0; i < this.Iterator.Count; i = (i + 1) | 0) {
-                this.SpecialRoot.AddChildView(System.Array.getItem(this.RealRoot.getChildren(), ((this.Iterator.FromIndex + i) | 0), OrgChart.Layout.BoxTree.TreeNode));
+                this.SpecialRoot.AddChildView(System.Array.getItem(this.RealRoot.getChildren(), ((this.Iterator.FromIndex + i) | 0), OrgChart.Layout.BoxTree.Node));
             }
-            var spacer = System.Array.getItem(this.RealRoot.getChildren(), ((((this.RealRoot.getState().NumberOfSiblings + 1) | 0) + this.Iterator.Group) | 0), OrgChart.Layout.BoxTree.TreeNode);
+            var spacer = System.Array.getItem(this.RealRoot.getChildren(), ((((this.RealRoot.getState().NumberOfSiblings + 1) | 0) + this.Iterator.Group) | 0), OrgChart.Layout.BoxTree.Node);
             this.SpecialRoot.AddChildView(spacer);
 
             OrgChart.Layout.LayoutAlgorithm.CopyExteriorFrom(this.SpecialRoot.getState(), this.RealRoot.getState());
@@ -4769,7 +4769,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
             for (var i = 0; i < this.Iterator.MaxOnLeft; i = (i + 1) | 0) {
                 var spacing = i === 0 ? this.ParentChildSpacing : this.SiblingSpacing;
 
-                var child = System.Array.getItem(this.SpecialRoot.getChildren(), i, OrgChart.Layout.BoxTree.TreeNode);
+                var child = System.Array.getItem(this.SpecialRoot.getChildren(), i, OrgChart.Layout.BoxTree.Node);
                 var frame = child.getState();
                 OrgChart.Layout.LayoutAlgorithm.MoveTo(frame, frame.getLeft(), prevRowBottom + spacing);
 
@@ -4777,7 +4777,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
 
                 var i2 = (i + this.Iterator.MaxOnLeft) | 0;
                 if (i2 < this.Iterator.Count) {
-                    var child2 = System.Array.getItem(this.SpecialRoot.getChildren(), i2, OrgChart.Layout.BoxTree.TreeNode);
+                    var child2 = System.Array.getItem(this.SpecialRoot.getChildren(), i2, OrgChart.Layout.BoxTree.Node);
                     var frame2 = child2.getState();
                     OrgChart.Layout.LayoutAlgorithm.MoveTo(frame2, frame2.getLeft(), prevRowBottom + spacing);
 
@@ -4809,7 +4809,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
             var left = true;
             var countOnThisSide = 0;
             for (var i = 0; i < this.Iterator.Count; i = (i + 1) | 0) {
-                var child = System.Array.getItem(this.SpecialRoot.getChildren(), i, OrgChart.Layout.BoxTree.TreeNode);
+                var child = System.Array.getItem(this.SpecialRoot.getChildren(), i, OrgChart.Layout.BoxTree.Node);
                 OrgChart.Layout.LayoutAlgorithm.HorizontalLayout(state, child);
 
                 // we go top-bottom to layout left side of the group,
@@ -4825,15 +4825,15 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
 
                         var rightmost = System.Double.min;
                         for (var k = 0; k < i; k = (k + 1) | 0) {
-                            rightmost = Math.max(rightmost, System.Array.getItem(this.SpecialRoot.getChildren(), k, OrgChart.Layout.BoxTree.TreeNode).getState().BranchExterior.getRight());
+                            rightmost = Math.max(rightmost, System.Array.getItem(this.SpecialRoot.getChildren(), k, OrgChart.Layout.BoxTree.Node).getState().BranchExterior.getRight());
                         }
 
                         rightmost = Math.max(rightmost, child.getState().getRight());
 
                         // integrate protector for group's vertical carrier 
-                        var spacer = System.Array.getItem(this.SpecialRoot.getChildren(), this.SpecialRoot.getState().NumberOfSiblings, OrgChart.Layout.BoxTree.TreeNode);
+                        var spacer = System.Array.getItem(this.SpecialRoot.getChildren(), this.SpecialRoot.getState().NumberOfSiblings, OrgChart.Layout.BoxTree.Node);
 
-                        OrgChart.Layout.LayoutAlgorithm.AdjustSpacer(spacer.getState(), rightmost, System.Array.getItem(this.SpecialRoot.getChildren(), 0, OrgChart.Layout.BoxTree.TreeNode).getState().SiblingsRowV.From, this.SiblingSpacing, child.getState().SiblingsRowV.To - System.Array.getItem(this.SpecialRoot.getChildren(), 0, OrgChart.Layout.BoxTree.TreeNode).getState().SiblingsRowV.From);
+                        OrgChart.Layout.LayoutAlgorithm.AdjustSpacer(spacer.getState(), rightmost, System.Array.getItem(this.SpecialRoot.getChildren(), 0, OrgChart.Layout.BoxTree.Node).getState().SiblingsRowV.From, this.SiblingSpacing, child.getState().SiblingsRowV.To - System.Array.getItem(this.SpecialRoot.getChildren(), 0, OrgChart.Layout.BoxTree.Node).getState().SiblingsRowV.From);
                         level.Boundary.MergeFrom$1(spacer);
                     }
                 }
@@ -4844,7 +4844,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
         EnumerateSiblings: function (from, to) {
             var $yield = [];
             for (var i = from; i < to; i = (i + 1) | 0) {
-                $yield.push(System.Array.getItem(this.SpecialRoot.getChildren(), i, OrgChart.Layout.BoxTree.TreeNode));
+                $yield.push(System.Array.getItem(this.SpecialRoot.getChildren(), i, OrgChart.Layout.BoxTree.Node));
             }
             return System.Array.toEnumerable($yield);
         },
@@ -4854,20 +4854,20 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
     });
 
     Bridge.define("OrgChart.Layout.MultiLineFishboneLayoutStrategy.SingleFishboneLayoutAdapter.TreeNodeView", {
-        inherits: [OrgChart.Layout.BoxTree.TreeNode],
+        inherits: [OrgChart.Layout.BoxTree.Node],
         ctor: function (element) {
             this.$initialize();
-            OrgChart.Layout.BoxTree.TreeNode.ctor.call(this, element);
+            OrgChart.Layout.BoxTree.Node.ctor.call(this, element);
         },
         Prepare: function (capacity) {
             if (this.getChildren() == null) {
-                this.setChildren(new (System.Collections.Generic.List$1(OrgChart.Layout.BoxTree.TreeNode))(capacity));
+                this.setChildren(new (System.Collections.Generic.List$1(OrgChart.Layout.BoxTree.Node))(capacity));
             } else {
-                System.Array.clear(this.getChildren(), OrgChart.Layout.BoxTree.TreeNode);
+                System.Array.clear(this.getChildren(), OrgChart.Layout.BoxTree.Node);
             }
         },
         AddChildView: function (node) {
-            System.Array.add(this.getChildren(), node, OrgChart.Layout.BoxTree.TreeNode);
+            System.Array.add(this.getChildren(), node, OrgChart.Layout.BoxTree.Node);
         }
     });
 
@@ -4913,8 +4913,8 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
          * @override
          * @this OrgChart.Layout.SingleColumnLayoutStrategy
          * @memberof OrgChart.Layout.SingleColumnLayoutStrategy
-         * @param   {OrgChart.Layout.LayoutState}         state    
-         * @param   {OrgChart.Layout.BoxTree.TreeNode}    node
+         * @param   {OrgChart.Layout.LayoutState}     state    
+         * @param   {OrgChart.Layout.BoxTree.Node}    node
          * @return  {void}
          */
         PreProcessThisNode: function (state, node) {
@@ -4964,7 +4964,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
 
             for (var row = 0; row < node.getState().NumberOfSiblings; row = (row + 1) | 0) {
                 // first, compute
-                var child = System.Array.getItem(node.getChildren(), row, OrgChart.Layout.BoxTree.TreeNode);
+                var child = System.Array.getItem(node.getChildren(), row, OrgChart.Layout.BoxTree.Node);
                 var rect = child.getState();
 
                 var top = prevRowExterior.To + (row === 0 ? this.ParentChildSpacing : this.SiblingSpacing);
@@ -4973,7 +4973,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
 
                 var rowExterior = new OrgChart.Layout.Dimensions.$ctor1(top, top + rect.Size.Height);
 
-                child = System.Array.getItem(node.getChildren(), row, OrgChart.Layout.BoxTree.TreeNode);
+                child = System.Array.getItem(node.getChildren(), row, OrgChart.Layout.BoxTree.Node);
                 child.getState().SiblingsRowV = rowExterior;
 
                 // re-enter layout algorithm for child branch
@@ -5007,7 +5007,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
 
             // first, perform horizontal layout for every node in this column
             for (var row = 0; row < nodeState.NumberOfSiblings; row = (row + 1) | 0) {
-                var child = System.Array.getItem(node.getChildren(), row, OrgChart.Layout.BoxTree.TreeNode);
+                var child = System.Array.getItem(node.getChildren(), row, OrgChart.Layout.BoxTree.Node);
 
                 // re-enter layout algorithm for child branch
                 // siblings are guaranteed not to offend each other
@@ -5034,10 +5034,10 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
                 OrgChart.Layout.LayoutAlgorithm.MoveChildrenOnly(state, level, diff);
 
                 // spacer for the vertical carrier 
-                var verticalSpacer = node.getLevel() > 0 ? System.Array.getItem(node.getChildren(), ((node.getChildCount() - 1) | 0), OrgChart.Layout.BoxTree.TreeNode) : null;
+                var verticalSpacer = node.getLevel() > 0 ? System.Array.getItem(node.getChildren(), ((node.getChildCount() - 1) | 0), OrgChart.Layout.BoxTree.Node) : null;
                 if (verticalSpacer != null) {
                     var spacerTop = node.getState().getBottom();
-                    var spacerBottom = System.Array.getItem(node.getChildren(), ((node.getChildCount() - 2) | 0), OrgChart.Layout.BoxTree.TreeNode).getState().getBottom();
+                    var spacerBottom = System.Array.getItem(node.getChildren(), ((node.getChildCount() - 2) | 0), OrgChart.Layout.BoxTree.Node).getState().getBottom();
                     OrgChart.Layout.LayoutAlgorithm.AdjustSpacer(verticalSpacer.getState(), rect.getCenterH() - this.ParentConnectorShield / 2, spacerTop, this.ParentConnectorShield, spacerBottom - spacerTop);
                     state.MergeSpacer(verticalSpacer);
                 }
@@ -5046,7 +5046,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
         EnumerateColumn: function (branchRoot) {
             var $yield = [];
             for (var i = 0; i < branchRoot.getState().NumberOfSiblings; i = (i + 1) | 0) {
-                $yield.push(System.Array.getItem(branchRoot.getChildren(), i, OrgChart.Layout.BoxTree.TreeNode));
+                $yield.push(System.Array.getItem(branchRoot.getChildren(), i, OrgChart.Layout.BoxTree.Node));
             }
             return System.Array.toEnumerable($yield);
         },
@@ -5058,8 +5058,8 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
          * @override
          * @this OrgChart.Layout.SingleColumnLayoutStrategy
          * @memberof OrgChart.Layout.SingleColumnLayoutStrategy
-         * @param   {OrgChart.Layout.LayoutState}         state    
-         * @param   {OrgChart.Layout.BoxTree.TreeNode}    node
+         * @param   {OrgChart.Layout.LayoutState}     state    
+         * @param   {OrgChart.Layout.BoxTree.Node}    node
          * @return  {void}
          */
         RouteConnectors: function (state, node) {
@@ -5077,13 +5077,13 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
             var rootRect = node.getState();
             var center = rootRect.getCenterH();
 
-            var verticalCarrierHeight = System.Array.getItem(node.getChildren(), ((node.getState().NumberOfSiblings - 1) | 0), OrgChart.Layout.BoxTree.TreeNode).getState().getCenterV() - node.getState().getBottom();
+            var verticalCarrierHeight = System.Array.getItem(node.getChildren(), ((node.getState().NumberOfSiblings - 1) | 0), OrgChart.Layout.BoxTree.Node).getState().getCenterV() - node.getState().getBottom();
 
             // big vertical connector, from parent to last row
             segments[0] = new OrgChart.Layout.Edge.$ctor1(new OrgChart.Layout.Point.$ctor1(center, rootRect.getBottom()), new OrgChart.Layout.Point.$ctor1(center, rootRect.getBottom() + verticalCarrierHeight));
 
             for (var ix = 0; ix < node.getState().NumberOfSiblings; ix = (ix + 1) | 0) {
-                var rect = System.Array.getItem(node.getChildren(), ix, OrgChart.Layout.BoxTree.TreeNode).getState();
+                var rect = System.Array.getItem(node.getChildren(), ix, OrgChart.Layout.BoxTree.Node).getState();
                 var destination = this.ParentAlignment === OrgChart.Layout.BranchParentAlignment.Left ? rect.getLeft() : rect.getRight();
                 segments[((1 + ix) | 0)] = new OrgChart.Layout.Edge.$ctor1(new OrgChart.Layout.Point.$ctor1(center, rect.getCenterV()), new OrgChart.Layout.Point.$ctor1(destination, rect.getCenterV()));
             }
@@ -5158,8 +5158,8 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
          * @override
          * @this OrgChart.Layout.StackingLayoutStrategy
          * @memberof OrgChart.Layout.StackingLayoutStrategy
-         * @param   {OrgChart.Layout.LayoutState}         state    
-         * @param   {OrgChart.Layout.BoxTree.TreeNode}    node
+         * @param   {OrgChart.Layout.LayoutState}     state    
+         * @param   {OrgChart.Layout.BoxTree.Node}    node
          * @return  {void}
          */
         PreProcessThisNode: function (state, node) {
@@ -5202,7 +5202,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
                 var top = node.getAssistantsRoot() == null ? node.getState().SiblingsRowV.To + this.ParentChildSpacing : node.getState().BranchExterior.getBottom() + this.ParentChildSpacing;
 
                 for (var i = 0; i < node.getState().NumberOfSiblings; i = (i + 1) | 0) {
-                    var child = System.Array.getItem(node.getChildren(), i, OrgChart.Layout.BoxTree.TreeNode);
+                    var child = System.Array.getItem(node.getChildren(), i, OrgChart.Layout.BoxTree.Node);
                     var rect = child.getState();
 
                     OrgChart.Layout.LayoutAlgorithm.MoveTo(child.getState(), 0, top);
@@ -5214,7 +5214,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
                 siblingsRowExterior = new OrgChart.Layout.Dimensions.$ctor1(siblingsRowExterior.From, siblingsRowExterior.To);
 
                 for (var i1 = 0; i1 < node.getState().NumberOfSiblings; i1 = (i1 + 1) | 0) {
-                    var child1 = System.Array.getItem(node.getChildren(), i1, OrgChart.Layout.BoxTree.TreeNode);
+                    var child1 = System.Array.getItem(node.getChildren(), i1, OrgChart.Layout.BoxTree.Node);
                     child1.getState().SiblingsRowV = siblingsRowExterior;
 
                     // re-enter layout algorithm for child branch
@@ -5225,7 +5225,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
 
                 for (var row = 0; row < node.getState().NumberOfSiblings; row = (row + 1) | 0) {
                     // first, compute
-                    var child2 = System.Array.getItem(node.getChildren(), row, OrgChart.Layout.BoxTree.TreeNode);
+                    var child2 = System.Array.getItem(node.getChildren(), row, OrgChart.Layout.BoxTree.Node);
                     var rect1 = child2.getState();
 
                     var top1 = prevRowExterior.To + (row === 0 ? this.ParentChildSpacing : this.SiblingSpacing);
@@ -5234,7 +5234,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
 
                     var rowExterior = new OrgChart.Layout.Dimensions.$ctor1(top1, top1 + rect1.Size.Height);
 
-                    child2 = System.Array.getItem(node.getChildren(), row, OrgChart.Layout.BoxTree.TreeNode);
+                    child2 = System.Array.getItem(node.getChildren(), row, OrgChart.Layout.BoxTree.Node);
                     child2.getState().SiblingsRowV = rowExterior;
 
                     // re-enter layout algorithm for child branch
@@ -5262,7 +5262,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
             var $t;
             var node = level.BranchRoot;
 
-            $t = Bridge.getEnumerator(node.getChildren(), OrgChart.Layout.BoxTree.TreeNode);
+            $t = Bridge.getEnumerator(node.getChildren(), OrgChart.Layout.BoxTree.Node);
             while ($t.moveNext()) {
                 var child = $t.getCurrent();
                 // re-enter layout algorithm for child branch
@@ -5272,11 +5272,11 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
             if (node.getChildCount() > 0) {
                 if (this.Orientation === OrgChart.Layout.StackOrientation.SingleRowHorizontal) {
                     // now auto-extend or contract the parent box
-                    var width = System.Array.getItem(node.getChildren(), ((node.getState().NumberOfSiblings - 1) | 0), OrgChart.Layout.BoxTree.TreeNode).getState().getRight() - System.Array.getItem(node.getChildren(), 0, OrgChart.Layout.BoxTree.TreeNode).getState().getLeft();
+                    var width = System.Array.getItem(node.getChildren(), ((node.getState().NumberOfSiblings - 1) | 0), OrgChart.Layout.BoxTree.Node).getState().getRight() - System.Array.getItem(node.getChildren(), 0, OrgChart.Layout.BoxTree.Node).getState().getLeft();
                     node.getState().Size = new OrgChart.Layout.Size.$ctor1(Math.max(node.getState().Size.Width, width), node.getState().Size.Height);
 
                     // now position children under the parent
-                    var center = (System.Array.getItem(node.getChildren(), 0, OrgChart.Layout.BoxTree.TreeNode).getState().getLeft() + System.Array.getItem(node.getChildren(), ((node.getChildCount() - 1) | 0), OrgChart.Layout.BoxTree.TreeNode).getState().getRight()) / 2;
+                    var center = (System.Array.getItem(node.getChildren(), 0, OrgChart.Layout.BoxTree.Node).getState().getLeft() + System.Array.getItem(node.getChildren(), ((node.getChildCount() - 1) | 0), OrgChart.Layout.BoxTree.Node).getState().getRight()) / 2;
                     var desiredCenter = node.getState().getCenterH();
                     var diff = desiredCenter - center;
                     OrgChart.Layout.LayoutAlgorithm.MoveChildrenOnly(state, level, diff);
@@ -5284,7 +5284,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
                     OrgChart.Layout.LayoutAlgorithm.AlignHorizontalCenters(state, level, node.getChildren());
 
                     // now position children under the parent
-                    var center1 = System.Array.getItem(node.getChildren(), 0, OrgChart.Layout.BoxTree.TreeNode).getState().getCenterH();
+                    var center1 = System.Array.getItem(node.getChildren(), 0, OrgChart.Layout.BoxTree.Node).getState().getCenterH();
                     var desiredCenter1 = node.getState().getCenterH();
                     var diff1 = desiredCenter1 - center1;
                     OrgChart.Layout.LayoutAlgorithm.MoveChildrenOnly(state, level, diff1);
@@ -5299,8 +5299,8 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
          * @override
          * @this OrgChart.Layout.StackingLayoutStrategy
          * @memberof OrgChart.Layout.StackingLayoutStrategy
-         * @param   {OrgChart.Layout.LayoutState}         state    
-         * @param   {OrgChart.Layout.BoxTree.TreeNode}    node
+         * @param   {OrgChart.Layout.LayoutState}     state    
+         * @param   {OrgChart.Layout.BoxTree.Node}    node
          * @return  {void}
          */
         RouteConnectors: function (state, node) {
@@ -5639,8 +5639,8 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
          * @override
          * @this OrgChart.Layout.MultiLineFishboneLayoutStrategy
          * @memberof OrgChart.Layout.MultiLineFishboneLayoutStrategy
-         * @param   {OrgChart.Layout.LayoutState}         state    
-         * @param   {OrgChart.Layout.BoxTree.TreeNode}    node
+         * @param   {OrgChart.Layout.LayoutState}     state    
+         * @param   {OrgChart.Layout.BoxTree.Node}    node
          * @return  {void}
          */
         PreProcessThisNode: function (state, node) {
@@ -5756,15 +5756,15 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
             if (node.getLevel() > 0) {
                 var diff;
                 if (node.getState().NumberOfSiblingColumns > 1) {
-                    var leftCarrier = System.Array.getItem(node.getChildren(), ((node.getState().NumberOfSiblings + 1) | 0), OrgChart.Layout.BoxTree.TreeNode).getState().getCenterH();
-                    var rightCarrier = System.Array.getItem(node.getChildren(), ((node.getState().NumberOfSiblings + node.getState().NumberOfSiblingColumns) | 0), OrgChart.Layout.BoxTree.TreeNode).getState().getCenterH();
+                    var leftCarrier = System.Array.getItem(node.getChildren(), ((node.getState().NumberOfSiblings + 1) | 0), OrgChart.Layout.BoxTree.Node).getState().getCenterH();
+                    var rightCarrier = System.Array.getItem(node.getChildren(), ((node.getState().NumberOfSiblings + node.getState().NumberOfSiblingColumns) | 0), OrgChart.Layout.BoxTree.Node).getState().getCenterH();
 
                     var desiredCenter = node.getState().NumberOfSiblings === 1 || this.ParentAlignment === OrgChart.Layout.BranchParentAlignment.Center ? leftCarrier + (rightCarrier - leftCarrier) / 2 : this.ParentAlignment === OrgChart.Layout.BranchParentAlignment.Left ? leftCarrier + this.ChildConnectorHookLength : rightCarrier - this.ChildConnectorHookLength;
 
                     //var desiredCenter = (leftCarrier + rightCarrier)/2.0;
                     diff = rect.getCenterH() - desiredCenter;
                 } else {
-                    var carrier = System.Array.getItem(node.getChildren(), ((1 + node.getState().NumberOfSiblings) | 0), OrgChart.Layout.BoxTree.TreeNode).getState().getCenterH();
+                    var carrier = System.Array.getItem(node.getChildren(), ((1 + node.getState().NumberOfSiblings) | 0), OrgChart.Layout.BoxTree.Node).getState().getCenterH();
                     var desiredCenter1 = rect.getCenterH();
                     diff = desiredCenter1 - carrier;
                 }
@@ -5774,8 +5774,8 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
             if (node.getLevel() > 0) {
                 // vertical connector from parent
                 var ix = node.getState().NumberOfSiblings;
-                var verticalSpacer = System.Array.getItem(node.getChildren(), ix, OrgChart.Layout.BoxTree.TreeNode);
-                OrgChart.Layout.LayoutAlgorithm.AdjustSpacer(verticalSpacer.getState(), rect.getCenterH() - this.ParentConnectorShield / 2, rect.getBottom(), this.ParentConnectorShield, System.Array.getItem(node.getChildren(), 0, OrgChart.Layout.BoxTree.TreeNode).getState().SiblingsRowV.From - rect.getBottom());
+                var verticalSpacer = System.Array.getItem(node.getChildren(), ix, OrgChart.Layout.BoxTree.Node);
+                OrgChart.Layout.LayoutAlgorithm.AdjustSpacer(verticalSpacer.getState(), rect.getCenterH() - this.ParentConnectorShield / 2, rect.getBottom(), this.ParentConnectorShield, System.Array.getItem(node.getChildren(), 0, OrgChart.Layout.BoxTree.Node).getState().SiblingsRowV.From - rect.getBottom());
                 state.MergeSpacer(verticalSpacer);
                 ix = (ix + 1) | 0;
 
@@ -5784,9 +5784,9 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
 
                 if (node.getState().NumberOfSiblingColumns > 1) {
                     // have a horizontal carrier
-                    var horizontalSpacer = System.Array.getItem(node.getChildren(), ix, OrgChart.Layout.BoxTree.TreeNode);
-                    var leftmost = System.Array.getItem(node.getChildren(), ((node.getState().NumberOfSiblings + 1) | 0), OrgChart.Layout.BoxTree.TreeNode).getState().TopLeft;
-                    var rightmost = System.Array.getItem(node.getChildren(), ((ix - 1) | 0), OrgChart.Layout.BoxTree.TreeNode).getState().getRight();
+                    var horizontalSpacer = System.Array.getItem(node.getChildren(), ix, OrgChart.Layout.BoxTree.Node);
+                    var leftmost = System.Array.getItem(node.getChildren(), ((node.getState().NumberOfSiblings + 1) | 0), OrgChart.Layout.BoxTree.Node).getState().TopLeft;
+                    var rightmost = System.Array.getItem(node.getChildren(), ((ix - 1) | 0), OrgChart.Layout.BoxTree.Node).getState().getRight();
                     OrgChart.Layout.LayoutAlgorithm.AdjustSpacer(horizontalSpacer.getState(), leftmost.X, leftmost.Y - this.ParentChildSpacing, rightmost - leftmost.X, this.ParentChildSpacing);
                     state.MergeSpacer(horizontalSpacer);
                 }
@@ -5800,8 +5800,8 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
          * @override
          * @this OrgChart.Layout.MultiLineFishboneLayoutStrategy
          * @memberof OrgChart.Layout.MultiLineFishboneLayoutStrategy
-         * @param   {OrgChart.Layout.LayoutState}         state    
-         * @param   {OrgChart.Layout.BoxTree.TreeNode}    node
+         * @param   {OrgChart.Layout.LayoutState}     state    
+         * @param   {OrgChart.Layout.BoxTree.Node}    node
          * @return  {void}
          */
         RouteConnectors: function (state, node) {
@@ -5826,27 +5826,27 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
             var ix = 0;
 
             // parent connector
-            var space = System.Array.getItem(node.getChildren(), 0, OrgChart.Layout.BoxTree.TreeNode).getState().SiblingsRowV.From - rootRect.getBottom();
+            var space = System.Array.getItem(node.getChildren(), 0, OrgChart.Layout.BoxTree.Node).getState().SiblingsRowV.From - rootRect.getBottom();
             segments[Bridge.identity(ix, (ix = (ix + 1) | 0))] = new OrgChart.Layout.Edge.$ctor1(new OrgChart.Layout.Point.$ctor1(center, rootRect.getBottom()), new OrgChart.Layout.Point.$ctor1(center, rootRect.getBottom() + space - this.ChildConnectorHookLength));
 
             // one hook for each child
             var iterator = new OrgChart.Layout.MultiLineFishboneLayoutStrategy.SingleFishboneLayoutAdapter.GroupIterator(node.getState().NumberOfSiblings, node.getState().NumberOfSiblingColumns);
             while (iterator.NextGroup()) {
-                var carrier = System.Array.getItem(node.getChildren(), ((((1 + node.getState().NumberOfSiblings) | 0) + iterator.Group) | 0), OrgChart.Layout.BoxTree.TreeNode).getState();
+                var carrier = System.Array.getItem(node.getChildren(), ((((1 + node.getState().NumberOfSiblings) | 0) + iterator.Group) | 0), OrgChart.Layout.BoxTree.Node).getState();
                 var from = carrier.getCenterH();
 
                 var isLeft = true;
                 var countOnThisSide = 0;
                 for (var i = iterator.FromIndex; i < ((iterator.FromIndex + iterator.Count) | 0); i = (i + 1) | 0) {
-                    var to = isLeft ? System.Array.getItem(node.getChildren(), i, OrgChart.Layout.BoxTree.TreeNode).getState().getRight() : System.Array.getItem(node.getChildren(), i, OrgChart.Layout.BoxTree.TreeNode).getState().getLeft();
-                    var y = System.Array.getItem(node.getChildren(), i, OrgChart.Layout.BoxTree.TreeNode).getState().getCenterV();
+                    var to = isLeft ? System.Array.getItem(node.getChildren(), i, OrgChart.Layout.BoxTree.Node).getState().getRight() : System.Array.getItem(node.getChildren(), i, OrgChart.Layout.BoxTree.Node).getState().getLeft();
+                    var y = System.Array.getItem(node.getChildren(), i, OrgChart.Layout.BoxTree.Node).getState().getCenterV();
                     segments[Bridge.identity(ix, (ix = (ix + 1) | 0))] = new OrgChart.Layout.Edge.$ctor1(new OrgChart.Layout.Point.$ctor1(from, y), new OrgChart.Layout.Point.$ctor1(to, y));
 
                     if (((countOnThisSide = (countOnThisSide + 1) | 0)) === iterator.MaxOnLeft) {
                         countOnThisSide = 0;
                         if (isLeft) {
                             // one for each vertical carrier
-                            segments[((((1 + node.getState().NumberOfSiblings) | 0) + iterator.Group) | 0)] = new OrgChart.Layout.Edge.$ctor1(new OrgChart.Layout.Point.$ctor1(carrier.getCenterH(), carrier.getTop() - this.ChildConnectorHookLength), new OrgChart.Layout.Point.$ctor1(carrier.getCenterH(), System.Array.getItem(node.getChildren(), i, OrgChart.Layout.BoxTree.TreeNode).getState().getCenterV()));
+                            segments[((((1 + node.getState().NumberOfSiblings) | 0) + iterator.Group) | 0)] = new OrgChart.Layout.Edge.$ctor1(new OrgChart.Layout.Point.$ctor1(carrier.getCenterH(), carrier.getTop() - this.ChildConnectorHookLength), new OrgChart.Layout.Point.$ctor1(carrier.getCenterH(), System.Array.getItem(node.getChildren(), i, OrgChart.Layout.BoxTree.Node).getState().getCenterV()));
                         }
                         isLeft = !isLeft;
                     }
@@ -5857,8 +5857,8 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
             ix = (ix + node.getState().NumberOfSiblingColumns) | 0;
 
             if (node.getState().NumberOfSiblingColumns > 1) {
-                var leftGroup = System.Array.getItem(node.getChildren(), ((1 + node.getState().NumberOfSiblings) | 0), OrgChart.Layout.BoxTree.TreeNode).getState();
-                var rightGroup = System.Array.getItem(node.getChildren(), ((((((1 + node.getState().NumberOfSiblings) | 0) + node.getState().NumberOfSiblingColumns) | 0) - 1) | 0), OrgChart.Layout.BoxTree.TreeNode).getState();
+                var leftGroup = System.Array.getItem(node.getChildren(), ((1 + node.getState().NumberOfSiblings) | 0), OrgChart.Layout.BoxTree.Node).getState();
+                var rightGroup = System.Array.getItem(node.getChildren(), ((((((1 + node.getState().NumberOfSiblings) | 0) + node.getState().NumberOfSiblingColumns) | 0) - 1) | 0), OrgChart.Layout.BoxTree.Node).getState();
 
                 // one horizontal carrier
                 segments[ix] = new OrgChart.Layout.Edge.$ctor1(new OrgChart.Layout.Point.$ctor1(leftGroup.getCenterH(), leftGroup.getTop() - this.ChildConnectorHookLength), new OrgChart.Layout.Point.$ctor1(rightGroup.getCenterH(), rightGroup.getTop() - this.ChildConnectorHookLength));
@@ -5916,8 +5916,8 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
          * @override
          * @this OrgChart.Layout.MultiLineHangerLayoutStrategy
          * @memberof OrgChart.Layout.MultiLineHangerLayoutStrategy
-         * @param   {OrgChart.Layout.LayoutState}         state    
-         * @param   {OrgChart.Layout.BoxTree.TreeNode}    node
+         * @param   {OrgChart.Layout.LayoutState}     state    
+         * @param   {OrgChart.Layout.BoxTree.Node}    node
          * @return  {void}
          */
         PreProcessThisNode: function (state, node) {
@@ -6012,7 +6012,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
                 var from = (row * node.getState().NumberOfSiblingColumns) | 0;
                 var to = Math.min(((from + node.getState().NumberOfSiblingColumns) | 0), node.getState().NumberOfSiblings);
                 for (var i = from; i < to; i = (i + 1) | 0) {
-                    var child = System.Array.getItem(node.getChildren(), i, OrgChart.Layout.BoxTree.TreeNode);
+                    var child = System.Array.getItem(node.getChildren(), i, OrgChart.Layout.BoxTree.Node);
                     if (child.getElement().IsSpecial) {
                         // skip vertical spacers for now
                         continue;
@@ -6031,7 +6031,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
 
                 var siblingsBottom = System.Double.min;
                 for (var i1 = from; i1 < to; i1 = (i1 + 1) | 0) {
-                    var child1 = System.Array.getItem(node.getChildren(), i1, OrgChart.Layout.BoxTree.TreeNode);
+                    var child1 = System.Array.getItem(node.getChildren(), i1, OrgChart.Layout.BoxTree.Node);
                     child1.getState().SiblingsRowV = siblingsRowExterior;
 
                     // re-enter layout algorithm for child branch
@@ -6048,9 +6048,9 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
                     // in the last row, spacer should only extend to the siblings row bottom,
                     // because main vertical carrier does not go below last row 
                     // and thus cannot conflict with branches of children of the last row
-                    var spacerBottom = row === ((node.getState().NumberOfSiblingRows - 1) | 0) ? System.Array.getItem(node.getChildren(), ((spacerIndex - 1) | 0), OrgChart.Layout.BoxTree.TreeNode).getState().SiblingsRowV.To : prevRowExterior.To;
+                    var spacerBottom = row === ((node.getState().NumberOfSiblingRows - 1) | 0) ? System.Array.getItem(node.getChildren(), ((spacerIndex - 1) | 0), OrgChart.Layout.BoxTree.Node).getState().SiblingsRowV.To : prevRowExterior.To;
 
-                    var spacer = System.Array.getItem(node.getChildren(), spacerIndex, OrgChart.Layout.BoxTree.TreeNode).getState();
+                    var spacer = System.Array.getItem(node.getChildren(), spacerIndex, OrgChart.Layout.BoxTree.Node).getState();
                     OrgChart.Layout.LayoutAlgorithm.AdjustSpacer(spacer, 0, prevRowExterior.From, this.ParentConnectorShield, spacerBottom - prevRowExterior.From);
                 }
             }
@@ -6088,7 +6088,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
                         break;
                     }
 
-                    var child = System.Array.getItem(node.getChildren(), ix, OrgChart.Layout.BoxTree.TreeNode);
+                    var child = System.Array.getItem(node.getChildren(), ix, OrgChart.Layout.BoxTree.Node);
                     // re-enter layout algorithm for child branch
                     OrgChart.Layout.LayoutAlgorithm.HorizontalLayout(state, child);
                 }
@@ -6098,23 +6098,23 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
 
             // now align children under parent
             var rect = node.getState();
-            var spacer = System.Array.getItem(node.getChildren(), ((Bridge.Int.div(node.getState().NumberOfSiblingColumns, 2)) | 0), OrgChart.Layout.BoxTree.TreeNode);
+            var spacer = System.Array.getItem(node.getChildren(), ((Bridge.Int.div(node.getState().NumberOfSiblingColumns, 2)) | 0), OrgChart.Layout.BoxTree.Node);
             var desiredCenter = spacer.getState().getCenterH();
             var diff = rect.getCenterH() - desiredCenter;
             OrgChart.Layout.LayoutAlgorithm.MoveChildrenOnly(state, level, diff);
 
             // vertical connector from parent
-            var verticalSpacer = System.Array.getItem(node.getChildren(), node.getState().NumberOfSiblings, OrgChart.Layout.BoxTree.TreeNode);
-            OrgChart.Layout.LayoutAlgorithm.AdjustSpacer(verticalSpacer.getState(), rect.getCenterH() - this.ParentConnectorShield / 2, rect.getBottom(), this.ParentConnectorShield, System.Array.getItem(node.getChildren(), 0, OrgChart.Layout.BoxTree.TreeNode).getState().SiblingsRowV.From - rect.getBottom());
+            var verticalSpacer = System.Array.getItem(node.getChildren(), node.getState().NumberOfSiblings, OrgChart.Layout.BoxTree.Node);
+            OrgChart.Layout.LayoutAlgorithm.AdjustSpacer(verticalSpacer.getState(), rect.getCenterH() - this.ParentConnectorShield / 2, rect.getBottom(), this.ParentConnectorShield, System.Array.getItem(node.getChildren(), 0, OrgChart.Layout.BoxTree.Node).getState().SiblingsRowV.From - rect.getBottom());
             state.MergeSpacer(verticalSpacer);
 
             // horizontal row carrier protectors
             var spacing = this.ParentChildSpacing;
             for (var firstInRowIndex = 0; firstInRowIndex < node.getState().NumberOfSiblings; firstInRowIndex = (firstInRowIndex + node.getState().NumberOfSiblingColumns) | 0) {
-                var firstInRow = System.Array.getItem(node.getChildren(), firstInRowIndex, OrgChart.Layout.BoxTree.TreeNode).getState();
-                var lastInRow = System.Array.getItem(node.getChildren(), Math.min(((((firstInRowIndex + node.getState().NumberOfSiblingColumns) | 0) - 1) | 0), ((node.getState().NumberOfSiblings - 1) | 0)), OrgChart.Layout.BoxTree.TreeNode).getState();
+                var firstInRow = System.Array.getItem(node.getChildren(), firstInRowIndex, OrgChart.Layout.BoxTree.Node).getState();
+                var lastInRow = System.Array.getItem(node.getChildren(), Math.min(((((firstInRowIndex + node.getState().NumberOfSiblingColumns) | 0) - 1) | 0), ((node.getState().NumberOfSiblings - 1) | 0)), OrgChart.Layout.BoxTree.Node).getState();
 
-                var horizontalSpacer = System.Array.getItem(node.getChildren(), ((((1 + node.getState().NumberOfSiblings) | 0) + ((Bridge.Int.div(firstInRowIndex, node.getState().NumberOfSiblingColumns)) | 0)) | 0), OrgChart.Layout.BoxTree.TreeNode);
+                var horizontalSpacer = System.Array.getItem(node.getChildren(), ((((1 + node.getState().NumberOfSiblings) | 0) + ((Bridge.Int.div(firstInRowIndex, node.getState().NumberOfSiblingColumns)) | 0)) | 0), OrgChart.Layout.BoxTree.Node);
 
                 var width = lastInRow.getRight() >= verticalSpacer.getState().getRight() ? lastInRow.getRight() - firstInRow.getLeft() : verticalSpacer.getState().getRight() - firstInRow.getLeft();
 
@@ -6132,7 +6132,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
                     break;
                 }
 
-                $yield.push(System.Array.getItem(branchRoot.getChildren(), ix, OrgChart.Layout.BoxTree.TreeNode));
+                $yield.push(System.Array.getItem(branchRoot.getChildren(), ix, OrgChart.Layout.BoxTree.Node));
             }
             return System.Array.toEnumerable($yield);
         },
@@ -6144,8 +6144,8 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
          * @override
          * @this OrgChart.Layout.MultiLineHangerLayoutStrategy
          * @memberof OrgChart.Layout.MultiLineHangerLayoutStrategy
-         * @param   {OrgChart.Layout.LayoutState}         state    
-         * @param   {OrgChart.Layout.BoxTree.TreeNode}    node
+         * @param   {OrgChart.Layout.LayoutState}     state    
+         * @param   {OrgChart.Layout.BoxTree.Node}    node
          * @return  {void}
          */
         RouteConnectors: function (state, node) {
@@ -6159,7 +6159,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
             // one parent connector (also serves as mid-sibling carrier) and horizontal carriers
             var count = (1 + node.getState().NumberOfSiblingRows) | 0;
 
-            $t = Bridge.getEnumerator(node.getChildren(), OrgChart.Layout.BoxTree.TreeNode);
+            $t = Bridge.getEnumerator(node.getChildren(), OrgChart.Layout.BoxTree.Node);
             while ($t.moveNext()) {
                 var child = $t.getCurrent();
                 // normal boxes get one upward hook 
@@ -6175,7 +6175,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
             var rootRect = node.getState();
             var center = rootRect.getCenterH();
 
-            var verticalCarrierHeight = System.Array.getItem(node.getChildren(), ((node.getState().NumberOfSiblings - 1) | 0), OrgChart.Layout.BoxTree.TreeNode).getState().SiblingsRowV.From - this.ChildConnectorHookLength - rootRect.getBottom();
+            var verticalCarrierHeight = System.Array.getItem(node.getChildren(), ((node.getState().NumberOfSiblings - 1) | 0), OrgChart.Layout.BoxTree.Node).getState().SiblingsRowV.From - this.ChildConnectorHookLength - rootRect.getBottom();
 
             // central mid-sibling vertical connector, from parent to last row
             segments[0] = new OrgChart.Layout.Edge.$ctor1(new OrgChart.Layout.Point.$ctor1(center, rootRect.getBottom()), new OrgChart.Layout.Point.$ctor1(center, rootRect.getBottom() + verticalCarrierHeight));
@@ -6183,7 +6183,7 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
             // short hook for each child
             var ix = 1;
             for (var i = 0; i < node.getState().NumberOfSiblings; i = (i + 1) | 0) {
-                var child1 = System.Array.getItem(node.getChildren(), i, OrgChart.Layout.BoxTree.TreeNode);
+                var child1 = System.Array.getItem(node.getChildren(), i, OrgChart.Layout.BoxTree.Node);
                 if (!child1.getElement().IsSpecial) {
                     var childRect = child1.getState();
                     var childCenter = childRect.getCenterH();
@@ -6213,10 +6213,10 @@ Bridge.assembly("OrgChart.Layout", function ($asm, globals) {
     var $m = Bridge.setMetadata,
         $n = [OrgChart.Layout,System,System.Collections.Generic,OrgChart.Annotations,OrgChart.Test];
     $m($n[3].ContractAnnotationAttribute, function () { return {"m":[{"at":[new OrgChart.Annotations.NotNullAttribute()],"a":2,"n":"Contract","t":16,"rt":String,"g":{"a":2,"n":"get_Contract","t":8,"sn":"getContract","rt":String},"s":{"a":1,"n":"set_Contract","t":8,"pi":[{"n":"value","pt":String,"ps":0}],"sn":"setContract","rt":Object,"p":[String]}}],"am":true}; });
-    $m($n[0].Boundary.Step, function () { return {"at":[new System.Diagnostics.DebuggerDisplayAttribute("{X}, {Top} - {Bottom}, {Node.Element.Id}")],"m":[{"at":[new OrgChart.Annotations.NotNullAttribute()],"a":2,"n":"Node","t":4,"rt":$n[0].BoxTree.TreeNode,"sn":"Node","ro":true}]}; });
+    $m($n[0].Boundary.Step, function () { return {"at":[new System.Diagnostics.DebuggerDisplayAttribute("{X}, {Top} - {Bottom}, {Node.Element.Id}")],"m":[{"at":[new OrgChart.Annotations.NotNullAttribute()],"a":2,"n":"Node","t":4,"rt":$n[0].BoxTree.Node,"sn":"Node","ro":true}]}; });
     $m($n[0].Box, function () { return {"at":[new System.Diagnostics.DebuggerDisplayAttribute("{Id}, Size.Width}x{Size.Height}")],"m":[{"at":[new OrgChart.Annotations.NotNullAttribute()],"a":2,"n":"Special","is":true,"t":8,"pi":[{"n":"id","pt":$n[1].Int32,"ps":0},{"n":"visualParentId","pt":$n[1].Int32,"ps":1},{"n":"disableCollisionDetection","pt":Boolean,"ps":2}],"sn":"Special","rt":$n[0].Box,"p":[$n[1].Int32,$n[1].Int32,Boolean]},{"at":[new OrgChart.Annotations.CanBeNullAttribute()],"a":2,"n":"AssistantLayoutStrategyId","t":4,"rt":String,"sn":"AssistantLayoutStrategyId"},{"at":[new OrgChart.Annotations.CanBeNullAttribute()],"a":2,"n":"DataId","t":4,"rt":String,"sn":"DataId","ro":true},{"at":[new OrgChart.Annotations.CanBeNullAttribute()],"a":2,"n":"LayoutStrategyId","t":4,"rt":String,"sn":"LayoutStrategyId"}]}; });
     $m($n[0].BoxContainer, function () { return {"m":[{"at":[new OrgChart.Annotations.CanBeNullAttribute()],"a":2,"n":"SystemRoot","t":16,"rt":$n[0].Box,"g":{"a":2,"n":"get_SystemRoot","t":8,"sn":"getSystemRoot","rt":$n[0].Box},"s":{"a":2,"n":"set_SystemRoot","t":8,"pi":[{"n":"value","pt":$n[0].Box,"ps":0}],"sn":"setSystemRoot","rt":Object,"p":[$n[0].Box]}}]}; });
-    $m($n[0].BoxTree.TreeNode, function () { return {"m":[{"at":[new OrgChart.Annotations.CanBeNullAttribute()],"a":2,"n":"AssistantsRoot","t":16,"rt":$n[0].BoxTree.TreeNode,"g":{"a":2,"n":"get_AssistantsRoot","t":8,"sn":"getAssistantsRoot","rt":$n[0].BoxTree.TreeNode},"s":{"a":3,"n":"set_AssistantsRoot","t":8,"pi":[{"n":"value","pt":$n[0].BoxTree.TreeNode,"ps":0}],"sn":"setAssistantsRoot","rt":Object,"p":[$n[0].BoxTree.TreeNode]}},{"at":[new OrgChart.Annotations.CanBeNullAttribute()],"a":2,"n":"Children","t":16,"rt":$n[2].IList$1(OrgChart.Layout.BoxTree.TreeNode),"g":{"a":2,"n":"get_Children","t":8,"sn":"getChildren","rt":$n[2].IList$1(OrgChart.Layout.BoxTree.TreeNode)},"s":{"a":3,"n":"set_Children","t":8,"pi":[{"n":"value","pt":$n[2].IList$1(OrgChart.Layout.BoxTree.TreeNode),"ps":0}],"sn":"setChildren","rt":Object,"p":[$n[2].IList$1(OrgChart.Layout.BoxTree.TreeNode)]}},{"at":[new OrgChart.Annotations.NotNullAttribute()],"a":2,"n":"Element","t":16,"rt":$n[0].Box,"g":{"a":2,"n":"get_Element","t":8,"sn":"getElement","rt":$n[0].Box},"s":{"a":1,"n":"set_Element","t":8,"pi":[{"n":"value","pt":$n[0].Box,"ps":0}],"sn":"setElement","rt":Object,"p":[$n[0].Box]}},{"at":[new OrgChart.Annotations.CanBeNullAttribute()],"a":2,"n":"ParentNode","t":16,"rt":$n[0].BoxTree.TreeNode,"g":{"a":2,"n":"get_ParentNode","t":8,"sn":"getParentNode","rt":$n[0].BoxTree.TreeNode},"s":{"a":2,"n":"set_ParentNode","t":8,"pi":[{"n":"value","pt":$n[0].BoxTree.TreeNode,"ps":0}],"sn":"setParentNode","rt":Object,"p":[$n[0].BoxTree.TreeNode]}},{"at":[new OrgChart.Annotations.NotNullAttribute()],"a":2,"n":"State","t":16,"rt":$n[0].NodeLayoutInfo,"g":{"a":2,"n":"get_State","t":8,"sn":"getState","rt":$n[0].NodeLayoutInfo},"s":{"a":1,"n":"set_State","t":8,"pi":[{"n":"value","pt":$n[0].NodeLayoutInfo,"ps":0}],"sn":"setState","rt":Object,"p":[$n[0].NodeLayoutInfo]}}]}; });
+    $m($n[0].BoxTree.Node, function () { return {"m":[{"at":[new OrgChart.Annotations.CanBeNullAttribute()],"a":2,"n":"AssistantsRoot","t":16,"rt":$n[0].BoxTree.Node,"g":{"a":2,"n":"get_AssistantsRoot","t":8,"sn":"getAssistantsRoot","rt":$n[0].BoxTree.Node},"s":{"a":3,"n":"set_AssistantsRoot","t":8,"pi":[{"n":"value","pt":$n[0].BoxTree.Node,"ps":0}],"sn":"setAssistantsRoot","rt":Object,"p":[$n[0].BoxTree.Node]}},{"at":[new OrgChart.Annotations.CanBeNullAttribute()],"a":2,"n":"Children","t":16,"rt":$n[2].IList$1(OrgChart.Layout.BoxTree.Node),"g":{"a":2,"n":"get_Children","t":8,"sn":"getChildren","rt":$n[2].IList$1(OrgChart.Layout.BoxTree.Node)},"s":{"a":3,"n":"set_Children","t":8,"pi":[{"n":"value","pt":$n[2].IList$1(OrgChart.Layout.BoxTree.Node),"ps":0}],"sn":"setChildren","rt":Object,"p":[$n[2].IList$1(OrgChart.Layout.BoxTree.Node)]}},{"at":[new OrgChart.Annotations.NotNullAttribute()],"a":2,"n":"Element","t":16,"rt":$n[0].Box,"g":{"a":2,"n":"get_Element","t":8,"sn":"getElement","rt":$n[0].Box},"s":{"a":1,"n":"set_Element","t":8,"pi":[{"n":"value","pt":$n[0].Box,"ps":0}],"sn":"setElement","rt":Object,"p":[$n[0].Box]}},{"at":[new OrgChart.Annotations.CanBeNullAttribute()],"a":2,"n":"ParentNode","t":16,"rt":$n[0].BoxTree.Node,"g":{"a":2,"n":"get_ParentNode","t":8,"sn":"getParentNode","rt":$n[0].BoxTree.Node},"s":{"a":2,"n":"set_ParentNode","t":8,"pi":[{"n":"value","pt":$n[0].BoxTree.Node,"ps":0}],"sn":"setParentNode","rt":Object,"p":[$n[0].BoxTree.Node]}},{"at":[new OrgChart.Annotations.NotNullAttribute()],"a":2,"n":"State","t":16,"rt":$n[0].NodeLayoutInfo,"g":{"a":2,"n":"get_State","t":8,"sn":"getState","rt":$n[0].NodeLayoutInfo},"s":{"a":1,"n":"set_State","t":8,"pi":[{"n":"value","pt":$n[0].NodeLayoutInfo,"ps":0}],"sn":"setState","rt":Object,"p":[$n[0].NodeLayoutInfo]}}]}; });
     $m($n[0].Connector, function () { return {"m":[{"at":[new OrgChart.Annotations.NotNullAttribute()],"a":2,"n":"Segments","t":16,"rt":Array,"g":{"a":2,"n":"get_Segments","t":8,"sn":"getSegments","rt":Array},"s":{"a":1,"n":"set_Segments","t":8,"pi":[{"n":"value","pt":Array,"ps":0}],"sn":"setSegments","rt":Object,"p":[Array]}}]}; });
     $m($n[0].Diagram, function () { return {"m":[{"at":[new OrgChart.Annotations.CanBeNullAttribute()],"a":2,"n":"VisualTree","t":16,"rt":$n[0].BoxTree,"g":{"a":2,"n":"get_VisualTree","t":8,"sn":"getVisualTree","rt":$n[0].BoxTree},"s":{"a":2,"n":"set_VisualTree","t":8,"pi":[{"n":"value","pt":$n[0].BoxTree,"ps":0}],"sn":"setVisualTree","rt":Object,"p":[$n[0].BoxTree]}}]}; });
     $m($n[0].DiagramLayoutSettings, function () { return {"m":[{"at":[new OrgChart.Annotations.CanBeNullAttribute()],"a":2,"n":"DefaultAssistantLayoutStrategyId","t":16,"rt":String,"g":{"a":2,"n":"get_DefaultAssistantLayoutStrategyId","t":8,"sn":"getDefaultAssistantLayoutStrategyId","rt":String},"s":{"a":2,"n":"set_DefaultAssistantLayoutStrategyId","t":8,"pi":[{"n":"value","pt":String,"ps":0}],"sn":"setDefaultAssistantLayoutStrategyId","rt":Object,"p":[String]}},{"at":[new OrgChart.Annotations.CanBeNullAttribute()],"a":2,"n":"DefaultLayoutStrategyId","t":16,"rt":String,"g":{"a":2,"n":"get_DefaultLayoutStrategyId","t":8,"sn":"getDefaultLayoutStrategyId","rt":String},"s":{"a":2,"n":"set_DefaultLayoutStrategyId","t":8,"pi":[{"n":"value","pt":String,"ps":0}],"sn":"setDefaultLayoutStrategyId","rt":Object,"p":[String]}},{"at":[new OrgChart.Annotations.NotNullAttribute()],"a":2,"n":"LayoutStrategies","t":16,"rt":$n[2].Dictionary$2(String,OrgChart.Layout.LayoutStrategyBase),"g":{"a":2,"n":"get_LayoutStrategies","t":8,"sn":"getLayoutStrategies","rt":$n[2].Dictionary$2(String,OrgChart.Layout.LayoutStrategyBase)},"s":{"a":1,"n":"set_LayoutStrategies","t":8,"pi":[{"n":"value","pt":$n[2].Dictionary$2(String,OrgChart.Layout.LayoutStrategyBase),"ps":0}],"sn":"setLayoutStrategies","rt":Object,"p":[$n[2].Dictionary$2(String,OrgChart.Layout.LayoutStrategyBase)]}}]}; });

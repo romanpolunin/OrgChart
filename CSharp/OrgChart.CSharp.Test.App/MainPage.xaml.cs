@@ -154,7 +154,7 @@ namespace OrgChart.CSharp.Test.App
             RenderBoxes(m_diagram.VisualTree, DrawCanvas);
         }
 
-        private string LayoutOptimizer(BoxTree.TreeNode node)
+        private string LayoutOptimizer(BoxTree.Node node)
         {
             return null;
 
@@ -284,7 +284,7 @@ namespace OrgChart.CSharp.Test.App
                 Y = -boundingRect.Top
             };
 
-            Func<BoxTree.TreeNode, bool> renderBox = node =>
+            Func<BoxTree.Node, bool> renderBox = node =>
             {
                 if (node.Level == 0)
                 {
@@ -384,7 +384,7 @@ namespace OrgChart.CSharp.Test.App
             return box.IsSpecial ? Colors.DarkGray : Colors.Black;
         }
 
-        private static Color GetBoxFillColor(BoxTree.TreeNode node)
+        private static Color GetBoxFillColor(BoxTree.Node node)
         {
             var box = node.Element;
             return box.IsSpecial

@@ -26,7 +26,7 @@ namespace OrgChart.Layout
             /// Which <see cref="Node"/> holds this edge.
             /// </summary>
             [NotNull]
-            public readonly BoxTree.TreeNode Node;
+            public readonly BoxTree.Node Node;
             /// <summary>
             /// Horizontal position of the edge.
             /// </summary>
@@ -43,7 +43,7 @@ namespace OrgChart.Layout
             /// <summary>
             /// Ctr.
             /// </summary>
-            public Step([NotNull]BoxTree.TreeNode node, double x, double top, double bottom)
+            public Step([NotNull]BoxTree.Node node, double x, double top, double bottom)
             {
                 Node = node;
                 X = x;
@@ -70,7 +70,7 @@ namespace OrgChart.Layout
             /// <summary>
             /// Returns a new <see cref="Step"/> whose <see cref="Node"/> property was set to <paramref name="newNode"/> and <see cref="X"/> to <paramref name="newX"/>.
             /// </summary>
-            public Step ChangeOwner([NotNull]BoxTree.TreeNode newNode, double newX)
+            public Step ChangeOwner([NotNull]BoxTree.Node newNode, double newX)
             {
                 return new Step(newNode, newX, Top, Bottom);
             }
@@ -126,7 +126,7 @@ namespace OrgChart.Layout
         /// <summary>
         /// Resets the edges, use when re-using this object from pool.
         /// </summary>
-        public void PrepareForHorizontalLayout([NotNull]BoxTree.TreeNode node)
+        public void PrepareForHorizontalLayout([NotNull]BoxTree.Node node)
         {
             Prepare(node);
 
@@ -144,7 +144,7 @@ namespace OrgChart.Layout
         /// <summary>
         /// Resets the edges, use when re-using this object from pool.
         /// </summary>
-        public void Prepare([NotNull]BoxTree.TreeNode node)
+        public void Prepare([NotNull]BoxTree.Node node)
         {
             Left.Clear();
             Right.Clear();
@@ -409,7 +409,7 @@ namespace OrgChart.Layout
         /// <summary>
         /// Merges a box into this one, potentially pushing its edges out.
         /// </summary>
-        public void MergeFrom([NotNull]BoxTree.TreeNode node)
+        public void MergeFrom([NotNull]BoxTree.Node node)
         {
             if (node.Element.DisableCollisionDetection)
             {
@@ -480,7 +480,7 @@ namespace OrgChart.Layout
         /// <summary>
         /// Re-initializes left and right edges based on actual coordinates of boxes.
         /// </summary>
-        public void ReloadFromBranch(BoxTree.TreeNode branchRoot)
+        public void ReloadFromBranch(BoxTree.Node branchRoot)
         {
             var leftmost = double.MaxValue;
             var rightmost = double.MinValue;

@@ -36,7 +36,7 @@ namespace OrgChart.Layout
         /// A chance for layout strategy to append special auto-generated boxes into the visual tree. 
         /// This strategy does not use connectors and spacers.
         /// </summary>
-        public override void PreProcessThisNode([NotNull]LayoutState state, [NotNull] BoxTree.TreeNode node)
+        public override void PreProcessThisNode([NotNull]LayoutState state, [NotNull] BoxTree.Node node)
         {
             node.State.NumberOfSiblings = node.Element.IsCollapsed ? 0 : node.ChildCount;
 
@@ -175,7 +175,7 @@ namespace OrgChart.Layout
         /// <summary>
         /// Allocates and routes connectors.
         /// </summary>
-        public override void RouteConnectors([NotNull] LayoutState state, [NotNull] BoxTree.TreeNode node)
+        public override void RouteConnectors([NotNull] LayoutState state, [NotNull] BoxTree.Node node)
         {
             // this strategy does not use connectors
         }

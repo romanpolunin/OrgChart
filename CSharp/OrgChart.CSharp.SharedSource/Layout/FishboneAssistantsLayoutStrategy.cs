@@ -17,7 +17,7 @@ namespace OrgChart.Layout
         /// <summary>
         /// A chance for layout strategy to append special auto-generated boxes into the visual tree. 
         /// </summary>
-        public override void PreProcessThisNode([NotNull] LayoutState state, [NotNull] BoxTree.TreeNode node)
+        public override void PreProcessThisNode([NotNull] LayoutState state, [NotNull] BoxTree.Node node)
         {
             node.State.NumberOfSiblings = node.ChildCount;
 
@@ -183,7 +183,7 @@ namespace OrgChart.Layout
         /// <summary>
         /// Allocates and routes connectors.
         /// </summary>
-        public override void RouteConnectors([NotNull] LayoutState state, [NotNull] BoxTree.TreeNode node)
+        public override void RouteConnectors([NotNull] LayoutState state, [NotNull] BoxTree.Node node)
         {
             var count = node.State.NumberOfSiblings;
             if (count == 0)
@@ -239,10 +239,10 @@ namespace OrgChart.Layout
         /// </summary>
         public override bool SupportsAssistants => false;
 
-        private int MaxOnLeft(BoxTree.TreeNode node) => node.State.NumberOfSiblings/2 + node.State.NumberOfSiblings % 2;
-        private bool NeedCarrierProtector(BoxTree.TreeNode node) => node.ParentNode.ChildCount == 0;
+        private int MaxOnLeft(BoxTree.Node node) => node.State.NumberOfSiblings/2 + node.State.NumberOfSiblings % 2;
+        private bool NeedCarrierProtector(BoxTree.Node node) => node.ParentNode.ChildCount == 0;
 
-        private IEnumerable<BoxTree.TreeNode> EnumerateSiblings(BoxTree.TreeNode node, int from, int to)
+        private IEnumerable<BoxTree.Node> EnumerateSiblings(BoxTree.Node node, int from, int to)
         {
             for (var i = from; i < to; i++)
             {
