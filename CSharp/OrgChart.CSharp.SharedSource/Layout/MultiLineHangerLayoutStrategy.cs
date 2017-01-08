@@ -24,7 +24,7 @@ namespace OrgChart.Layout
         /// <summary>
         /// A chance for layout strategy to append special auto-generated boxes into the visual tree. 
         /// </summary>
-        public override void PreProcessThisNode([NotNull]LayoutState state, [NotNull] BoxTree.TreeNode node)
+        public override void PreProcessThisNode([NotNull]LayoutState state, [NotNull] BoxTree.Node node)
         {
             if (MaxSiblingsPerRow <= 0 || MaxSiblingsPerRow%2 != 0)
             {
@@ -119,6 +119,8 @@ namespace OrgChart.Layout
             {
                 var siblingsRowExterior = Dimensions.MinMax();
 
+                var spacing = row == 0 ? ParentChildSpacing : SiblingSpacing;
+
                 // first, compute
                 var from = row* node.State.NumberOfSiblingColumns;
                 var to = Math.Min(from + node.State.NumberOfSiblingColumns, node.State.NumberOfSiblings);
@@ -133,7 +135,7 @@ namespace OrgChart.Layout
 
                     var rect = child.State;
 
-                    var top = prevRowExterior.To + ParentChildSpacing;
+                    var top = prevRowExterior.To + spacing;
                     child.State.MoveTo(rect.Left, top);
                     child.State.BranchExterior = new Rect(child.State.TopLeft, child.State.Size);
 
@@ -228,6 +230,7 @@ namespace OrgChart.Layout
             state.MergeSpacer(verticalSpacer);
 
             // horizontal row carrier protectors
+            var spacing = ParentChildSpacing;
             for (var firstInRowIndex = 0; firstInRowIndex < node.State.NumberOfSiblings; firstInRowIndex += node.State.NumberOfSiblingColumns)
             {
                 var firstInRow = node.Children[firstInRowIndex].State;
@@ -241,13 +244,15 @@ namespace OrgChart.Layout
                     verticalSpacer.State.Right - firstInRow.Left;
 
                 horizontalSpacer.State.AdjustSpacer(
-                    firstInRow.Left, firstInRow.SiblingsRowV.From - ParentChildSpacing,
-                    width, ParentChildSpacing);
+                    firstInRow.Left, firstInRow.SiblingsRowV.From - spacing,
+                    width, spacing);
                 state.MergeSpacer(horizontalSpacer);
+
+                spacing = SiblingSpacing;
             }
         }
 
-        private IEnumerable<BoxTree.TreeNode> EnumerateColumn(BoxTree.TreeNode branchRoot, int col)
+        private IEnumerable<BoxTree.Node> EnumerateColumn(BoxTree.Node branchRoot, int col)
         {
             for (var row = 0; row < branchRoot.State.NumberOfSiblingRows; row++)
             {
@@ -264,7 +269,7 @@ namespace OrgChart.Layout
         /// <summary>
         /// Allocates and routes connectors.
         /// </summary>
-        public override void RouteConnectors([NotNull] LayoutState state, [NotNull] BoxTree.TreeNode node)
+        public override void RouteConnectors([NotNull] LayoutState state, [NotNull] BoxTree.Node node)
         {
             if (node.State.NumberOfSiblings <= MaxSiblingsPerRow)
             {
@@ -336,5 +341,11 @@ namespace OrgChart.Layout
 
             node.State.Connector = new Connector(segments);
         }
+
+        /// <summary>
+        /// <c>true</c> if this strategy supports special layout for assistant boxes.
+        /// If not, assistants will be processed as part of normal children group.
+        /// </summary>
+        public override bool SupportsAssistants => true;
     }
 }

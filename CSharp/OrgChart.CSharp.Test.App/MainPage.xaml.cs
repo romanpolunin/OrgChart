@@ -62,7 +62,7 @@ namespace OrgChart.CSharp.Test.App
             if (resetBoxes || m_diagram == null)
             {
                 m_dataSource = new TestDataSource();
-                new TestDataGen().GenerateDataItems((TestDataSource)m_dataSource, 200);
+                new TestDataGen().GenerateDataItems((TestDataSource)m_dataSource, 200, 5);
                 //m_dataSource = new DebugDataSource();
                 //await ((DebugDataSource)m_dataSource).Load();
 
@@ -78,7 +78,7 @@ namespace OrgChart.CSharp.Test.App
                         box.IsCollapsed = true;
                     }
                 }
-
+                
                 m_diagram = new Diagram {Boxes = boxContainer};
 
                 m_diagram.LayoutSettings.LayoutStrategies.Add("linear",
@@ -94,12 +94,23 @@ namespace OrgChart.CSharp.Test.App
                     new MultiLineFishboneLayoutStrategy {ParentAlignment = BranchParentAlignment.Center, MaxGroups = 1});
                 m_diagram.LayoutSettings.LayoutStrategies.Add("fishbone2",
                     new MultiLineFishboneLayoutStrategy {ParentAlignment = BranchParentAlignment.Center, MaxGroups = 2});
+                m_diagram.LayoutSettings.LayoutStrategies.Add("hstack1",
+                    new StackingLayoutStrategy
+                    {
+                        Orientation = StackOrientation.SingleRowHorizontal
+                    });
+                m_diagram.LayoutSettings.LayoutStrategies.Add("vstack1",
+                    new StackingLayoutStrategy
+                    {
+                        Orientation = StackOrientation.SingleColumnVertical
+                    });
 
                 m_diagram.LayoutSettings.LayoutStrategies.Add("assistants",
                     new FishboneAssistantsLayoutStrategy { ParentAlignment = BranchParentAlignment.Center });
 
-                m_diagram.LayoutSettings.DefaultLayoutStrategyId = "fishbone2";
+                m_diagram.LayoutSettings.DefaultLayoutStrategyId = "hanger";
                 m_diagram.LayoutSettings.DefaultAssistantLayoutStrategyId = "assistants";
+                //m_diagram.LayoutSettings.BranchSpacing = 5;
             }
 
             var state = new LayoutState(m_diagram);
@@ -110,6 +121,7 @@ namespace OrgChart.CSharp.Test.App
             }
 
             state.OperationChanged += StateOperationChanged;
+            state.LayoutOptimizerFunc = LayoutOptimizer;
 
             Task.Factory.StartNew(() =>
                 {
@@ -135,10 +147,22 @@ namespace OrgChart.CSharp.Test.App
         {
             var state = new LayoutState(m_diagram);
             state.BoxSizeFunc = dataId => m_diagram.Boxes.BoxesByDataId[dataId].Size;
+            state.LayoutOptimizerFunc = LayoutOptimizer;
 
             LayoutAlgorithm.Apply(state);
 
             RenderBoxes(m_diagram.VisualTree, DrawCanvas);
+        }
+
+        private string LayoutOptimizer(BoxTree.Node node)
+        {
+            return null;
+
+            if (node.IsAssistantRoot)
+            {
+                return null;
+            }
+            return node.Level % 2 == 1 ? "hstack1" : "vstack1";
         }
 
         private void BoxOnDoubleTapped(object sender, DoubleTappedRoutedEventArgs doubleTappedRoutedEventArgs)
@@ -153,7 +177,7 @@ namespace OrgChart.CSharp.Test.App
 
         private void StateOperationChanged(object sender, LayoutStateOperationChangedEventArgs args)
         {
-            if (args.State.CurrentOperation > LayoutState.Operation.Preparing)
+            if (args.State.CurrentOperation > LayoutState.Operation.PreprocessVisualTree)
             {
                 Dispatcher.RunAsync(CoreDispatcherPriority.High, () => UpdateListView(m_diagram.VisualTree));
             }
@@ -199,7 +223,8 @@ namespace OrgChart.CSharp.Test.App
 
         private void UpdateListView(BoxTree visualTree)
         {
-            m_nodesForTreeCollection = new ObservableCollection<NodeViewModel>(visualTree.Roots.Select(x => new NodeViewModel {Node = x}));
+            m_nodesForTreeCollection = new ObservableCollection<NodeViewModel>();
+            m_nodesForTreeCollection.Add(new NodeViewModel { Node = visualTree.Root });
             LvBoxes.ItemsSource = m_nodesForTreeCollection;
         }
 
@@ -212,7 +237,8 @@ namespace OrgChart.CSharp.Test.App
                     item.Changed();
                 }
             }
-            m_nodesForTreeCollection = new ObservableCollection<NodeViewModel>(visualTree.Roots.Select(x => new NodeViewModel {Node = x}));
+            m_nodesForTreeCollection = new ObservableCollection<NodeViewModel>();
+            m_nodesForTreeCollection.Add(new NodeViewModel { Node = visualTree.Root });
             LvBoxes.ItemsSource = m_nodesForTreeCollection;
         }
 
@@ -258,7 +284,7 @@ namespace OrgChart.CSharp.Test.App
                 Y = -boundingRect.Top
             };
 
-            Func<BoxTree.TreeNode, bool> renderBox = node =>
+            Func<BoxTree.Node, bool> renderBox = node =>
             {
                 if (node.Level == 0)
                 {
@@ -358,7 +384,7 @@ namespace OrgChart.CSharp.Test.App
             return box.IsSpecial ? Colors.DarkGray : Colors.Black;
         }
 
-        private static Color GetBoxFillColor(BoxTree.TreeNode node)
+        private static Color GetBoxFillColor(BoxTree.Node node)
         {
             var box = node.Element;
             return box.IsSpecial

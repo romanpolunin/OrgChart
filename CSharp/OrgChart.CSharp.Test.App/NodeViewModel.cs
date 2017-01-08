@@ -9,7 +9,7 @@ namespace OrgChart.CSharp.Test.App
     public class NodeViewModel : INotifyPropertyChanged
     {
         private ObservableCollection<NodeViewModel> m_children;
-        public BoxTree.TreeNode Node { get; set; }
+        public BoxTree.Node Node { get; set; }
 
         public string Text => $"{Node.Element.Id}, ({Node.State.Left},{Node.State.Top}), {Node.State.Size.Width}x{Node.State.Size.Height}";
 

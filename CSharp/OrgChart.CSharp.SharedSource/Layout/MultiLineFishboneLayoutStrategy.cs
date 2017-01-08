@@ -23,7 +23,7 @@ namespace OrgChart.Layout
         /// <summary>
         /// A chance for layout strategy to append special auto-generated boxes into the visual tree. 
         /// </summary>
-        public override void PreProcessThisNode([NotNull]LayoutState state, [NotNull] BoxTree.TreeNode node)
+        public override void PreProcessThisNode([NotNull]LayoutState state, [NotNull] BoxTree.Node node)
         {
             if (MaxGroups <= 0)
             {
@@ -192,7 +192,7 @@ namespace OrgChart.Layout
         /// <summary>
         /// Allocates and routes connectors.
         /// </summary>
-        public override void RouteConnectors([NotNull] LayoutState state, [NotNull] BoxTree.TreeNode node)
+        public override void RouteConnectors([NotNull] LayoutState state, [NotNull] BoxTree.Node node)
         {
             if (node.State.NumberOfSiblings <= MaxGroups * 2)
             {
@@ -269,6 +269,12 @@ namespace OrgChart.Layout
         }
 
         /// <summary>
+        /// <c>true</c> if this strategy supports special layout for assistant boxes.
+        /// If not, assistants will be processed as part of normal children group.
+        /// </summary>
+        public override bool SupportsAssistants => true;
+
+        /// <summary>
         /// Implements layout for a single vertically stretched fishbone.
         /// Re-used by <see cref="MultiLineFishboneLayoutStrategy"/> to layout multiple groups of siblings.
         /// </summary>
@@ -333,7 +339,7 @@ namespace OrgChart.Layout
                 }
             }
 
-            public class TreeNodeView : BoxTree.TreeNode
+            public class TreeNodeView : BoxTree.Node
             {
                 public TreeNodeView([NotNull] Box element) : base(element)
                 {
@@ -343,7 +349,7 @@ namespace OrgChart.Layout
                 {
                     if (Children == null)
                     {
-                        Children = new List<BoxTree.TreeNode>(capacity);
+                        Children = new List<BoxTree.Node>(capacity);
                     }
                     else
                     {
@@ -351,17 +357,17 @@ namespace OrgChart.Layout
                     }
                 }
 
-                public void AddChildView(BoxTree.TreeNode node)
+                public void AddChildView(BoxTree.Node node)
                 {
                     Children.Add(node);
                 }
             }
 
-            public readonly BoxTree.TreeNode RealRoot;
+            public readonly BoxTree.Node RealRoot;
             public readonly TreeNodeView SpecialRoot;
             public readonly GroupIterator Iterator;
 
-            public SingleFishboneLayoutAdapter([NotNull]BoxTree.TreeNode realRoot)
+            public SingleFishboneLayoutAdapter([NotNull]BoxTree.Node realRoot)
             {
                 Iterator = new GroupIterator(realRoot.State.NumberOfSiblings, realRoot.State.NumberOfSiblingColumns);
 
@@ -403,7 +409,7 @@ namespace OrgChart.Layout
                 return true;
             }
 
-            public override void PreProcessThisNode(LayoutState state, BoxTree.TreeNode node)
+            public override void PreProcessThisNode(LayoutState state, BoxTree.Node node)
             {
                 throw new NotSupportedException();
             }
@@ -416,9 +422,11 @@ namespace OrgChart.Layout
                 
                 for (var i = 0; i < Iterator.MaxOnLeft; i++)
                 {
+                    var spacing = i == 0 ? ParentChildSpacing : SiblingSpacing;
+
                     var child = SpecialRoot.Children[i];
                     var frame = child.State;
-                    frame.MoveTo(frame.Left, prevRowBottom + ParentChildSpacing);
+                    frame.MoveTo(frame.Left, prevRowBottom + spacing);
 
                     var rowExterior = new Dimensions(frame.Top, frame.Bottom);
 
@@ -427,7 +435,7 @@ namespace OrgChart.Layout
                     {
                         var child2 = SpecialRoot.Children[i2];
                         var frame2 = child2.State;
-                        frame2.MoveTo(frame2.Left, prevRowBottom + ParentChildSpacing);
+                        frame2.MoveTo(frame2.Left, prevRowBottom + spacing);
 
                         if (frame2.Bottom > frame.Bottom)
                         {
@@ -502,7 +510,7 @@ namespace OrgChart.Layout
                 LayoutAlgorithm.AlignHorizontalCenters(state, level, EnumerateSiblings(Iterator.MaxOnLeft, Iterator.Count));
             }
 
-            private IEnumerable<BoxTree.TreeNode> EnumerateSiblings(int from, int to)
+            private IEnumerable<BoxTree.Node> EnumerateSiblings(int from, int to)
             {
                 for (var i = from; i < to; i++)
                 {
@@ -510,10 +518,17 @@ namespace OrgChart.Layout
                 }
             }
 
-            public override void RouteConnectors(LayoutState state, BoxTree.TreeNode node)
+            public override void RouteConnectors(LayoutState state, BoxTree.Node node)
             {
                 throw new NotSupportedException();
             }
+
+
+            /// <summary>
+            /// <c>true</c> if this strategy supports special layout for assistant boxes.
+            /// If not, assistants will be processed as part of normal children group.
+            /// </summary>
+            public override bool SupportsAssistants => false;
         }
     }
 }

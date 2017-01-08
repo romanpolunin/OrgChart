@@ -196,8 +196,11 @@
     <Compile Include="..\OrgChart.CSharp.SharedSource\Layout\SingleColumnLayoutStrategy.cs">
       <Link>Layout\SingleColumnLayoutStrategy.cs</Link>
     </Compile>
-    <Compile Include="..\OrgChart.CSharp.SharedSource\Misc\Tree.cs">
-      <Link>Misc\Tree.cs</Link>
+    <Compile Include="..\OrgChart.CSharp.SharedSource\Layout\StackingLayoutStrategy.cs">
+      <Link>Layout\StackingLayoutStrategy.cs</Link>
+    </Compile>
+    <Compile Include="..\OrgChart.CSharp.SharedSource\Layout\StackOrientation.cs">
+      <Link>Layout\StackOrientation.cs</Link>
     </Compile>
     <Compile Include="..\OrgChart.CSharp.SharedSource\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
@@ -217,6 +220,9 @@
   <ItemGroup />
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>false</SignAssembly>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

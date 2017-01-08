@@ -17,7 +17,7 @@ namespace OrgChart.Layout
         /// <summary>
         /// A chance for layout strategy to append special auto-generated boxes into the visual tree. 
         /// </summary>
-        public override void PreProcessThisNode([NotNull] LayoutState state, [NotNull] BoxTree.TreeNode node)
+        public override void PreProcessThisNode([NotNull] LayoutState state, [NotNull] BoxTree.Node node)
         {
             node.State.NumberOfSiblings = node.ChildCount;
 
@@ -55,9 +55,11 @@ namespace OrgChart.Layout
             var maxOnLeft = MaxOnLeft(node);
             for (var i = 0; i < maxOnLeft; i++)
             {
+                var spacing = i == 0 ? ParentChildSpacing : SiblingSpacing;
+
                 var child = node.Children[i];
                 var frame = child.State;
-                frame.MoveTo(frame.Left, prevRowBottom + ParentChildSpacing);
+                frame.MoveTo(frame.Left, prevRowBottom + spacing);
 
                 var rowExterior = new Dimensions(frame.Top, frame.Bottom);
 
@@ -66,7 +68,7 @@ namespace OrgChart.Layout
                 {
                     var child2 = node.Children[i2];
                     var frame2 = child2.State;
-                    frame2.MoveTo(frame2.Left, prevRowBottom + ParentChildSpacing);
+                    frame2.MoveTo(frame2.Left, prevRowBottom + spacing);
 
                     if (frame2.Bottom > frame.Bottom)
                     {
@@ -156,7 +158,7 @@ namespace OrgChart.Layout
                         spacer.State.AdjustSpacer(
                             rightmost,
                             node.State.Bottom,
-                            state.Diagram.LayoutSettings.BranchSpacing,
+                            ParentConnectorShield,
                             node.State.BranchExterior.Bottom - node.State.Bottom
                         );
                         level.Boundary.MergeFrom(spacer);
@@ -181,7 +183,7 @@ namespace OrgChart.Layout
         /// <summary>
         /// Allocates and routes connectors.
         /// </summary>
-        public override void RouteConnectors([NotNull] LayoutState state, [NotNull] BoxTree.TreeNode node)
+        public override void RouteConnectors([NotNull] LayoutState state, [NotNull] BoxTree.Node node)
         {
             var count = node.State.NumberOfSiblings;
             if (count == 0)
@@ -231,10 +233,16 @@ namespace OrgChart.Layout
             node.State.Connector = new Connector(segments);
         }
 
-        private int MaxOnLeft(BoxTree.TreeNode node) => node.State.NumberOfSiblings/2 + node.State.NumberOfSiblings % 2;
-        private bool NeedCarrierProtector(BoxTree.TreeNode node) => node.ParentNode.ChildCount == 0;
+        /// <summary>
+        /// <c>true</c> if this strategy supports special layout for assistant boxes.
+        /// If not, assistants will be processed as part of normal children group.
+        /// </summary>
+        public override bool SupportsAssistants => false;
 
-        private IEnumerable<BoxTree.TreeNode> EnumerateSiblings(BoxTree.TreeNode node, int from, int to)
+        private int MaxOnLeft(BoxTree.Node node) => node.State.NumberOfSiblings/2 + node.State.NumberOfSiblings % 2;
+        private bool NeedCarrierProtector(BoxTree.Node node) => node.ParentNode.ChildCount == 0;
+
+        private IEnumerable<BoxTree.Node> EnumerateSiblings(BoxTree.Node node, int from, int to)
         {
             for (var i = from; i < to; i++)
             {

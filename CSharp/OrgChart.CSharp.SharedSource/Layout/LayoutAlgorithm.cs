@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using OrgChart.Annotations;
-using OrgChart.Misc;
 
 namespace OrgChart.Layout
 {
@@ -24,7 +23,7 @@ namespace OrgChart.Layout
             var result = new Rect();
             var initialized = false;
 
-            BoxTree.TreeNode.IterateParentFirst(visualTree.Roots[0], node =>
+            visualTree.Root.IterateParentFirst(node =>
             {
                 var box = node.Element;
 
@@ -60,12 +59,13 @@ namespace OrgChart.Layout
 
             state.CurrentOperation = LayoutState.Operation.Preparing;
 
-            var tree = BoxTree.Build(state.Diagram.Boxes.BoxesById.Values, x => x.Id, x => x.ParentId);
+            var tree = BoxTree.Build(state);
 
             state.Diagram.VisualTree = tree;
 
-            // verify the root
-            if (tree.Roots.Count != 1 || tree.Roots[0].Element.Id != state.Diagram.Boxes.SystemRoot.Id)
+            // verify the root: regardless of data items, there must be a system root box on top of everything
+            // the corresponding node is not supposed to be rendered, it only serves as layout algorithm's starting point
+            if (tree.Root == null || tree.Root.Element.Id != state.Diagram.Boxes.SystemRoot.Id)
             {
                 throw new Exception("SystemRoot is not on the top of the visual tree");
             }
@@ -74,6 +74,24 @@ namespace OrgChart.Layout
             tree.UpdateHierarchyStats();
             state.AttachVisualTree(tree);
 
+            // update visibility of boxes based on collapsed state
+            tree.IterateParentFirst(
+                node =>
+                {
+                    node.State.IsHidden =
+                        node.ParentNode != null &&
+                        (node.ParentNode.State.IsHidden || node.ParentNode.Element.IsCollapsed);
+
+                    return true;
+                });
+
+            // In this phase, we will figure out layout strategy
+            // and initialize layout state for each node.
+            // Event listener may perform initial rendering /measuring of boxes when this event fires,
+            // to determine box sizes and be ready to supply them via BoxSizeFunc delegate.
+            state.CurrentOperation = LayoutState.Operation.PreprocessVisualTree;
+
+            // initialize box sizes
             if (state.BoxSizeFunc != null)
             {
                 // apply box sizes
@@ -83,24 +101,30 @@ namespace OrgChart.Layout
                 }
             }
 
-            // update visibility of boxes based on collapsed state
+            foreach (var box in state.Diagram.Boxes.BoxesById.Values)
+            {
+                AssertBoxSize(box);
+            }
+
+            // initialize layout state on each node
             tree.IterateParentFirst(
                 node =>
                 {
-                    node.State.IsHidden =
-                        node.ParentNode != null &&
-                        (node.ParentNode.State.IsHidden || node.ParentNode.Element.IsCollapsed);
+                    node.State.MoveTo(0, 0);
+                    node.State.Size = node.Element.Size;
+                    node.State.BranchExterior = new Rect(new Point(0, 0), node.Element.Size);
+
                     return true;
                 });
 
-            state.CurrentOperation = LayoutState.Operation.PreprocessVisualTree;
             PreprocessVisualTree(state, tree);
+            tree.UpdateHierarchyStats();
 
             state.CurrentOperation = LayoutState.Operation.VerticalLayout;
-            VerticalLayout(state, tree.Roots[0]);
+            VerticalLayout(state, tree.Root);
 
             state.CurrentOperation = LayoutState.Operation.HorizontalLayout;
-            HorizontalLayout(state, tree.Roots[0]);
+            HorizontalLayout(state, tree.Root);
 
             state.CurrentOperation = LayoutState.Operation.ConnectorsLayout;
             RouteConnectors(state, tree);
@@ -108,10 +132,33 @@ namespace OrgChart.Layout
             state.CurrentOperation = LayoutState.Operation.Completed;
         }
 
+        /// <summary>
+        /// Ths function helps catch "undefined" values when operating in JavaScript-converted version of this code.
+        /// Also, helps catch some bugs in C# version as well.
+        /// They way it's implemented has direct impact on how JavaScript validation code looks like, so don't "optimize".
+        /// </summary>
+        private static void AssertBoxSize(Box box)
+        {
+            if (box.Size.Width >= 0.0 && box.Size.Width <= 1000000000.0)
+            {
+                if (box.Size.Height >= 0.0 && box.Size.Width <= 1000000000.0)
+                {
+                    return;
+                }
+            }
+
+            throw new InvalidOperationException($"Box {box.Id} has invalid size: {box.Size.Width}x{box.Size.Height}");
+        }
+
         private static void PreprocessVisualTree([NotNull]LayoutState state, [NotNull]BoxTree visualTree)
         {
             var defaultStrategy = state.Diagram.LayoutSettings.RequireDefaultLayoutStrategy();
             var defaultAssistantsStrategy = state.Diagram.LayoutSettings.RequireDefaultAssistantLayoutStrategy();
+
+            var regular = new Stack<LayoutStrategyBase>();
+            regular.Push(defaultStrategy);
+            var assistants = new Stack<LayoutStrategyBase>();
+            assistants.Push(defaultAssistantsStrategy);
 
             visualTree.IterateParentFirst(node =>
             {
@@ -120,64 +167,70 @@ namespace OrgChart.Layout
                     return false;
                 }
 
-                LayoutStrategyBase found = null;
+                LayoutStrategyBase strategy = null;
+
+                if (state.LayoutOptimizerFunc != null)
+                {
+                    var suggestedStrategyId = state.LayoutOptimizerFunc(node);
+                    if (!string.IsNullOrEmpty(suggestedStrategyId))
+                    {
+                        strategy = state.Diagram.LayoutSettings.LayoutStrategies[suggestedStrategyId];
+                    }
+                }
+
                 if (node.IsAssistantRoot)
                 {
-                    // find and associate assistant layout strategy in effect for this node
-                    var parent = node;
-                    while (parent != null)
+                    if (strategy == null)
                     {
-                        if (parent.Element.AssistantLayoutStrategyId != null)
-                        {
-                            // can we inherit it from previous level?
-                            found = state.Diagram.LayoutSettings.LayoutStrategies[parent.Element.AssistantLayoutStrategyId];
-                            break;
-                        }
-                        parent = parent.ParentNode;
+                        strategy = node.ParentNode.Element.AssistantLayoutStrategyId != null
+                            ? state.Diagram.LayoutSettings.LayoutStrategies[
+                                node.ParentNode.Element.AssistantLayoutStrategyId]
+                            : assistants.Peek();
                     }
-
-                    if (found == null)
-                    {
-                        found = defaultAssistantsStrategy;
-                    }
+                    assistants.Push(strategy);
                 }
                 else
                 {
-                    // find and associate layout strategy in effect for this node
-                    var parent = node;
-                    while (parent != null)
+                    if (strategy == null)
                     {
-                        if (parent.Element.LayoutStrategyId != null)
-                        {
-                            // can we inherit it from previous level?
-                            found = state.Diagram.LayoutSettings.LayoutStrategies[parent.Element.LayoutStrategyId];
-                            break;
-                        }
-                        parent = parent.ParentNode;
+                        strategy = node.Element.LayoutStrategyId != null
+                            ? state.Diagram.LayoutSettings.LayoutStrategies[node.Element.LayoutStrategyId]
+                            : regular.Peek();
                     }
+                    regular.Push(strategy);
 
-                    if (found == null)
+                    if (!strategy.SupportsAssistants)
                     {
-                        found = defaultStrategy;
+                        node.SuppressAssistants();
                     }
                 }
 
-                node.State.MoveTo(0, 0);
-                node.State.Size = node.Element.Size;
-                node.State.BranchExterior = new Rect(new Point(0, 0), node.Element.Size);
-  
                 // now let it pre-allocate special boxes etc
-                node.State.EffectiveLayoutStrategy = found;
+                node.State.EffectiveLayoutStrategy = strategy;
                 node.State.RequireLayoutStrategy().PreProcessThisNode(state, node);
 
                 return (!node.Element.IsCollapsed && node.ChildCount > 0) || node.AssistantsRoot != null;
-            });
+            },
+                node =>
+                {
+                    if (!node.State.IsHidden)
+                    {
+                        if (node.IsAssistantRoot)
+                        {
+                            assistants.Pop();
+                        }
+                        else
+                        {
+                            regular.Pop();
+                        }
+                    }
+                });
         }
 
         /// <summary>
         /// Re-entrant layout algorithm,
         /// </summary>
-        public static void HorizontalLayout([NotNull]LayoutState state, [NotNull]BoxTree.TreeNode branchRoot)
+        public static void HorizontalLayout([NotNull]LayoutState state, [NotNull]BoxTree.Node branchRoot)
         {
             if (branchRoot.State.IsHidden)
             {
@@ -203,7 +256,7 @@ namespace OrgChart.Layout
         /// <summary>
         /// Re-entrant layout algorithm.
         /// </summary>
-        public static void VerticalLayout([NotNull]LayoutState state, [NotNull]BoxTree.TreeNode branchRoot)
+        public static void VerticalLayout([NotNull]LayoutState state, [NotNull]BoxTree.Node branchRoot)
         {
             if (branchRoot.State.IsHidden)
             {
@@ -263,7 +316,7 @@ namespace OrgChart.Layout
                 throw new InvalidOperationException("Should never be invoked when children not set");
             }
 
-            Func<Tree<int, Box, NodeLayoutInfo>.TreeNode, bool> action = node =>
+            Func<BoxTree.Node, bool> action = node =>
             {
                 if (!node.State.IsHidden)
                 {
@@ -275,7 +328,7 @@ namespace OrgChart.Layout
             
             foreach (var child in children)
             {
-                BoxTree.TreeNode.IterateChildFirst(child, action);
+                child.IterateChildFirst(action);
             }
 
             layoutLevel.Boundary.ReloadFromBranch(layoutLevel.BranchRoot);
@@ -288,10 +341,9 @@ namespace OrgChart.Layout
         /// Unlike <see cref="MoveChildrenOnly"/> and <see cref="MoveBranch"/>, does NOT update the boundary.
         /// </summary>
         /// <remarks>DOES NOT update branch boundary! Must call <see cref="Boundary.ReloadFromBranch"/> after batch of updates is complete</remarks>
-        private static void MoveOneChild([NotNull]LayoutState state, [NotNull]BoxTree.TreeNode root, double offset)
+        private static void MoveOneChild([NotNull]LayoutState state, [NotNull]BoxTree.Node root, double offset)
         {
-            BoxTree.TreeNode.IterateChildFirst(root,
-                node =>
+            root.IterateChildFirst(node =>
                 {
                     if (!node.State.IsHidden)
                     {
@@ -322,7 +374,7 @@ namespace OrgChart.Layout
         public static Dimensions AlignHorizontalCenters(
             [NotNull]LayoutState state, 
             [NotNull]LayoutState.LayoutLevel level,
-            [NotNull]IEnumerable<BoxTree.TreeNode> subset)
+            [NotNull]IEnumerable<BoxTree.Node> subset)
         {
             // compute the rightmost center in the column
             var center = double.MinValue;

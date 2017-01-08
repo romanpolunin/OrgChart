@@ -16,7 +16,7 @@ namespace OrgChart.Layout
         /// <summary>
         /// A chance for layout strategy to append special auto-generated boxes into the visual tree. 
         /// </summary>
-        public override void PreProcessThisNode([NotNull]LayoutState state, [NotNull] BoxTree.TreeNode node)
+        public override void PreProcessThisNode([NotNull]LayoutState state, [NotNull] BoxTree.Node node)
         {
             if (node.ChildCount > 0)
             {
@@ -147,7 +147,7 @@ namespace OrgChart.Layout
         /// <summary>
         /// Allocates and routes connectors.
         /// </summary>
-        public override void RouteConnectors([NotNull] LayoutState state, [NotNull] BoxTree.TreeNode node)
+        public override void RouteConnectors([NotNull] LayoutState state, [NotNull] BoxTree.Node node)
         {
             var normalChildCount = node.State.NumberOfSiblings;
 
@@ -202,5 +202,11 @@ namespace OrgChart.Layout
 
             node.State.Connector = new Connector(segments);
         }
+
+        /// <summary>
+        /// <c>true</c> if this strategy supports special layout for assistant boxes.
+        /// If not, assistants will be processed as part of normal children group.
+        /// </summary>
+        public override bool SupportsAssistants => true;
     }
 }

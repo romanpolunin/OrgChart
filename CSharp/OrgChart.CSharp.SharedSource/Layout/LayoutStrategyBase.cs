@@ -38,9 +38,15 @@ namespace OrgChart.Layout
         public double ChildConnectorHookLength = 5;
 
         /// <summary>
+        /// <c>true</c> if this strategy supports special layout for assistant boxes.
+        /// If not, assistants will be processed as part of normal children group.
+        /// </summary>
+        public abstract bool SupportsAssistants { get; }
+
+        /// <summary>
         /// A chance for layout strategy to insert special auto-generated boxes into the visual tree. 
         /// </summary>
-        public abstract void PreProcessThisNode([NotNull] LayoutState state, [NotNull] BoxTree.TreeNode node);
+        public abstract void PreProcessThisNode([NotNull] LayoutState state, [NotNull] BoxTree.Node node);
 
         /// <summary>
         /// Applies layout changes to a given box and its children.
@@ -55,6 +61,6 @@ namespace OrgChart.Layout
         /// <summary>
         /// Allocates and routes connectors.
         /// </summary>
-        public abstract void RouteConnectors([NotNull]LayoutState state, [NotNull]BoxTree.TreeNode node);
+        public abstract void RouteConnectors([NotNull]LayoutState state, [NotNull]BoxTree.Node node);
     }
 }

@@ -19,7 +19,7 @@ namespace OrgChart.Layout
         /// <summary>
         /// A chance for layout strategy to append special auto-generated boxes into the visual tree. 
         /// </summary>
-        public override void PreProcessThisNode([NotNull]LayoutState state, [NotNull] BoxTree.TreeNode node)
+        public override void PreProcessThisNode([NotNull]LayoutState state, [NotNull] BoxTree.Node node)
         {
             if (ParentAlignment != BranchParentAlignment.Left
                 && ParentAlignment != BranchParentAlignment.Right)
@@ -73,7 +73,7 @@ namespace OrgChart.Layout
                 var child = node.Children[row];
                 var rect = child.State;
 
-                var top = prevRowExterior.To + ParentChildSpacing;
+                var top = prevRowExterior.To + (row == 0 ? ParentChildSpacing : SiblingSpacing);
                 child.State.MoveTo(rect.Left, top);
                 child.State.BranchExterior = new Rect(child.State.TopLeft, child.State.Size);
 
@@ -154,7 +154,7 @@ namespace OrgChart.Layout
             }
         }
 
-        private IEnumerable<BoxTree.TreeNode> EnumerateColumn(BoxTree.TreeNode branchRoot)
+        private IEnumerable<BoxTree.Node> EnumerateColumn(BoxTree.Node branchRoot)
         {
             for (var i = 0; i < branchRoot.State.NumberOfSiblings; i++)
             {
@@ -165,7 +165,7 @@ namespace OrgChart.Layout
         /// <summary>
         /// Allocates and routes connectors.
         /// </summary>
-        public override void RouteConnectors([NotNull] LayoutState state, [NotNull] BoxTree.TreeNode node)
+        public override void RouteConnectors([NotNull] LayoutState state, [NotNull] BoxTree.Node node)
         {
             if (node.ChildCount == 0)
             {
@@ -196,5 +196,11 @@ namespace OrgChart.Layout
 
             node.State.Connector = new Connector(segments);
         }
+
+        /// <summary>
+        /// <c>true</c> if this strategy supports special layout for assistant boxes.
+        /// If not, assistants will be processed as part of normal children group.
+        /// </summary>
+        public override bool SupportsAssistants => true;
     }
 }
