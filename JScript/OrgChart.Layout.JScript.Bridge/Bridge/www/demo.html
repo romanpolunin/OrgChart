@@ -2,11 +2,12 @@
 
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 <head>
+	<title>Demo for RomanPolunin.OrgChart.Net library on NuGet</title>
     <meta charset="utf-8" />
     <script src="jquery-3.1.1.min.js"></script>
     <script src="../output/bridge.min.js"></script>
     <script src="../output/bridge.collections.min.js"></script>
-    <script src="../output/orgchart.layout.js"></script>
+    <script src="../output/OrgChart.Layout.js"></script>
 </head>
 <body>
 
@@ -89,39 +90,42 @@
         }
     </style>
 
-    <div class="row">
+	<h2>Demo for RomanPolunin.OrgChart.Net library, JS version</h2>
+	<ul>
+		<li>Sources on GitHub: <a href="https://github.com/romanpolunin/OrgChart">https://github.com/romanpolunin/OrgChart</a></li>
+		<li>.NET package on NuGet: <a href="https://www.nuget.org/packages/RomanPolunin.OrgChart.Net/">https://www.nuget.org/packages/RomanPolunin.OrgChart.Net/</a></li>
+		<li>C# -> JS conversion tool used to generate JS code: <a href="http://bridge.net/">http://bridge.net/</a>
+	</ul>
+	
+	<p>
+		<input type="checkbox" id="SuppressRootBox" onchange="changedSuppressRootBox(this)" />
+		<label for="SuppressRootBox">Suppress root data item, to have multiple roots in the diagram</label>
+		<br/>
+		<input type="checkbox" id="CollapseAllOnRebuild" checked />
+		<label for="CollapseAllOnRebuild">Collapse all boxes on data change</label>
+		<br />
+		<input type="radio" name="DataCounts" id="DataCounts" value="small" onclick="clickDataCounts(this)"/>Small
+		<input type="radio" name="DataCounts" id="DataCounts" value="small-a" checked onclick="clickDataCounts(this)"/>Small with asst
+		<input type="radio" name="DataCounts" id="DataCounts" value="large" onclick="clickDataCounts(this)"/>Large
+		<input type="radio" name="DataCounts" id="DataCounts" value="large-a" onclick="clickDataCounts(this)"/>Large with asst
+		<input type="radio" name="DataCounts" id="DataCounts" value="huge-a" onclick="clickDataCounts(this)"/>Huge with asst
+		<br />
+		<input type="button" id="collapseAll" onclick="clickCollapseAll(this)" value="Collapse All" />
+		<input type="button" id="expandAll" onclick="clickExpandAll(this)" value="Expand All" />
+		<input type="radio" name="SelectBranchOptimizer" id="SelectBranchOptimizer" value="AllLinear" onclick="clickOptimizer(this)" />Linear
+		<input type="radio" name="SelectBranchOptimizer" id="SelectBranchOptimizer" value="AllHanger2" onclick="clickOptimizer(this)" />Hanger2
+		<input type="radio" name="SelectBranchOptimizer" id="SelectBranchOptimizer" value="AllHanger4" onclick="clickOptimizer(this)" checked />Hanger4
+		<input type="radio" name="SelectBranchOptimizer" id="SelectBranchOptimizer" value="AllFishbone1" onclick="clickOptimizer(this)" />Fishbone 1
+		<input type="radio" name="SelectBranchOptimizer" id="SelectBranchOptimizer" value="AllFishbone2" onclick="clickOptimizer(this)" />Fishbone 2
+		<input type="radio" name="SelectBranchOptimizer" id="SelectBranchOptimizer" value="AllSingleColumnLeft" onclick="clickOptimizer(this)" />1 Column L
+		<input type="radio" name="SelectBranchOptimizer" id="SelectBranchOptimizer" value="AllSingleColumnRight" onclick="clickOptimizer(this)" />1 Column R
+		<input type="radio" name="SelectBranchOptimizer" id="SelectBranchOptimizer" value="Smart" onclick="clickOptimizer(this)" />Smart
+		<input type="radio" name="SelectBranchOptimizer" id="SelectBranchOptimizer" value="Stackers" onclick="clickOptimizer(this)" />Stackers
+	</p>
+	<div id="myDiagramDiv" style="background-color: white; border: dotted 1px black; width: 10px; height: 10px">
 
-        <div id="sample" style="">
-            <p>
-                <input type="checkbox" id="SuppressRootBox" onchange="changedSuppressRootBox(this)" />
-                <label for="SuppressRootBox">Suppress root data item, to have multiple roots in the diagram</label>
-                <br/>
-                <input type="checkbox" id="CollapseAllOnRebuild" checked />
-                <label for="CollapseAllOnRebuild">Collapse all boxes on data change</label>
-                <br />
-                <input type="radio" name="DataCounts" id="DataCounts" value="small" onclick="clickDataCounts(this)"/>Small
-                <input type="radio" name="DataCounts" id="DataCounts" value="small-a" checked onclick="clickDataCounts(this)"/>Small with asst
-                <input type="radio" name="DataCounts" id="DataCounts" value="large" onclick="clickDataCounts(this)"/>Large
-                <input type="radio" name="DataCounts" id="DataCounts" value="large-a" onclick="clickDataCounts(this)"/>Large with asst
-                <input type="radio" name="DataCounts" id="DataCounts" value="huge-a" onclick="clickDataCounts(this)"/>Huge with asst
-                <br />
-                <input type="button" id="collapseAll" onclick="clickCollapseAll(this)" value="Collapse All" />
-                <input type="button" id="expandAll" onclick="clickExpandAll(this)" value="Expand All" />
-                <input type="radio" name="SelectBranchOptimizer" id="SelectBranchOptimizer" value="AllLinear" onclick="clickOptimizer(this)" />Linear
-                <input type="radio" name="SelectBranchOptimizer" id="SelectBranchOptimizer" value="AllHanger2" onclick="clickOptimizer(this)" />Hanger2
-                <input type="radio" name="SelectBranchOptimizer" id="SelectBranchOptimizer" value="AllHanger4" onclick="clickOptimizer(this)" checked />Hanger4
-                <input type="radio" name="SelectBranchOptimizer" id="SelectBranchOptimizer" value="AllFishbone1" onclick="clickOptimizer(this)" />Fishbone 1
-                <input type="radio" name="SelectBranchOptimizer" id="SelectBranchOptimizer" value="AllFishbone2" onclick="clickOptimizer(this)" />Fishbone 2
-                <input type="radio" name="SelectBranchOptimizer" id="SelectBranchOptimizer" value="AllSingleColumnLeft" onclick="clickOptimizer(this)" />1 Column L
-                <input type="radio" name="SelectBranchOptimizer" id="SelectBranchOptimizer" value="AllSingleColumnRight" onclick="clickOptimizer(this)" />1 Column R
-                <input type="radio" name="SelectBranchOptimizer" id="SelectBranchOptimizer" value="Smart" onclick="clickOptimizer(this)" />Smart
-                <input type="radio" name="SelectBranchOptimizer" id="SelectBranchOptimizer" value="Stackers" onclick="clickOptimizer(this)" />Stackers
-            </p>
-            <div id="myDiagramDiv" style="background-color: white; border: dotted 1px black; width: 10px; height: 10px">
+	</div>
 
-            </div>
-        </div>
-    </div>
 
 <script>
     Bridge.define('ChartApp',
@@ -355,6 +359,10 @@
 
                         // now store element size, as rendered by browser
                         box.Size = ChartApp.getBoxElementSize(box.Id);
+                        
+                        var div = $('#box' + box.Id);
+                        div.css("width", box.Size.Width);
+                        div.css("height", box.Size.Height);
                     }
 
                     return true;
@@ -501,8 +509,6 @@
                             var y = node.State.TopLeft.Y + offsety;
 
                             div.offset({ left: x, top: y });
-                            div.css("width", node.State.Size.Width);
-                            div.css("height", node.State.Size.Height);
 
                             if (node.getChildCount() > 0 || node.AssistantsRoot != null) {
                                 var exp = $('#exp' + box.Id);
@@ -541,6 +547,7 @@
                                 }
                             } else {
                                 edgeType = "chartVLine";
+                                width = 1;
                                 if (edge.From.Y < edge.To.Y) {
                                     topLeft = edge.From;
                                     height = edge.To.Y - edge.From.Y;
