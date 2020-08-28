@@ -51,6 +51,18 @@ Does not force you into any specific rendering technique/framework - use existin
 
 Rich API for extensibility, supports development of custom layout strategies.
 
+## Usage: JavaScript
+
+Converted JS libraries are under $\JScript\OrgChart.Layout.JScript.Bridge\Bridge\output.
+
+See [advanced demo page (multiple layout strategies, rendering, expand/collapse)](https://romanpolunin.github.io/OrgChart/www/demo.html).
+
+If you modify C# code and want to update JS, just re-build OrgChart.Layout.JScript.Bridge project from solution.
+
+Also, there's now a great TypeScript/React project based on this source code, converted from C#.
+
+https://awesome-react-org-chart.vercel.app/example.html
+
 ## Usage: C# #
 
 #### To compute chart "fresh" [see C# sample application](https://github.com/romanpolunin/OrgChart/blob/master/CSharp/OrgChart.CSharp.Test.App/MainPage.xaml.cs):
@@ -114,11 +126,3 @@ Properties of NodeLayoutInfo (access via `BoxTree.Node.State`):
 - calculated `TopLeft` position of the box rectangle.
 - calculated `BranchExterior` - bounding rectangle of this node with all its children and spacers.
 - `Connector`, a collection of `Edge` objects that define visible connectors.
-
-## Usage: JavaScript
-
-Converted JS libraries are under $\JScript\OrgChart.Layout.JScript.Bridge\Bridge\output.
-
-See [advanced demo page (multiple layout strategies, rendering, expand/collapse)](https://romanpolunin.github.io/OrgChart/www/demo.html).
-
-If you modify C# code and want to update JS, just re-build OrgChart.Layout.JScript.Bridge project from solution.
