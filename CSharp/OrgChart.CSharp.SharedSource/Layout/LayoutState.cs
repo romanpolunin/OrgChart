@@ -81,10 +81,10 @@ namespace OrgChart.Layout
         /// </summary>
         public Operation CurrentOperation
         {
-            get { return m_currentOperation; }
+            get { return _currentOperation; }
             set
             {
-                m_currentOperation = value;
+                _currentOperation = value;
                 OperationChanged?.Invoke(this, new LayoutStateOperationChangedEventArgs(this));
             }
         }
@@ -94,14 +94,14 @@ namespace OrgChart.Layout
         /// Every box has a <see cref="Boundary"/> object associated with it, to keep track of corresponding visual tree's edges.
         /// </summary>
         [NotNull]
-        private readonly Stack<LayoutLevel> m_layoutStack = new Stack<LayoutLevel>();
+        private readonly Stack<LayoutLevel> _layoutStack = new Stack<LayoutLevel>();
         /// <summary>
-        /// Pool of currently-unused <see cref="Boundary"/> objects. They are added and removed here as they are taken for use in <see cref="m_layoutStack"/>.
+        /// Pool of currently-unused <see cref="Boundary"/> objects. They are added and removed here as they are taken for use in <see cref="_layoutStack"/>.
         /// </summary>
         [NotNull]
-        private readonly Stack<Boundary> m_pooledBoundaries = new Stack<Boundary>();
+        private readonly Stack<Boundary> _pooledBoundaries = new Stack<Boundary>();
 
-        private Operation m_currentOperation;
+        private Operation _currentOperation;
 
         /// <summary>
         /// Reference to the diagram for which a layout is being computed.
@@ -150,9 +150,9 @@ namespace OrgChart.Layout
         /// </summary>
         public void AttachVisualTree([NotNull] BoxTree tree)
         {
-            while (m_pooledBoundaries.Count < tree.Depth)
+            while (_pooledBoundaries.Count < tree.Depth)
             {
-                m_pooledBoundaries.Push(new Boundary());
+                _pooledBoundaries.Push(new Boundary());
             }
         }
 
@@ -162,12 +162,12 @@ namespace OrgChart.Layout
         /// </summary>
         public LayoutLevel PushLayoutLevel([NotNull] BoxTree.Node node)
         {
-            if (m_pooledBoundaries.Count == 0)
+            if (_pooledBoundaries.Count == 0)
             {
-                m_pooledBoundaries.Push(new Boundary());
+                _pooledBoundaries.Push(new Boundary());
             }
 
-            var boundary = m_pooledBoundaries.Pop();
+            var boundary = _pooledBoundaries.Pop();
 
             switch (CurrentOperation)
             {
@@ -183,7 +183,7 @@ namespace OrgChart.Layout
             }
 
             var result = new LayoutLevel(node, boundary);
-            m_layoutStack.Push(result);
+            _layoutStack.Push(result);
 
             BoundaryChanged?.Invoke(this, new BoundaryChangedEventArgs(boundary, result, this));
 
@@ -200,12 +200,12 @@ namespace OrgChart.Layout
                 throw new InvalidOperationException("Spacers can only be merged during horizontal layout");
             }
 
-            if (m_layoutStack.Count == 0)
+            if (_layoutStack.Count == 0)
             {
                 throw new InvalidOperationException("Cannot merge spacers at top nesting level");
             }
 
-            var level = m_layoutStack.Peek();
+            var level = _layoutStack.Peek();
             level.Boundary.MergeFrom(spacer);
 
             BoundaryChanged?.Invoke(this, new BoundaryChangedEventArgs(level.Boundary, level, this));
@@ -217,14 +217,14 @@ namespace OrgChart.Layout
         /// </summary>
         public void PopLayoutLevel()
         {
-            var innerLevel = m_layoutStack.Pop();
+            var innerLevel = _layoutStack.Pop();
 
             BoundaryChanged?.Invoke(this, new BoundaryChangedEventArgs(innerLevel.Boundary, innerLevel, this));
 
             // if this was not the root, merge boundaries into current level
-            if (m_layoutStack.Count > 0)
+            if (_layoutStack.Count > 0)
             {
-                var higherLevel = m_layoutStack.Peek();
+                var higherLevel = _layoutStack.Peek();
 
                 switch (CurrentOperation)
                 {
@@ -249,6 +249,7 @@ namespace OrgChart.Layout
                                 BoundaryChanged?.Invoke(this, new BoundaryChangedEventArgs(innerLevel.Boundary, innerLevel, this));
                             }
                         }
+
                         higherLevel.Boundary.MergeFrom(innerLevel.Boundary);
 
                         // Do not update branch vertical measurements from the boundary, because boundary adds children one-by-one.
@@ -260,6 +261,7 @@ namespace OrgChart.Layout
                             higherLevel.Boundary.BoundingRect.Size.Width,
                             higherLevel.BranchRoot.State.BranchExterior.Size.Height);
                     }
+
                         break;
                     default:
                         throw new InvalidOperationException(
@@ -270,7 +272,7 @@ namespace OrgChart.Layout
             }
 
             // return boundary to the pool
-            m_pooledBoundaries.Push(innerLevel.Boundary);
+            _pooledBoundaries.Push(innerLevel.Boundary);
         }
     }
 }

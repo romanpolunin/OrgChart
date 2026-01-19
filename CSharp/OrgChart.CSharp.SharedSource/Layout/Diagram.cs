@@ -11,8 +11,7 @@ namespace OrgChart.Layout
     /// </summary>
     public class Diagram
     {
-        private BoxTree m_visualTree;
-        private BoxContainer m_boxes;
+        private BoxContainer _boxes;
 
         /// <summary>
         /// Diagram layout styles.
@@ -24,11 +23,11 @@ namespace OrgChart.Layout
         /// </summary>
         public BoxContainer Boxes
         {
-            get { return m_boxes; }
+            get { return _boxes; }
             set
             {
-                m_visualTree = null;
-                m_boxes = value;
+                VisualTree = null;
+                _boxes = value;
             }
         }
 
@@ -36,14 +35,7 @@ namespace OrgChart.Layout
         /// Visual tree of boxes.
         /// </summary>
         [CanBeNull]
-        public BoxTree VisualTree
-        {
-            get { return m_visualTree; }
-            set
-            {
-                m_visualTree = value;
-            }
-        }
+        public BoxTree VisualTree { get; set; }
 
         /// <summary>
         /// Ctr.

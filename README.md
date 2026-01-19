@@ -43,13 +43,21 @@ Absolutely free to use and modify in all types of applications, in source code a
 
 Supports very sophisticated layout rules, supports assistants and multiple visual roots, step-by-step visualization of layout for debugging, produces double-precision coordinates and rich supplementary layout information.
 
-Exactly same code is available both in C# and JavaScript, compiles to .NET 2.0 and 4.0, .NET Core, UWP, Silverlight etc. JavaScript code is generated automatically using Bridge.Net!
+Exactly same code is available both in C# and JavaScript, compiles to .NET 2.0 and 4.0, .NET Core, UWP, Silverlight etc. 
+Look into the .NET 10 desktop demo application for UI-based layout visualizer on Mac and Windows, built with Avalonia.
+
+JavaScript code is generated automatically using Bridge.Net (it's been dead for a while, but there's H5 project as its direct new incarnation).
 
 As non-intrusive as possible, you can have your data structured and rendered in any way you want.
 
 Does not force you into any specific rendering technique/framework - use existing or implement your own.
 
 Rich API for extensibility, supports development of custom layout strategies.
+
+## Notes on C# language compatibility
+
+For JScript conversion using in Bridge.NET, the layout code had to be implemented using C# 7.x, which is very, very old.
+As long as you don't need Bridge.NET, there is nothing preventing you from upgrading the code using C# refactoring tools. 
 
 ## Usage: JavaScript
 
@@ -65,7 +73,7 @@ https://awesome-react-org-chart.vercel.app/example.html
 
 ## Usage: C# #
 
-#### To compute chart "fresh" [see C# sample application](https://github.com/romanpolunin/OrgChart/blob/master/CSharp/OrgChart.CSharp.Test.App/MainPage.xaml.cs):
+#### To compute chart "fresh" [see C# sample application](https://github.com/romanpolunin/OrgChart/blob/master/CSharp/OrgChart.CSharp.Test.Avalonia/MainWindow.axaml.cs):
 
 1. Either import source code or plug in this NuGet package: http://www.nuget.org/packages/RomanPolunin.OrgChart.Net/
 2. Implement two adapter interfaces: `IChartDataSource` and `IChartDataItem`.

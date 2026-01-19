@@ -1,0 +1,29 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:OrgChart.CSharp.Test.Avalonia"
+        mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
+        x:Class="OrgChart.CSharp.Test.Avalonia.MainWindow"
+        Title="OrgChart Demo - Avalonia UI"
+        Width="1200" Height="800">
+    <Grid ColumnDefinitions="Auto,*">
+        <StackPanel Grid.Column="0" Margin="10">
+            <CheckBox Name="CbInteractiveMode">Incremental</CheckBox>
+            <Button Name="BtnStartWithFullReset" Margin="0,5,0,0">Start With Full Reset</Button>
+            <Button Name="BtnStartWithCleanLayout" Margin="0,5,0,0">Start With Clean Layout</Button>
+            <Button Name="BtnProgress" Margin="0,5,0,0" IsEnabled="{Binding #CbInteractiveMode.IsChecked}">Progress</Button>
+            <TextBox Name="TextLayoutTimeElapsed" Text="Elapsed: 00:00:00" IsReadOnly="True" Margin="0,5,0,0"/>
+            <TreeView Name="LvBoxes" Margin="0,10,0,0" Width="250" Height="500">
+                <TreeView.DataTemplates>
+                    <TreeDataTemplate DataType="local:NodeViewModel" ItemsSource="{Binding Children}">
+                        <TextBlock Text="{Binding Text}" />
+                    </TreeDataTemplate>
+                </TreeView.DataTemplates>
+            </TreeView>
+        </StackPanel>
+        <ScrollViewer Name="ScrollViewer" Grid.Column="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+            <Canvas Name="DrawCanvas" Background="White" />
+        </ScrollViewer>
+    </Grid>
+</Window>

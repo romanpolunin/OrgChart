@@ -103,7 +103,7 @@ namespace OrgChart.Layout
         /// <summary>
         /// A temporary Boundary used for merging Boxes in, since they don't come with their own Boundary.
         /// </summary>
-        private readonly Boundary m_spacerMerger;
+        private readonly Boundary _spacerMerger;
 
         /// <summary>
         /// Ctr.
@@ -119,7 +119,7 @@ namespace OrgChart.Layout
 
             if (frompublic)
             {
-                m_spacerMerger = new Boundary(false);
+                _spacerMerger = new Boundary(false);
             }
         }
 
@@ -213,6 +213,7 @@ namespace OrgChart.Layout
                             {
                                 mySteps[i] = th; // replace entire step
                             }
+
                             i++;
                             k++;
 
@@ -227,6 +228,7 @@ namespace OrgChart.Layout
                             {
                                 mySteps[i] = my.ChangeOwner(th.Node, th.X); // replace my with a piece of theirs
                             }
+
                             theirSteps[k] = th.ChangeTop(my.Bottom); // push their top down
                             i++;
 
@@ -243,6 +245,7 @@ namespace OrgChart.Layout
                                 mySteps.Insert(i, th); // insert theirs before my
                                 i++;
                             }
+
                             k++;
 
                             ValidateState();
@@ -261,6 +264,7 @@ namespace OrgChart.Layout
                                 mySteps.Insert(i + 1, th); // insert theirs after my
                                 i++;
                             }
+
                             i++;
                             k++;
 
@@ -282,6 +286,7 @@ namespace OrgChart.Layout
                                 mySteps.Insert(i, th.ChangeBottom(my.Top));
                                 i++;
                             }
+
                             i++;
                             k++;
 
@@ -299,6 +304,7 @@ namespace OrgChart.Layout
                             mySteps.Insert(i + 1, new Step(th.Node, th.X, th.Top, my.Bottom)); // insert a piece of theirs after my
                             i++;
                         }
+
                         theirSteps[k] = th.ChangeTop(my.Bottom); // push theirs down
                         i++;
 
@@ -316,6 +322,7 @@ namespace OrgChart.Layout
                             mySteps.Insert(i + 2, my.ChangeTop(th.Bottom)); // insert my tail after theirs
                             i += 2;
                         }
+
                         k++;
 
                         ValidateState();
@@ -335,6 +342,7 @@ namespace OrgChart.Layout
                         {
                             mySteps.Insert(i, th.ChangeBottom(my.Top));
                         }
+
                         i++;
                         k++;
 
@@ -354,6 +362,7 @@ namespace OrgChart.Layout
                             mySteps.Insert(i, th.ChangeBottom(my.Top));
                             i++;
                         }
+
                         theirSteps[k] = th.ChangeTop(my.Bottom); // push theirs down
                         i++;
 
@@ -421,8 +430,8 @@ namespace OrgChart.Layout
                 return;
             }
 
-            m_spacerMerger.PrepareForHorizontalLayout(node);
-            MergeFrom(m_spacerMerger);
+            _spacerMerger.PrepareForHorizontalLayout(node);
+            MergeFrom(_spacerMerger);
         }
 
         /// <summary>
@@ -467,6 +476,7 @@ namespace OrgChart.Layout
                     {
                         k++;
                     }
+
                     if (th.Bottom >= my.Bottom)
                     {
                         i++;

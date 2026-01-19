@@ -158,6 +158,7 @@ namespace OrgChart.Layout
                     var desiredCenter = rect.CenterH;
                     diff = desiredCenter - carrier;
                 }
+
                 LayoutAlgorithm.MoveChildrenOnly(state, level, diff);
             }
 
@@ -246,6 +247,7 @@ namespace OrgChart.Layout
                                 new Point(carrier.CenterH, carrier.Top - ChildConnectorHookLength),
                                 new Point(carrier.CenterH, node.Children[i].State.CenterV));
                         }
+
                         isLeft = !isLeft;
                     }
                 }
@@ -317,8 +319,10 @@ namespace OrgChart.Layout
                             {
                                 result++;
                             }
+
                             break;
                         }
+
                         firstInRow += countInRow;
                     }
 
@@ -333,6 +337,7 @@ namespace OrgChart.Layout
                     {
                         Group++;
                     }
+
                     Count = CountInGroup();
                     MaxOnLeft = Count / 2 + Count % 2;
                     return Count != 0;
@@ -402,6 +407,7 @@ namespace OrgChart.Layout
                 {
                     SpecialRoot.AddChildView(RealRoot.Children[Iterator.FromIndex + i]);
                 }
+
                 var spacer = RealRoot.Children[RealRoot.State.NumberOfSiblings + 1 + Iterator.Group];
                 SpecialRoot.AddChildView(spacer);
 

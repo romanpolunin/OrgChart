@@ -21,6 +21,7 @@ namespace OrgChart.Layout
             {
                 throw new ArgumentException("Need at least one segment", nameof(Segments));
             }
+
             Segments = segments;
         }
 

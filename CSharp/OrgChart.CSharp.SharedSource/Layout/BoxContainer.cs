@@ -13,19 +13,19 @@ namespace OrgChart.Layout
     /// </summary>
     public class BoxContainer
     {
-        private int m_lastBoxId;
-        private readonly Dictionary<int, Box> m_boxesById = new Dictionary<int, Box>();
-        private readonly Dictionary<string, Box> m_boxesByDataId = new Dictionary<string, Box>();
+        private int _lastBoxId;
+        private readonly Dictionary<int, Box> _boxesById = new Dictionary<int, Box>();
+        private readonly Dictionary<string, Box> _boxesByDataId = new Dictionary<string, Box>();
 
         /// <summary>
         /// Access to internal collection of boxes.
         /// </summary>
-        public IDictionary<int, Box> BoxesById => m_boxesById;
+        public IDictionary<int, Box> BoxesById => _boxesById;
 
         /// <summary>
         /// Access to internal collection of boxes.
         /// </summary>
-        public IDictionary<string, Box> BoxesByDataId => m_boxesByDataId;
+        public IDictionary<string, Box> BoxesByDataId => _boxesByDataId;
 
         /// <summary>
         /// Auto-generated system root box. Added to guarantee a single-root hierarchy.
@@ -53,13 +53,13 @@ namespace OrgChart.Layout
         /// </summary>
         public void ReloadBoxes([NotNull]IChartDataSource source)
         {
-            m_boxesByDataId.Clear();
-            m_boxesById.Clear();
-            m_lastBoxId = 0;
+            _boxesByDataId.Clear();
+            _boxesById.Clear();
+            _lastBoxId = 0;
 
             // generate system root box
-            SystemRoot = Box.Special(++m_lastBoxId, Box.None, true);
-            m_boxesById.Add(SystemRoot.Id, SystemRoot);
+            SystemRoot = Box.Special(++_lastBoxId, Box.None, true);
+            _boxesById.Add(SystemRoot.Id, SystemRoot);
 
             var map = new Dictionary<string, int>();
             
@@ -92,10 +92,10 @@ namespace OrgChart.Layout
         private Box AddBox([CanBeNull]string dataId, int id, int visualParentId, bool isAssistant)
         {
             var box = new Box(dataId, id, visualParentId, isAssistant);
-            m_boxesById.Add(box.Id, box);
+            _boxesById.Add(box.Id, box);
             if (!string.IsNullOrEmpty(dataId))
             {
-                m_boxesByDataId.Add(box.DataId, box);
+                _boxesByDataId.Add(box.DataId, box);
             }
 
             return box;
@@ -106,8 +106,8 @@ namespace OrgChart.Layout
         /// </summary>
         public int NextBoxId()
         {
-            m_lastBoxId++;
-            return m_lastBoxId;
+            _lastBoxId++;
+            return _lastBoxId;
         }
     }
 }

@@ -1,0 +1,89 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>Organizational charting library for .NET</Title>
+    <Authors>roman.polunin</Authors>
+    <Company>Roman Polunin</Company>
+    <Description>A fast, robust and easily extensible organization chart layout library without any 3-rd party dependencies.
+Designed specifically to compute arrangement of rectangular boxes and connectors, 
+for use by applications which represent hierarchical organizational structures in a user-friendly manner.
+MIT License.</Description>
+    <Copyright>(c) Roman Polunin 2016</Copyright>
+    <PackageProjectUrl>https://github.com/romanpolunin/OrgChart</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/romanpolunin/OrgChart</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>orgchart;chart;organizational;diagram;avalonia;wpf;universal;html5;javascript;js;html</PackageTags>
+    <PackageReleaseNotes>Switched targeting to NET10. Added new cross-platform desktop demo app using Avalonia. Removed obsolete code</PackageReleaseNotes>
+    <AssemblyVersion>1.1.0</AssemblyVersion>
+    <FileVersion>1.1.0</FileVersion>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <IncludeSymbols>True</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <Version>1.1.0</Version>
+    <RootNamespace>OrgChart.Layout</RootNamespace>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <IsTrimmable>True</IsTrimmable>
+    <IsAotCompatible>True</IsAotCompatible>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <IsTrimmable>True</IsTrimmable>
+    <IsAotCompatible>True</IsAotCompatible>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\OrgChart.CSharp.SharedSource\Layout\Boundary.cs" Link="Layout\Boundary.cs" />
+    <Compile Include="..\OrgChart.CSharp.SharedSource\Layout\BoundaryChangedEventArgs.cs" Link="Layout\BoundaryChangedEventArgs.cs" />
+    <Compile Include="..\OrgChart.CSharp.SharedSource\Layout\Box.cs" Link="Layout\Box.cs" />
+    <Compile Include="..\OrgChart.CSharp.SharedSource\Layout\BoxContainer.cs" Link="Layout\BoxContainer.cs" />
+    <Compile Include="..\OrgChart.CSharp.SharedSource\Layout\BoxTree.cs" Link="Layout\BoxTree.cs" />
+    <Compile Include="..\OrgChart.CSharp.SharedSource\Layout\BranchParentAlignment.cs" Link="Layout\BranchParentAlignment.cs" />
+    <Compile Include="..\OrgChart.CSharp.SharedSource\Layout\CanBeNullAttribute.cs" Link="Layout\CanBeNullAttribute.cs" />
+    <Compile Include="..\OrgChart.CSharp.SharedSource\Layout\Connector.cs" Link="Layout\Connector.cs" />
+    <Compile Include="..\OrgChart.CSharp.SharedSource\Layout\Diagram.cs" Link="Layout\Diagram.cs" />
+    <Compile Include="..\OrgChart.CSharp.SharedSource\Layout\DiagramLayoutSettings.cs" Link="Layout\DiagramLayoutSettings.cs" />
+    <Compile Include="..\OrgChart.CSharp.SharedSource\Layout\DiagramLayoutTemplates.cs" Link="Layout\DiagramLayoutTemplates.cs" />
+    <Compile Include="..\OrgChart.CSharp.SharedSource\Layout\Dimensions.cs" Link="Layout\Dimensions.cs" />
+    <Compile Include="..\OrgChart.CSharp.SharedSource\Layout\Edge.cs" Link="Layout\Edge.cs" />
+    <Compile Include="..\OrgChart.CSharp.SharedSource\Layout\FishboneAssistantsLayoutStrategy.cs" Link="Layout\FishboneAssistantsLayoutStrategy.cs" />
+    <Compile Include="..\OrgChart.CSharp.SharedSource\Layout\Frame.cs" Link="Layout\Frame.cs" />
+    <Compile Include="..\OrgChart.CSharp.SharedSource\Layout\IChartDataItem.cs" Link="Layout\IChartDataItem.cs" />
+    <Compile Include="..\OrgChart.CSharp.SharedSource\Layout\IChartDataSource.cs" Link="Layout\IChartDataSource.cs" />
+    <Compile Include="..\OrgChart.CSharp.SharedSource\Layout\LayoutAlgorithm.cs" Link="Layout\LayoutAlgorithm.cs" />
+    <Compile Include="..\OrgChart.CSharp.SharedSource\Layout\LayoutState.cs" Link="Layout\LayoutState.cs" />
+    <Compile Include="..\OrgChart.CSharp.SharedSource\Layout\LayoutStrategyBase.cs" Link="Layout\LayoutStrategyBase.cs" />
+    <Compile Include="..\OrgChart.CSharp.SharedSource\Layout\LinearLayoutStrategy.cs" Link="Layout\LinearLayoutStrategy.cs" />
+    <Compile Include="..\OrgChart.CSharp.SharedSource\Layout\MultiLineFishboneLayoutStrategy.cs" Link="Layout\MultiLineFishboneLayoutStrategy.cs" />
+    <Compile Include="..\OrgChart.CSharp.SharedSource\Layout\MultiLineHangerLayoutStrategy.cs" Link="Layout\MultiLineHangerLayoutStrategy.cs" />
+    <Compile Include="..\OrgChart.CSharp.SharedSource\Layout\NodeLayoutInfo.cs" Link="Layout\NodeLayoutInfo.cs" />
+    <Compile Include="..\OrgChart.CSharp.SharedSource\Layout\NotNullAttribute.cs" Link="Layout\NotNullAttribute.cs" />
+    <Compile Include="..\OrgChart.CSharp.SharedSource\Layout\Point.cs" Link="Layout\Point.cs" />
+    <Compile Include="..\OrgChart.CSharp.SharedSource\Layout\Rect.cs" Link="Layout\Rect.cs" />
+    <Compile Include="..\OrgChart.CSharp.SharedSource\Layout\SingleColumnLayoutStrategy.cs" Link="Layout\SingleColumnLayoutStrategy.cs" />
+    <Compile Include="..\OrgChart.CSharp.SharedSource\Layout\StackingLayoutStrategy.cs" Link="Layout\StackingLayoutStrategy.cs" />
+    <Compile Include="..\OrgChart.CSharp.SharedSource\Layout\StackOrientation.cs" Link="Layout\StackOrientation.cs" />
+    <Compile Include="..\OrgChart.CSharp.SharedSource\Test\TestDataGen.cs" Link="Test\TestDataGen.cs" />
+    <Compile Include="..\OrgChart.CSharp.SharedSource\Test\TestDataItem.cs" Link="Test\TestDataItem.cs" />
+    <Compile Include="..\OrgChart.CSharp.SharedSource\Test\TestDataSource.cs" Link="Test\TestDataSource.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Layout\" />
+    <Folder Include="Test\" />
+  </ItemGroup>
+
+</Project>

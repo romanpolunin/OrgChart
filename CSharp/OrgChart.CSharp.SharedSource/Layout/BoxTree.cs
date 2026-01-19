@@ -82,6 +82,7 @@ namespace OrgChart.Layout
                         Level = Level + 1
                     };
                 }
+
                 AssistantsRoot.AddRegularChild(child);
                 return this;
             }
@@ -213,6 +214,7 @@ namespace OrgChart.Layout
                     {
                         AddRegularChild(child);
                     }
+
                     AssistantsRoot = null;
                 }
             }
@@ -274,8 +276,9 @@ namespace OrgChart.Layout
                     x.Level = x.ParentNode.Level;
                     if (!x.ParentNode.IsAssistantRoot)
                     {
-                        x.Level = x.Level + 1;
+                        x.Level++;
                     }
+
                     Depth = Math.Max(1 + x.Level, Depth);
                 }
                 else
@@ -283,6 +286,7 @@ namespace OrgChart.Layout
                     x.Level = 0;
                     Depth = 1;
                 }
+
                 return true;
             });
         }
@@ -314,8 +318,7 @@ namespace OrgChart.Layout
             {
                 var parentKey = node.Element.ParentId;
 
-                Node parentNode;
-                if (result.Nodes.TryGetValue(parentKey, out parentNode))
+                if (result.Nodes.TryGetValue(parentKey, out Node parentNode))
                 {
                     if (node.Element.IsAssistant && parentNode.Element.ParentId != Box.None)
                     {

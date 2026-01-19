@@ -13,7 +13,7 @@ namespace OrgChart.Layout
     /// </summary>
     public class DiagramLayoutSettings
     {
-        private double m_branchSpacing;
+        private double _branchSpacing;
 
         /// <summary>
         /// All unique layout strategies (semantically similar to CSS style sheets) referenced by sub-trees in the diagram.
@@ -37,14 +37,15 @@ namespace OrgChart.Layout
         /// </summary>
         public double BranchSpacing
         {
-            get { return m_branchSpacing; }
+            get { return _branchSpacing; }
             set
             {
                 if (value < 0)
                 {
                     throw new ArgumentOutOfRangeException(nameof(value), value, "Cannot be negative");
                 }
-                m_branchSpacing = value;
+
+                _branchSpacing = value;
             }
         }
         
@@ -63,9 +64,8 @@ namespace OrgChart.Layout
         /// <exception cref="InvalidOperationException"><see cref="DefaultLayoutStrategyId"/> is null or not valid</exception>
         public LayoutStrategyBase RequireDefaultLayoutStrategy()
         {
-            LayoutStrategyBase result;
             if (string.IsNullOrEmpty(DefaultLayoutStrategyId)
-                || !LayoutStrategies.TryGetValue(DefaultLayoutStrategyId, out result))
+                || !LayoutStrategies.TryGetValue(DefaultLayoutStrategyId, out LayoutStrategyBase result))
             {
                 throw new InvalidOperationException(nameof(DefaultLayoutStrategyId) + " is null or not valid");
             }
@@ -79,9 +79,8 @@ namespace OrgChart.Layout
         /// <exception cref="InvalidOperationException"><see cref="DefaultAssistantLayoutStrategyId"/> is null or not valid</exception>
         public LayoutStrategyBase RequireDefaultAssistantLayoutStrategy()
         {
-            LayoutStrategyBase result;
             if (string.IsNullOrEmpty(DefaultAssistantLayoutStrategyId)
-                || !LayoutStrategies.TryGetValue(DefaultAssistantLayoutStrategyId, out result))
+                || !LayoutStrategies.TryGetValue(DefaultAssistantLayoutStrategyId, out LayoutStrategyBase result))
             {
                 throw new InvalidOperationException(nameof(DefaultAssistantLayoutStrategyId) + " is null or not valid");
             }

@@ -187,6 +187,7 @@ namespace OrgChart.Layout
                                 node.ParentNode.Element.AssistantLayoutStrategyId]
                             : assistants.Peek();
                     }
+
                     assistants.Push(strategy);
                 }
                 else
@@ -197,6 +198,7 @@ namespace OrgChart.Layout
                             ? state.Diagram.LayoutSettings.LayoutStrategies[node.Element.LayoutStrategyId]
                             : regular.Peek();
                     }
+
                     regular.Push(strategy);
 
                     if (!strategy.SupportsAssistants)
@@ -323,6 +325,7 @@ namespace OrgChart.Layout
                     node.State.TopLeft = node.State.TopLeft.MoveH(offset);
                     node.State.BranchExterior = node.State.BranchExterior.MoveH(offset);
                 }
+
                 return true;
             };
             
@@ -350,6 +353,7 @@ namespace OrgChart.Layout
                         node.State.TopLeft = node.State.TopLeft.MoveH(offset);
                         node.State.BranchExterior = node.State.BranchExterior.MoveH(offset);
                     }
+
                     return true;
                 });
         }
@@ -399,6 +403,7 @@ namespace OrgChart.Layout
                     var diff = center - c;
                     MoveOneChild(state, child, diff);
                 }
+
                 leftmost = Math.Min(leftmost, child.State.BranchExterior.Left);
                 rightmost = Math.Max(rightmost, child.State.BranchExterior.Right);
             }
