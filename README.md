@@ -11,13 +11,12 @@ Supports combining arbitrary layout styles with some available out of the box an
 special layout rules for assistants, expand-collapse operations, pluggable box rendering algorithms. 
 All calculations made using double-precision coordinates.
 
-Available in C# and JavaScript (JS code is generated from C# using Bridge.Net).
+Available in C# and TypeScript. An older JavaScript build, generated with Bridge.NET, is still in the repository.
 All code (including C# -> JS converter) is in one Visual Studio solution.
 C# version has advanced demo and debugging tool built on top of OrgChart as a Windows Universal application, 
 that helps to visualize and debug layout computation process step-by-step.
 
-JavaScript demo page generates a 200-box chart and renders it into a collection of pure HTML/div objects 
-with absolute coordinates as computed by OrgChart library - you can build rich HTML5 user interfaces the way your users want it.
+The TypeScript demo is a static page. It lays out a chart in the browser and draws one HTML card per box.
 
 Use OrgChart if you need to:
 
@@ -46,7 +45,7 @@ Supports very sophisticated layout rules, supports assistants and multiple visua
 Exactly same code is available both in C# and JavaScript, compiles to .NET 2.0 and 4.0, .NET Core, UWP, Silverlight etc. 
 Look into the .NET 10 desktop demo application for UI-based layout visualizer on Mac and Windows, built with Avalonia.
 
-JavaScript code is generated automatically using Bridge.Net (it's been dead for a while, but there's H5 project as its direct new incarnation).
+The TypeScript project in `typescript/` is a direct port of the C# layout engine and does not use Bridge.NET. The older Bridge.NET output remains under `JScript/` for reference.
 
 As non-intrusive as possible, you can have your data structured and rendered in any way you want.
 
@@ -59,17 +58,23 @@ Rich API for extensibility, supports development of custom layout strategies.
 For JScript conversion using in Bridge.NET, the layout code had to be implemented using C# 7.x, which is very, very old.
 As long as you don't need Bridge.NET, there is nothing preventing you from upgrading the code using C# refactoring tools. 
 
-## Usage: JavaScript
+## Usage: TypeScript
 
-Converted JS libraries are under $\JScript\OrgChart.Layout.JScript.Bridge\Bridge\output.
+The layout engine and the static demo live in `typescript/`. Install and check it with Bun:
 
-See [advanced demo page (multiple layout strategies, rendering, expand/collapse)](https://romanpolunin.github.io/OrgChart/www/demo.html).
+```
+cd typescript
+bun install
+bun test
+bun run check
+bun run build
+```
 
-If you modify C# code and want to update JS, just re-build OrgChart.Layout.JScript.Bridge project from solution.
+`bun run build` writes two browser modules, `demo/orgchart.js` (the layout engine) and `demo/demo.js` (the page). `demo/index.html` imports them by name. The page does not fetch chart data. Browsers block those module imports when the HTML file is opened directly, so from `typescript/` run `bun run preview` and open the printed address.
 
-Also, there's now a great TypeScript/React project based on this source code, converted from C#.
+The public API is exported from `typescript/src/index.ts`.
 
-https://awesome-react-org-chart.vercel.app/example.html
+The hosted demo is [demo.html](https://romanpolunin.github.io/OrgChart/www/demo.html). The previous Bridge.NET conversion is still under `JScript/OrgChart.Layout.JScript.Bridge`. There is also an independent TypeScript/React project based on this source: https://awesome-react-org-chart.vercel.app/example.html
 
 ## Usage: C# #
 

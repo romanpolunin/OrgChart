@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OrgChart layout studio</title>
+    <link rel="stylesheet" href="./demo.css" />
+  </head>
+  <body>
+    <div id="app">
+      <p class="module-help">This page imports the layout module from <code>orgchart.js</code>. Browsers block that import when this file is opened directly. From the <code>typescript</code> folder, run <code>bun run preview</code>.</p>
+    </div>
+    <script type="module">
+      import * as OrgChart from "./orgchart.js";
+      import { mount } from "./demo.js";
+
+      mount(OrgChart);
+    </script>
+  </body>
+</html>

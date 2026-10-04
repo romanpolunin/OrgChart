@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
 VisualStudioVersion = 18.2.11408.102
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrgChart.Layout.JScript.Bridge", "JScript\OrgChart.Layout.JScript.Bridge\OrgChart.Layout.JScript.Bridge.csproj", "{25056F19-92AC-4CBC-9C80-5B933D1109B6}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrgChart.CSharp.Test.Avalonia", "CSharp\OrgChart.CSharp.Test.Avalonia\OrgChart.CSharp.Test.Avalonia.csproj", "{3547667E-1D4A-3498-7A07-DD935486F44C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RomanPolunin.OrgChart.Net", "CSharp\RomanPolunin.OrgChart.Net\RomanPolunin.OrgChart.Net.csproj", "{531938B0-4F38-4625-BC69-722D6C5241D4}"
@@ -21,22 +19,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{25056F19-92AC-4CBC-9C80-5B933D1109B6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{25056F19-92AC-4CBC-9C80-5B933D1109B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{25056F19-92AC-4CBC-9C80-5B933D1109B6}.Debug|ARM.ActiveCfg = Debug|Any CPU
-		{25056F19-92AC-4CBC-9C80-5B933D1109B6}.Debug|ARM.Build.0 = Debug|Any CPU
-		{25056F19-92AC-4CBC-9C80-5B933D1109B6}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{25056F19-92AC-4CBC-9C80-5B933D1109B6}.Debug|x64.Build.0 = Debug|Any CPU
-		{25056F19-92AC-4CBC-9C80-5B933D1109B6}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{25056F19-92AC-4CBC-9C80-5B933D1109B6}.Debug|x86.Build.0 = Debug|Any CPU
-		{25056F19-92AC-4CBC-9C80-5B933D1109B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{25056F19-92AC-4CBC-9C80-5B933D1109B6}.Release|Any CPU.Build.0 = Release|Any CPU
-		{25056F19-92AC-4CBC-9C80-5B933D1109B6}.Release|ARM.ActiveCfg = Release|Any CPU
-		{25056F19-92AC-4CBC-9C80-5B933D1109B6}.Release|ARM.Build.0 = Release|Any CPU
-		{25056F19-92AC-4CBC-9C80-5B933D1109B6}.Release|x64.ActiveCfg = Release|Any CPU
-		{25056F19-92AC-4CBC-9C80-5B933D1109B6}.Release|x64.Build.0 = Release|Any CPU
-		{25056F19-92AC-4CBC-9C80-5B933D1109B6}.Release|x86.ActiveCfg = Release|Any CPU
-		{25056F19-92AC-4CBC-9C80-5B933D1109B6}.Release|x86.Build.0 = Release|Any CPU
 		{3547667E-1D4A-3498-7A07-DD935486F44C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{3547667E-1D4A-3498-7A07-DD935486F44C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3547667E-1D4A-3498-7A07-DD935486F44C}.Debug|ARM.ActiveCfg = Debug|Any CPU
